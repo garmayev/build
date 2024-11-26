@@ -16,6 +16,8 @@ use yii\web\IdentityInterface;
  * @property string $chat_id
  * @property string $device_id
  * @property integer $status
+ *
+ * @property Profile $profile
  */
 class User extends ActiveRecord implements IdentityInterface
 {

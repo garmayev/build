@@ -1,5 +1,6 @@
 <?php
 
+use app\models\Order;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
@@ -14,7 +15,11 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'type')->textInput() ?>
+    <?= $form->field($model, 'type')->dropDownList([
+        Order::TYPE_COWORKER => \Yii::t('app', 'Coworker'),
+        Order::TYPE_MATERIAL => \Yii::t('app', 'Material'),
+        Order::TYPE_TECHNIQUE => \Yii::t('app', 'Technique')
+    ]) ?>
 
     <div class="form-group">
         <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>

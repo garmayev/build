@@ -14,9 +14,6 @@ $this->title = Yii::t('app', 'Properties');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="property-index">
-
-    <h1><?= Html::encode($this->title) ?></h1>
-
     <p>
         <?= Html::a(Yii::t('app', 'Create Property'), ['create'], ['class' => 'btn btn-success']) ?>
     </p>
@@ -26,10 +23,11 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
+        'summary' => false,
+        'tableOptions' => [
+            'class' => ['table', 'table-striped']
+        ],
         'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'id',
             'title',
             [
                 'class' => ActionColumn::className(),
