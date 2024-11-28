@@ -3,6 +3,8 @@
 namespace app\models;
 
 use Yii;
+use yii\behaviors\BlameableBehavior;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "building".
@@ -14,8 +16,22 @@ use Yii;
  * @property Location $location
  * @property Order[] $orders
  */
-class Building extends \yii\db\ActiveRecord
+class Building extends ActiveRecord
 {
+    public function behaviors()
+    {
+        return [
+            'blameable' => [
+                'class' => BlameableBehavior::class,
+                'createdByAttribute' => 'user_id',
+                'updateByAttribute' => false,
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_VALIDATE => ['user_id']
+                ]
+            ]
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -33,6 +49,7 @@ class Building extends \yii\db\ActiveRecord
             [['location_id'], 'integer'],
             [['title'], 'string', 'max' => 255],
             [['location_id'], 'exist', 'skipOnError' => true, 'targetClass' => Location::class, 'targetAttribute' => ['location_id' => 'id']],
+            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
     }
 

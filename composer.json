@@ -21,7 +21,8 @@
         "hail812/yii2-adminlte3": "^1.1",
         "bower-asset/font-awesome": "^6.3",
         "ext-curl": "*",
-        "kartik-v/yii2-widget-select2": "dev-master"
+        "kartik-v/yii2-widget-select2": "dev-master",
+      "ext-json": "*"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

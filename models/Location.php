@@ -3,6 +3,8 @@
 namespace app\models;
 
 use Yii;
+use yii\behaviors\BlameableBehavior;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "location".
@@ -16,6 +18,20 @@ use Yii;
  */
 class Location extends \yii\db\ActiveRecord
 {
+    public function behaviors()
+    {
+        return [
+            'blameable' => [
+                'class' => BlameableBehavior::class,
+                'createdByAttribute' => 'user_id',
+                'updateByAttribute' => false,
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_VALIDATE => ['user_id']
+                ]
+            ]
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */

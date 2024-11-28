@@ -2,6 +2,7 @@
 
 namespace app\modules\api\controllers;
 
+use app\models\telegram\TelegramMessage;
 use app\models\User;
 use app\models\Order;
 use app\models\Telegram;
@@ -31,19 +32,24 @@ class TelegramController extends \yii\web\Controller {
         \Yii::error( "ok" );
         $order = Order::findOne($this->data['order_id']);
         $user = User::findOne(['chat_id' => $this->query['callback_query']['from']['id']]);
-        if ( $order->check($user) ) {
-            $this->cancel();
-        } else {
+        if ( !$order->check($user) ) {
             $order->addCoworker($user);
-            Telegram::editMessage($this->query['callback_query']['from']['id'], $this->query['callback_query']['message']['message_id'], "You are agree for this order!", []);
+            $message = TelegramMessage::findOne(['id' => $this->query['callback_query']['message']['message_id']]);
+            $message->load(["TelegramMessage" => ["text" => "You are agree for this order!", "reply_markup" => []]]);
+            $message->edit();
+        } else {
+            $messages = TelegramMessage::findAll(['order_id' => $order->id]);
+            foreach ($messages as $message) {
+                $message->remove();
+            }
         }
     }
 
     private function cancel() 
     {
-        \Yii::error( "cancel" );
-        $order = Order::findOne($this->data['order_id']);
-        Telegram::editMessage($this->query['callback_query']['from']['id'], $this->query['callback_query']['message']['message_id'], "You are cancelled from this order!", []);
+        $message = TelegramMessage::findOne(['id' => $this->query['callback_query']['message']['message_id']]);
+        $message->load(["TelegramMessage" => ["text" => "You are cancelled from this order!", "reply_markup" => []]]);
+        $message->edit();
     }
 }
 

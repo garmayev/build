@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use app\models\telegram\TelegramMessage;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\db\ActiveQuery;
@@ -267,13 +268,18 @@ class Order extends \yii\db\ActiveRecord
         foreach ($data as $item) {
             $user = User::findOne($item['user_id']);
             if ($user->chat_id) {
-                $result[$user->id] = $user->sendMessage("Hello", [
-                    [
-                        ["text" => "Ok", "callback_data" => "order_id={$this->id}&action=ok"]
-                    ], [
-                        ["text" => "Cancel", "callback_data" => "order_id={$this->id}&action=cancel"]
+                $message = new TelegramMessage(['text' => '', 'chat_id' => $user->chat_id, 'reply_markup' => [
+                    'inline_markup' => [
+                        [
+                            ["text" => "Ok", "callback_data" => "order_id={$this->id}&action=ok"]
+                        ], [
+                            ["text" => "Cancel", "callback_data" => "order_id={$this->id}&action=cancel"]
+                        ]
                     ]
-                ]);
+                ]]);
+                $result[] = $message->send();
+            } else if ($user->device_id) {
+                \Yii::error('Push notification');
             }
         }
         return $result;
