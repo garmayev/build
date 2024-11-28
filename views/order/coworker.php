@@ -23,6 +23,7 @@ $this->params['breadcrumbs'][] = [
     'label' => \Yii::t('app', 'Orders'),
     'url' => ['/order/index']
 ];
+
 $this->params['breadcrumbs'][] = $this->title;
 
 echo $form->field($model, 'status')->dropDownList($model->statusList);

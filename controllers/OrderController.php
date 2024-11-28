@@ -45,6 +45,7 @@ class OrderController extends Controller
 
         if (\Yii::$app->request->isPost) {
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
+                \Yii::error( $model->notify() );
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             }

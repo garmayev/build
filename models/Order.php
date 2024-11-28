@@ -267,9 +267,32 @@ class Order extends \yii\db\ActiveRecord
         foreach ($data as $item) {
             $user = User::findOne($item['user_id']);
             if ($user->chat_id) {
-                $result[$user->id] = $user->sendMessage("Hello!");
+                $result[$user->id] = $user->sendMessage("Hello", [
+                    [
+                        ["text" => "Ok", "callback_data" => "order_id={$this->id}&action=ok"]
+                    ], [
+                        ["text" => "Cancel", "callback_data" => "order_id={$this->id}&action=cancel"]
+                    ]
+                ]);
             }
         }
         return $result;
+    }
+
+    public function check($target) 
+    {
+        switch ( $this->type ) {
+            case Order::TYPE_COWORKER:
+                $query = Coworker::find()->where(['user_id' => $target->id])->andWhere(['category_id' => \yii\helpers\ArrayHelper::map($this->filters, 'category_id', 'category_id')])->all();
+                $count = OrderCoworker::find()->where(['order_id' => $this->id])->all();
+                break;
+        }
+        return count($query) === count($count) ;
+    }
+
+    public function addCoworker($user) 
+    {
+        $coworker = Coworker::findOne(['user_id' => $user->id]);
+        $this->link('coworkers', $coworker);
     }
 }

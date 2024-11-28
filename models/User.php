@@ -26,6 +26,8 @@ class User extends ActiveRecord implements IdentityInterface
     const STATUS_ACTIVE = 1;
     const STATUS_INACTIVE = 2;
 
+    public $password;
+
     public static function tableName(): string
     {
         return '{{%user}}';
@@ -118,10 +120,10 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->username;
     }
 
-    public function sendMessage($message)
+    public function sendMessage($message, $keyboard)
     {
         if (isset($this->chat_id)) {
-            return Telegram::sendMessage($this->chat_id, $message);
+            return Telegram::sendMessage($this->chat_id, $message, $keyboard);
         } else if (isset($this->device_id)) {
             PushNotify::sendMessage($this->device_id, $message);
         }

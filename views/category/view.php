@@ -1,7 +1,11 @@
 <?php
 
+use app\models\CategoryProperty;
+use yii\data\ArrayDataProvider;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\grid\GridView;
 
 /** @var yii\web\View $this */
 /** @var app\models\Category $model */
@@ -32,6 +36,30 @@ $this->params['breadcrumbs'][] = $this->title;
             'type',
             'parent_id'
         ],
+    ]) ?>
+
+    <?= GridView::widget([
+        'dataProvider' => new ArrayDataProvider([
+            'allModels' => $model->categoryProperties,
+        ]),
+        'summary' => false,
+        'tableOptions' => [
+            'class' => 'table table-striped'
+        ],
+        'columns' => [
+            [
+                'attribute' => 'property_id',
+                'value' => function (CategoryProperty $categoryProperty) {
+                    return $categoryProperty->property->title;
+                }
+            ],
+            [
+                'attribute' => 'dimension_id',
+                'value' => function (CategoryProperty $categoryProperty) {
+                    return implode(', ', ArrayHelper::map( $categoryProperty->property->dimensions, 'id', 'title' ));
+                }
+            ],
+        ]
     ]) ?>
 
 </div>

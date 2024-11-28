@@ -94,7 +94,7 @@ class DataController extends Controller
     {
         $order = Order::findOne($order_id);
 
-        echo Json::encode($order->notify());
+        echo Json::encode($order->notify())."\n";
     }
 
     public function actionSetWebhook()

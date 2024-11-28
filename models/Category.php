@@ -21,7 +21,6 @@ use Yii;
  * @property Coworker[] $coworkers0
  * @property Filter[] $filters
  * @property Material[] $materials
- * @property Material[] $materials0
  * @property Category $parent
  * @property Property[] $properties
  * @property Technique[] $techniques
@@ -46,6 +45,7 @@ class Category extends \yii\db\ActiveRecord
             [['type', 'parent_id'], 'integer'],
             [['title'], 'string', 'max' => 255],
             [['parent_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['parent_id' => 'id']],
+            [['properties'], 'safe']
         ];
     }
 
@@ -143,21 +143,11 @@ class Category extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[Materials]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getMaterials()
-    {
-        return $this->hasMany(Material::class, ['category_id' => 'id']);
-    }
-
-    /**
      * Gets query for [[Materials0]].
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getMaterials0()
+    public function getMaterials()
     {
         return $this->hasMany(Material::class, ['id' => 'material_id'])->viaTable('category_material', ['category_id' => 'id']);
     }
@@ -180,6 +170,15 @@ class Category extends \yii\db\ActiveRecord
     public function getProperties()
     {
         return $this->hasMany(Property::class, ['id' => 'property_id'])->viaTable('category_property', ['category_id' => 'id']);
+    }
+
+    public function setProperties($data)
+    {
+        foreach ( $this->properties as $property ) $this->unlink('properties', $property, true);
+        foreach ( $data as $item ) {
+            $property = Property::findOne($item);
+            $this->link('properties', $property);
+        }
     }
 
     /**

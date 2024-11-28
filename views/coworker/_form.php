@@ -141,7 +141,8 @@ $this->registerJsFile("https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/s
                     ->field($model, 'coworkerProperties[][property_id]')
                     ->dropDownList(ArrayHelper::map(Property::find()->all(), 'id', 'title'), [
                         'id' => "coworker-properties--property_id",
-                        'class' => 'property form-control'
+                        'class' => 'property_example form-control',
+                        'style' => 'display: none;'
                     ]) ?>
             </div>
             <div class="col-4">
@@ -149,7 +150,7 @@ $this->registerJsFile("https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/s
                     ->field($model, 'coworkerProperties[][value]')
                     ->textInput([
                         'type' => 'number',
-                        'class' => 'value form-control',
+                        'class' => 'value_example form-control',
                         'id' => "coworker-properties--value"
                     ]) ?>
             </div>
@@ -158,7 +159,7 @@ $this->registerJsFile("https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/s
                     ->field($model, 'coworkerProperties[][dimension_id]')
                     ->dropDownList(ArrayHelper::map(Dimension::find()->all(), 'id', 'title'), [
                         'id' => "coworker-properties--property-dimension_id",
-                        'class' => 'dimension form-control'
+                        'class' => 'dimension_example form-control'
                     ]) ?>
             </div>
             <div class="col-1 d-flex justify-content-center align-items-center">
@@ -178,6 +179,12 @@ $this->registerCss(<<<CSS
 #example {
     display: none;
 }
+.select2-container {
+    width: 100% !important;
+}
+.select2-container:nth-child(2) {
+    display: none;
+}
 CSS
 );
 
@@ -189,7 +196,7 @@ $t = Json::encode([
 $this->registerJs(<<<JS
 yii.t = $t
 
-$(".property", document).select2({
+const propertySelectConfig = {
     ajax: {
         url: `/api/property/by-category?id=` + $('#coworker-category_id').val(),
         dataType: 'json'
@@ -202,7 +209,9 @@ $(".property", document).select2({
     templateResult: (item) => {
         return item.title
     }
-})
+};
+
+$(".property").select2(propertySelectConfig);
 
 const timeout = 500;
 const checkbox = $('#coworker-isset_user');
@@ -217,9 +226,9 @@ $("#add-property").on("click", function () {
     let clone = $("#example").clone().attr('id', '');
     clone.attr('data-key', index);
     clone.find('.fa-trash').attr('data-target', index).on('click', removeItem)
-    clone.find('.property').attr('id', `coworker-properties-\${index}-property_id`).attr('name', `Coworker[coworkerProperties][\${index}][property_id]`)
-    clone.find('.value').attr('id', `coworker-properties-\${index}-value`).attr('name', `Coworker[coworkerProperties][\${index}][value]`)
-    clone.find('.dimension').attr('id', `coworker-properties-\${index}-dimension_id`).attr('name', `Coworker[coworkerProperties][\${index}][dimension_id]`)
+    clone.find('.property_example').attr('id', `coworker-properties-\${index}-property_id`).toggleClass('property_example').toggleClass('property').attr('name', `Coworker[coworkerProperties][\${index}][property_id]`).select2(propertySelectConfig)
+    clone.find('.value_example').attr('id', `coworker-properties-\${index}-value`).attr('name', `Coworker[coworkerProperties][\${index}][value]`).toggleClass('value_example').toggleClass('value')
+    clone.find('.dimension_example').attr('id', `coworker-properties-\${index}-dimension_id`).attr('name', `Coworker[coworkerProperties][\${index}][dimension_id]`).toggleClass('dimension_example').toggleClass('dimension')
     index++;
     $("#property-list").append(clone)
 })

@@ -1,7 +1,9 @@
 <?php
 
 use app\models\Order;
+use app\models\Property;
 use yii\helpers\Html;
+use yii\helpers\ArrayHelper;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
@@ -20,6 +22,12 @@ use yii\widgets\ActiveForm;
         Order::TYPE_MATERIAL => \Yii::t('app', 'Material'),
         Order::TYPE_TECHNIQUE => \Yii::t('app', 'Technique')
     ]) ?>
+
+    <?php
+        if (!$model->isNewRecord) {
+            echo $form->field($model, 'properties')->dropDownList( ArrayHelper::map(Property::find()->all(), 'id', 'title'), ['multiple' => true] );
+        }
+    ?>
 
     <div class="form-group">
         <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>
