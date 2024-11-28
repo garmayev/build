@@ -79,7 +79,7 @@ $this->registerJsFile("https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/s
         <?= $form->field($model, 'category_id')->dropDownList(ArrayHelper::map(Category::find()->all(), 'id', 'title')) ?>
 
         <?php
-        if ($model->isNewRecord) {
+        if (!$model->isNewRecord) {
             ?>
 
             <div class="form-group">
