@@ -212,6 +212,7 @@ class Order extends \yii\db\ActiveRecord
      * Gets query for [[Techniques]].
      *
      * @return \yii\db\ActiveQuery
+     * @throws InvalidConfigException
      */
     public function getTechniques()
     {
@@ -268,16 +269,25 @@ class Order extends \yii\db\ActiveRecord
         foreach ($data as $item) {
             $user = User::findOne($item['user_id']);
             if ($user->chat_id) {
-                $message = new TelegramMessage(['text' => '', 'chat_id' => $user->chat_id, 'reply_markup' => [
-                    'inline_markup' => [
-                        [
-                            ["text" => "Ok", "callback_data" => "order_id={$this->id}&action=ok"]
-                        ], [
-                            ["text" => "Cancel", "callback_data" => "order_id={$this->id}&action=cancel"]
-                        ]
+                $message = new TelegramMessage();
+                $data = [
+                    'TelegramMessage' => [
+                        'text' => "Order #$this->id",
+                        'chat_id' => $user->chat_id,
+                        'reply_markup' => json_encode([
+                            'inline_markup' => [
+                                [
+                                    ["text" => "Ok", "callback_data" => "order_id={$this->id}&action=ok"]
+                                ], [
+                                    ["text" => "Cancel", "callback_data" => "order_id={$this->id}&action=cancel"]
+                                ]
+                            ]
+                        ])
                     ]
-                ]]);
-                $result[] = $message->send();
+                ];
+                if ($message->load($data) && $message->save()) {
+                    $result[$user->chat_id] = $message->send();
+                }
             } else if ($user->device_id) {
                 \Yii::error('Push notification');
             }

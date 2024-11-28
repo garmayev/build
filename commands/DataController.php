@@ -7,7 +7,6 @@ use app\models\Category;
 use app\models\Coworker;
 use app\models\Location;
 use app\models\Order;
-use app\models\Profile;
 use app\models\Telegram;
 use app\models\User;
 use Faker\Factory;

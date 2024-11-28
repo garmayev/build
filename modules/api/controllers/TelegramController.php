@@ -35,7 +35,7 @@ class TelegramController extends \yii\web\Controller {
         if ( !$order->check($user) ) {
             $order->addCoworker($user);
             $message = TelegramMessage::findOne(['id' => $this->query['callback_query']['message']['message_id']]);
-            $message->load(["TelegramMessage" => ["text" => "You are agree for this order!", "reply_markup" => []]]);
+            $message->load(["TelegramMessage" => ["text" => "You are agree for this order!", "reply_markup" => json_encode([])]]);
             $message->edit();
         } else {
             $messages = TelegramMessage::findAll(['order_id' => $order->id]);
@@ -48,7 +48,7 @@ class TelegramController extends \yii\web\Controller {
     private function cancel() 
     {
         $message = TelegramMessage::findOne(['id' => $this->query['callback_query']['message']['message_id']]);
-        $message->load(["TelegramMessage" => ["text" => "You are cancelled from this order!", "reply_markup" => []]]);
+        $message->load(["TelegramMessage" => ["text" => "You are cancelled from this order!", "reply_markup" => json_encode([])]]);
         $message->edit();
     }
 }

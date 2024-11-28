@@ -42,7 +42,7 @@ class TelegramMessage extends ActiveRecord
         $data = [
             "chat_id" => urlencode($this->chat_id),
             "text" => urlencode($this->text),
-            "reply_markup" => json_encode($this->reply_markup)
+            "reply_markup" => $this->reply_markup
         ];
 
         curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/sendMessage");
@@ -70,7 +70,7 @@ class TelegramMessage extends ActiveRecord
         ];
 
         if ( isset($this->reply_markup) ) {
-            $data["reply_markup"] = json_encode($this->reply_markup);
+            $data["reply_markup"] = $this->reply_markup;
         }
 
         curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/editMessageText");
