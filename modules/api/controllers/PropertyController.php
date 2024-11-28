@@ -21,6 +21,6 @@ class PropertyController extends Controller
 
     public function actionByCategory($id)
     {
-        return Category::findOne($id)->properties;
+        return ['results' => Category::findOne($id)->properties];
     }
 }

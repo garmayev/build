@@ -32,8 +32,9 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'user_id',
                 'label' => \Yii::t('app', 'Coworker'),
+                'format' => 'raw',
                 'value' => function (Coworker $model) {
-                    return Html::a($model->user->username, ['view']);
+                    return Html::a($model->user->name, ['view', 'id' => $model->id]);
                 }
             ],
             'category.title',

@@ -30,7 +30,17 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
         'columns' => [
             'title',
-            'type',
+            [
+                'attribute' => 'type',
+                'value' => function (Category $model) {
+                    $list = [
+                        \app\models\Order::TYPE_COWORKER => \Yii::t('app', 'Coworker'),
+                        \app\models\Order::TYPE_MATERIAL => \Yii::t('app', 'Material'),
+                        \app\models\Order::TYPE_TECHNIQUE => \Yii::t('app', 'Technique'),
+                    ];
+                    return $list[$model->type];
+                }
+            ],
             'parent_id',
             [
                 'class' => ActionColumn::className(),

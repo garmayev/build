@@ -61,7 +61,9 @@ $t = Json::encode([
     'modal.type.equal' => \Yii::t('app', 'Equal'),
     'modal.type.not-equal' => \Yii::t('app', 'Not Equal'),
 ]);
+
 $this->registerJsVar('filters', $model->filters); ;
+
 $script = <<<JS
     yii.t = $t ;
     const root = ReactDOM.createRoot(document.getElementById('dynamicTable'));
@@ -69,6 +71,9 @@ $script = <<<JS
     root.render(
         <DynamicTable 
             data={filters} 
+            dataUrl={'/api/order/detail?id={$model->id}'}
+            categoryUrl={'/api/category/index?type=1'}
+            propertyUrl={'/api/property/by-category'}
             tableHeader={[{
                 header: yii.t['header.category'],
                 key: 'category.title',
@@ -80,7 +85,6 @@ $script = <<<JS
                 inputName: '[count]',
                 inputValue: 'count'
             }, {
-                
                 header: yii.t['header.requirement'],
                 key: {
                     header: 'requirements',
@@ -99,11 +103,8 @@ $script = <<<JS
                         inputValue: 'dimension.id'
                     }]
                 }
-            }]} 
-            dataUrl={'/api/order/detail?id={$model->id}'} 
-            categoryUrl={'/api/category/index?type=1'} 
-            propertyUrl={'/api/property/by-category'}
-            formName={'Order[filters]'}
+            }]}
+            formName={'Order[filters]'} 
         />
     )
 JS;

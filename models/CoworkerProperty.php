@@ -9,9 +9,11 @@ use Yii;
  *
  * @property int $coworker_id
  * @property int $property_id
+ * @property int $dimension_id
  *
  * @property Coworker $coworker
  * @property Property $property
+ * @property Dimension $dimension
  */
 class CoworkerProperty extends \yii\db\ActiveRecord
 {
@@ -66,5 +68,10 @@ class CoworkerProperty extends \yii\db\ActiveRecord
     public function getProperty()
     {
         return $this->hasOne(Property::class, ['id' => 'property_id']);
+    }
+
+    public function getDimension()
+    {
+        return $this->hasOne(Dimension::class, ['id' => 'dimension_id']);
     }
 }

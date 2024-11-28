@@ -50,11 +50,12 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
         fetch(`${propertyUrl}?id=${categoryId}`)
             .then(response => response.json())
             .then(result => {
-                setPropertyList(result);
-                setSelectedProperty(result[0])
+                const res = result.results;
+                setPropertyList(res);
+                setSelectedProperty(res[0])
                 setSelectedType(types[0]);
-                setDimensionList(result[0].dimensions)
-                setSelectedDimension(result[0].dimensions[0])
+                setDimensionList(res[0].dimensions)
+                setSelectedDimension(res[0].dimensions[0])
             })
     }, [categoryId])
 
@@ -63,7 +64,6 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
         // {property: selectedProperty, type: selectedType, value: value, dimension: selectedDimension};
         setRequirements(requirements.map((item, index) => {
             // console.log(dataKey, index)
-            console.log(item)
             return index === dataKey ? my : item
         } ))
     }, [selectedProperty, selectedType, selectedDimension, value]);
@@ -127,14 +127,15 @@ function Table({data, header, formName})
         <table className={'table table-striped'}>
             <thead>
             <tr>
-            {header.map((head, index) => (<th key={index}>{head.header}</th>))}
+                {header.map((head, index) => (<th key={index}>{head.header}</th>))}
+                <th></th>
             </tr>
             </thead>
             <tbody>
             {data.map((item, index) => {
                 if (item) {
                     return (
-                        <tr key={`row-${index}`}>
+                        <tr key={`row-${index}`} data-key={index}>
                             {
                                 header.map((head, headIndex) => {
                                     let result, value;
@@ -174,6 +175,10 @@ function Table({data, header, formName})
                                     )
                                 })
                             }
+                            <td data-target={index}>
+                                <a className={'fas fa-pen'} href={'#'}></a>
+                                <a className={'fas fa-trash'} href={'#'}></a>
+                            </td>
                         </tr>
                     );
                 }
@@ -187,8 +192,13 @@ function Modal({categoryUrl, propertyUrl, onClick})
 {
     const [categoryList, setCategoryList] = React.useState([]);
     const [requirements, setRequirements] = React.useState([]);
-    const [category, setCategory] = React.useState({});
+    const [category, _setCategory] = React.useState({});
     const [count, setCount] = React.useState(1);
+
+    const setCategory = (value) => {
+        _setCategory(value);
+        setRequirements([]);
+    }
 
     const id = 'add-filter';
     React.useEffect(() => {
@@ -200,10 +210,18 @@ function Modal({categoryUrl, propertyUrl, onClick})
                 setCategory(result[0]);
             })
     }, [])
+    React.useEffect(() => {
+        setRequirements([]);
+    }, [category])
 
     return (
         <>
             <span className={'btn btn-primary'} data-toggle={'modal'}
+                  onClick={() => {
+                      _setCategory(categoryList[0]);
+                      setCount(1);
+                      setRequirements([]);
+                  }}
                   data-target={`#${id}`}>{yii.t['submit.title']}</span>
             <div className={'modal fade'} id={id} tabIndex={-1} aria-labelledby={`${id}-label`} aria-hidden={true}>
                 <div className={'modal-dialog modal-dialog-scrollable modal-lg nodal-xl'}>
@@ -248,7 +266,7 @@ function Modal({categoryUrl, propertyUrl, onClick})
                         <div className={'modal-footer'}>
                             <button type={'button'} className={'btn btn-success'} data-dismiss={'modal'}
                                     onClick={() => {
-                                        onClick.call(this, {category: category, count: count, requirements: requirements})
+                                        onClick?.call(this, {category: category, count: count, requirements: requirements})
                                     }}>{yii.t['modal.save']}</button>
                             <button type={'button'} className={'btn btn-danger'}
                                     data-dismiss={'modal'}>{yii.t['modal.close']}</button>
@@ -271,10 +289,10 @@ function Modal({categoryUrl, propertyUrl, onClick})
  * @returns {Element}
  * @constructor
  */
-function DynamicTable({tableHeader, dataUrl, propertyUrl, categoryUrl, formName}) {
+function DynamicTable({tableHeader, dataUrl, propertyUrl, categoryUrl, formName, children}) {
     const [dataList, _setDataList] = React.useState([]);
     const setDataList = (value) => {
-        _setDataList([...dataList.filter((item, index) => index !== 0), value]);
+        _setDataList([...dataList, value]);
     }
 
     React.useEffect(() => {

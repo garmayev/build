@@ -16,6 +16,7 @@ use yii\web\IdentityInterface;
  * @property string $chat_id
  * @property string $device_id
  * @property integer $status
+ * @property string $name
  *
  * @property Profile $profile
  */
@@ -39,17 +40,6 @@ class User extends ActiveRecord implements IdentityInterface
             [['status'], 'default', 'value' => self::STATUS_ACTIVE],
             [['password'], 'safe'],
         ];
-    }
-
-    public function afterSave($insert, $changedAttributes)
-    {
-        if ($insert) {
-            $profile = new Profile([
-                'id' => $this->id
-            ]);
-            $profile->save();
-        }
-        parent::afterSave($insert, $changedAttributes);
     }
 
     /**
@@ -114,19 +104,18 @@ class User extends ActiveRecord implements IdentityInterface
         return \Yii::$app->security->validatePassword($password, $this->password_hash);
     }
 
-    public function setPassword($password)
-    {
-        $this->password_hash = \Yii::$app->security->generatePasswordHash($password);
-    }
-
-    public function getPassword(): string
-    {
-        return $this->password_hash;
-    }
-
     public function getProfile(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Profile::class, ['id' => 'id']);
+    }
+
+    public function getName(): string
+    {
+        $profileName = "{$this->profile->last_name} {$this->profile->patronymic} {$this->profile->first_name}";
+        if (strlen($profileName) > 2) {
+            return $profileName;
+        }
+        return $this->username;
     }
 
     public function sendMessage($message)

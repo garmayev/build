@@ -32,4 +32,16 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]) ?>
 
+    <?= \yii\grid\GridView::widget([
+        'dataProvider' => new \yii\data\ArrayDataProvider([
+            'allModels' => $model->dimensions
+        ]),
+        'summary' => false,
+        'columns' => [
+            'title',
+            'multiplier',
+            'short'
+        ]
+    ]); ?>
+
 </div>

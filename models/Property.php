@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "property".
@@ -22,6 +23,8 @@ use Yii;
  */
 class Property extends \yii\db\ActiveRecord
 {
+    public $dimension_ids;
+
     /**
      * {@inheritdoc}
      */
@@ -38,6 +41,7 @@ class Property extends \yii\db\ActiveRecord
         return [
             [['title'], 'required'],
             [['title'], 'string', 'max' => 255],
+            [['dimensions'], 'safe']
         ];
     }
 
@@ -91,6 +95,21 @@ class Property extends \yii\db\ActiveRecord
     public function getDimensions()
     {
         return $this->hasMany(Dimension::class, ['id' => 'dimension_id'])->viaTable('property_dimension', ['property_id' => 'id']);
+    }
+
+    public function setDimensions($data)
+    {
+        if ($data) {
+            if ($this->isNewRecord) {
+                $this->save(false);
+            } else {
+                foreach ($this->dimensions as $dimension) $this->unlink('dimensions', $dimension, true);
+            }
+            foreach ($data as $item) {
+                $dimension = Dimension::findOne($item);
+                $this->link('dimensions', $dimension);
+            }
+        }
     }
 
     /**

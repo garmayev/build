@@ -21,6 +21,7 @@ use Yii;
  */
 class Coworker extends \yii\db\ActiveRecord
 {
+    public $isset_user = false;
     /**
      * {@inheritdoc}
      */
@@ -38,6 +39,7 @@ class Coworker extends \yii\db\ActiveRecord
             [['user_id', 'category_id'], 'integer'],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id']],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
+            [['user', 'coworkerProperties'], 'safe'],
         ];
     }
 
@@ -71,6 +73,20 @@ class Coworker extends \yii\db\ActiveRecord
     public function getCoworkerProperties()
     {
         return $this->hasMany(CoworkerProperty::class, ['coworker_id' => 'id']);
+    }
+
+    public function setCoworkerProperties($data)
+    {
+        foreach ($this->coworkerProperties as $coworkerProperty) {
+            $this->unlink('coworkerProperties', $coworkerProperty, true);
+        }
+        \Yii::error($data);
+        foreach ($data as $item) {
+            $link = new CoworkerProperty(array_merge($item, ['coworker_id' => $this->id]));
+            if ($link->save()) {
+                $this->link('coworkerProperties', $link);
+            }
+        }
     }
 
     /**
@@ -121,5 +137,19 @@ class Coworker extends \yii\db\ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    public function setUser($data)
+    {
+        $this->save(false);
+        $user = new User();
+        if (!isset($data['password'])) {
+            $data['password_hash'] = \Yii::$app->security->generatePasswordHash( \Yii::$app->security->generateRandomString(16) );
+        } else {
+            $data['password_hash'] = \Yii::$app->security->generatePasswordHash( $data['password'] );
+        }
+        if ($user->load(['User' => $data]) && $user->save()) {
+            $this->link('user', $user);
+        }
     }
 }
