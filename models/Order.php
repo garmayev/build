@@ -56,14 +56,6 @@ class Order extends \yii\db\ActiveRecord
         return parent::beforeDelete();
     }
 
-    public function afterSave($insert, $changedAttributes)
-    {
-        if ($insert) {
-            $this->notify();
-        }
-        parent::afterSave($insert, $changedAttributes);
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -274,8 +266,10 @@ class Order extends \yii\db\ActiveRecord
                     'TelegramMessage' => [
                         'text' => "Order #$this->id",
                         'chat_id' => $user->chat_id,
+                        'order_id' => $this->id,
+                        'status' => TelegramMessage::STATUS_NEW,
                         'reply_markup' => json_encode([
-                            'inline_markup' => [
+                            'inline_keyboard' => [
                                 [
                                     ["text" => "Ok", "callback_data" => "order_id={$this->id}&action=ok"]
                                 ], [
@@ -285,7 +279,8 @@ class Order extends \yii\db\ActiveRecord
                         ])
                     ]
                 ];
-                if ($message->load($data) && $message->save()) {
+                if ($message->load($data)) {
+//                    $message->send();
                     $result[$user->chat_id] = $message->send();
                 }
             } else if ($user->device_id) {
@@ -295,15 +290,20 @@ class Order extends \yii\db\ActiveRecord
         return $result;
     }
 
-    public function check($target) 
+    public function check()
     {
         switch ( $this->type ) {
             case Order::TYPE_COWORKER:
-                $query = Coworker::find()->where(['user_id' => $target->id])->andWhere(['category_id' => \yii\helpers\ArrayHelper::map($this->filters, 'category_id', 'category_id')])->all();
+//                $query = Coworker::find()->where(['user_id' => $target->id])->andWhere(['category_id' => \yii\helpers\ArrayHelper::map($this->filters, 'category_id', 'category_id')])->all();
+//                foreach ( $this->filters as $filter ) {
+//                    if ()
+//                }
+                $f = $this->getFilters()->joinWith('orderFilters')->andWhere(['order_filter.order_id' => $this->id])->one();
                 $count = OrderCoworker::find()->where(['order_id' => $this->id])->all();
                 break;
         }
-        return count($query) === count($count) ;
+//        return $f;
+        return $f->count === count($count);
     }
 
     public function addCoworker($user) 

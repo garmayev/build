@@ -15,41 +15,46 @@ class TelegramController extends \yii\web\Controller {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $this->enableCsrfValidation = false;
         $this->query = json_decode( file_get_contents("php://input"), true );
-        parse_str( $this->query['callback_query']['data'], $this->data );
+        if ( isset($this->query['callback_query']) ) {
+            parse_str( $this->query['callback_query']['data'], $this->data );
+        }
         return parent::beforeAction($action);
     }
 
     public function actionCallback() {
         if ( isset($this->data) ) {
             $this->{$this->data['action']}();
-            \Yii::error( $this->query );
+//            \Yii::error( $this->query );
         }
         return [];
     }
 
     private function ok()
     {
-        \Yii::error( "ok" );
         $order = Order::findOne($this->data['order_id']);
         $user = User::findOne(['chat_id' => $this->query['callback_query']['from']['id']]);
-        if ( !$order->check($user) ) {
+        if (!$order->check()) {
             $order->addCoworker($user);
             $message = TelegramMessage::findOne(['id' => $this->query['callback_query']['message']['message_id']]);
-            $message->load(["TelegramMessage" => ["text" => "You are agree for this order!", "reply_markup" => json_encode([])]]);
-            $message->edit();
-        } else {
-            $messages = TelegramMessage::findAll(['order_id' => $order->id]);
-            foreach ($messages as $message) {
-                $message->remove();
+            if ( $message->load(["TelegramMessage" => ["text" => "You are agree for this order!", "status" => TelegramMessage::STATUS_AGREE, "reply_markup" => null]]) && $message->save() ) {
+                $message->edit();
+            } else {
+                \Yii::error($message->getErrorSummary(true));
             }
+            if ( $order->check() ) {
+                foreach ( TelegramMessage::find()->where(['order_id' => $order->id])->andWhere(['status' => TelegramMessage::STATUS_NEW])->all() as $message ) {
+                    $message->remove();
+                }
+            }
+        } else {
+            $messages = TelegramMessage::find()->where(['order_id' => $order->id])->andWhere(['status' => TelegramMessage::STATUS_NEW])->all();
         }
     }
 
     private function cancel() 
     {
-        $message = TelegramMessage::findOne(['id' => $this->query['callback_query']['message']['message_id']]);
-        $message->load(["TelegramMessage" => ["text" => "You are cancelled from this order!", "reply_markup" => json_encode([])]]);
-        $message->edit();
+        $message = TelegramMessage::find()->where(['id' => $this->query['callback_query']['message']['message_id']])->one();
+        $message->remove();
     }
 }
 

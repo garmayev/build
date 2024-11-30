@@ -111,6 +111,11 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->hasOne(Profile::class, ['id' => 'id']);
     }
 
+    public function getCoworker()
+    {
+        return $this->hasOne(Coworker::class, ['user_id' => 'id']);
+    }
+
     public function getName(): string
     {
         $profileName = "{$this->profile->last_name} {$this->profile->patronymic} {$this->profile->first_name}";

@@ -13,9 +13,14 @@ use yii\db\ActiveRecord;
  * @property integer $created_at
  * @property integer $updated_at
  * @property integer $order_id
+ * @property integer $status
  */
 class TelegramMessage extends ActiveRecord
 {
+    const STATUS_NEW = 0;
+    const STATUS_AGREE = 1;
+    const STATUS_CANCEL = 2;
+
     public static function tableName(): string
     {
         return "{{%telegram_message}}";
@@ -25,8 +30,9 @@ class TelegramMessage extends ActiveRecord
     {
         return [
             [['chat_id', 'device_id', 'text', 'reply_markup'], 'string'],
-            [['created_at', 'updated_at'], 'integer'],
-            [['order_id'], 'exist', 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']]
+            [['created_at', 'updated_at', 'status'], 'integer'],
+            [['order_id'], 'exist', 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']],
+            [['status'], 'default', 'value' => self::STATUS_NEW],
         ];
     }
 
@@ -39,10 +45,11 @@ class TelegramMessage extends ActiveRecord
     {
         $curl = curl_init();
         $bot_id = \Yii::$app->params['bot_id'];
+
         $data = [
-            "chat_id" => urlencode($this->chat_id),
-            "text" => urlencode($this->text),
-            "reply_markup" => $this->reply_markup
+            "chat_id" => $this->chat_id,
+            "text" => $this->text,
+            "reply_markup" => $this->reply_markup,
         ];
 
         curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/sendMessage");
@@ -54,6 +61,8 @@ class TelegramMessage extends ActiveRecord
         if ( ($result = curl_exec($curl)) === false ) {
             \Yii::error(curl_error($curl));
         }
+        $this->id = json_decode($result, true)["result"]["message_id"];
+        $this->save();
 
         curl_close($curl);
         return $result;
@@ -84,7 +93,6 @@ class TelegramMessage extends ActiveRecord
             return curl_error($curl);
         } else {
             curl_close($curl);
-            $this->save();
             return $result;
         }
     }

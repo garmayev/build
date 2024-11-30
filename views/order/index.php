@@ -24,7 +24,10 @@ echo GridView::widget([
     ],
     'columns' => [
         [
-            'class' => \yii\grid\SerialColumn::class
+            'attribute' => 'id',
+            'value' => function (Order $model) {
+                return "#{$model->id}";
+            }
         ],
         [
             'attribute' => 'status',

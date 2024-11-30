@@ -71,7 +71,7 @@ class Filter extends \yii\db\ActiveRecord
 
     public function beforeSave($insert)
     {
-        \Yii::error($insert);
+//        \Yii::error($insert);
         return parent::beforeSave($insert);
     }
 
@@ -158,5 +158,10 @@ class Filter extends \yii\db\ActiveRecord
                 \Yii::error('Requirement is not saved');
             }
         }
+    }
+
+    public function getCoworker()
+    {
+        
     }
 }

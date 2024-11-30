@@ -39,8 +39,11 @@
                         'label' => \Yii::t('app', 'Dashboard'),
                         'url' => ['/site/index'],
                         'icon' => 'tachometer-alt',
-                    ],
-                    [
+                    ], [
+                        'label' => \Yii::t('app', 'Building'),
+                        'icon' => '',
+                        'url' => ['/building/index']
+                    ], [
                         'label' => \Yii::t('app', 'Control Panel'),
                         'icon' => 'th',
                         'items' => [
@@ -60,6 +63,10 @@
                                 'label' => \Yii::t('app', 'Technique'),
                                 'icon' => 'cube',
                                 'url' => ['/technique/index']
+                            ], [
+                                'label' => \Yii::t('app', 'Equipment'),
+                                'icon' => 'cube',
+                                'url' => ['/equipment/index']
                             ]
                         ]
                     ], [
@@ -71,10 +78,6 @@
                         'icon' => 'cog',
                         'items' => [
                             [
-                                'label' => \Yii::t('app', 'Building'),
-                                'icon' => '',
-                                'url' => ['/building/index']
-                            ], [
                                 'label' => \Yii::t('app', 'Properties'),
                                 'icon' => '',
                                 'url' => ['/property/index']

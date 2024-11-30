@@ -39,6 +39,28 @@ echo GridView::widget([
                 }
                 return $result;
             }
-        ]
+        ],
     ],
 ]);
+
+
+$data = [];
+
+switch ($model->type) {
+    case Order::TYPE_COWORKER:
+        $data = $model->coworkers;
+        break;
+}
+
+if (count($data)) {
+
+    echo GridView::widget([
+        'dataProvider' => new ArrayDataProvider([
+            'allModels' => $data
+        ]),
+        'summary' => false,
+        'columns' => [
+            'user.name'
+        ],
+    ]);
+}

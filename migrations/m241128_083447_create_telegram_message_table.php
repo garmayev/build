@@ -21,6 +21,7 @@ class m241128_083447_create_telegram_message_table extends Migration
             'updated_at' => $this->integer(),
             'text' => $this->text(),
             'reply_markup' => $this->text(),
+            'status' => $this->integer(),
         ]);
 
         $this->createIndex(
@@ -30,7 +31,7 @@ class m241128_083447_create_telegram_message_table extends Migration
         );
 
         $this->addForeignKey(
-            'fk-temegram_message-order_id',
+            'fk-telegram_message-order_id',
             '{{%telegram_message}}',
             'order_id',
             '{{%order}}',
