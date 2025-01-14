@@ -7,9 +7,45 @@ use yii\rest\Controller;
 
 class CategoryController extends Controller
 {
+    public function behaviors()
+    {
+        return \yii\helpers\ArrayHelper::merge(
+            parent::behaviors(),
+            [
+                'corsFilter' => [ 
+                    'class' => \yii\filters\Cors::class,
+                    'cors' => [
+                        'Origin' => ['*'],
+                        'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'PREFLIGHT'],
+                        'Access-Control-Request-Headers' => ['*'],
+                        'Access-Control-Allow-Credentials' => null,
+                        'Access-Control-Max-Age' => 86400,
+                        'Access-Control-Allow-Origin' => ['*'],
+                    ],
+                ],
+                'access' => [
+                    'class' => \yii\filters\AccessControl::class,
+                    'rules' => [
+                        [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view'] ],
+                        [ 'allow' => true, 'roles' => ['@'], 'actions' => ['options', 'preflight'] ],
+                    ],
+                ],
+                'authenticator' => [
+                    'class' => \yii\filters\auth\CompositeAuth::class,
+                    'authMethods' => [
+                        \yii\filters\auth\HttpBearerAuth::class,
+                        \yii\filters\auth\HttpBasicAuth::class,
+                        \yii\filters\auth\QueryParamAuth::class,
+                    ],
+                    'except' => ['OPTIONS', 'PREFLIGHT', 'index', 'view']
+                ]
+            ]
+        );
+    }
+
     public function actionIndex($type = 1)
     {
-        return Category::find()->where(['type' => 1])->all();
+        return Category::find()->all();
     }
 
     public function actionView($id)

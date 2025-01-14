@@ -23,7 +23,7 @@ $('#show-map').on('click', function () {
     if (group.hasClass('show')) {
         window.initMap( 'map', {$position}, 'Building[location]' )
     } else {
-        window.destroyMap()
+        window.destroyMap();
     }
 })
 JS);

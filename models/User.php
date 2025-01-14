@@ -44,6 +44,17 @@ class User extends ActiveRecord implements IdentityInterface
         ];
     }
 
+    public function fields()
+    {
+        return [
+            'id',
+            'username',
+            'email',
+            'access_token',
+            'name',
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -109,6 +120,18 @@ class User extends ActiveRecord implements IdentityInterface
     public function getProfile(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Profile::class, ['id' => 'id']);
+    }
+
+    public function setProfile($data)
+    {
+        $profile = $this->profile;
+        if (isset($profile)) {
+            if ($profile->load() && $profile->save()) {
+                return ["ok" => true];
+            } else {
+                return ["ok" => false];
+            }
+        }
     }
 
     public function getCoworker()

@@ -76,7 +76,7 @@ $this->registerJsFile("https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/s
             </div>
         </div>
 
-        <?= $form->field($model, 'category_id')->dropDownList(ArrayHelper::map(Category::find()->all(), 'id', 'title')) ?>
+        <?= $form->field($model, 'category_id')->dropDownList(ArrayHelper::map(Category::find()->all(), 'id', 'title'))->label(\Yii::t('app', 'Category')) ?>
 
         <?php
         if (!$model->isNewRecord) {

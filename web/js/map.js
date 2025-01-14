@@ -43,7 +43,7 @@ window.initMap = (container, position, formName = undefined) =>
         map.events.add('click', function(event) {
             const coords = event.get('coords')
             if (placemark) {
-                placemark.geometry.setCoordinates(coords)
+                placemark.geometry.setCoordinates(coords);
             } else {
                 placemark = new ymaps.Placemark(coords, {
                     balloonContent: '',

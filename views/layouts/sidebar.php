@@ -33,6 +33,7 @@
 
         <nav class="mt-2">
             <?php
+//            var_dump( \Yii::$app->controller->id );
             echo \hail812\adminlte\widgets\Menu::widget([
                 'items' => [
                     [
@@ -50,23 +51,28 @@
                             [
                                 'label' => \Yii::t('app', 'Categories'),
                                 'icon' => 'layer-group',
-                                'url' => ['/category/index']
+                                'url' => ['/category/index'],
+                                'active' => \Yii::$app->controller->id === 'category',
                             ], [
                                 'label' => \Yii::t('app', 'Materials'),
                                 'icon' => 'crop',
-                                'url' => ['/material/index']
+                                'url' => ['/material/index'],
+                                'active' => \Yii::$app->controller->id === 'material',
                             ], [
                                 'label' => \Yii::t('app', 'Coworkers'),
                                 'icon' => 'splotch',
-                                'url' => ['/coworker/index']
+                                'url' => ['/coworker/index'],
+                                'active' => \Yii::$app->controller->id === 'coworker',
                             ], [
                                 'label' => \Yii::t('app', 'Technique'),
                                 'icon' => 'cube',
-                                'url' => ['/technique/index']
+                                'url' => ['/technique/index'],
+                                'active' => \Yii::$app->controller->id === 'technique',
                             ], [
                                 'label' => \Yii::t('app', 'Equipment'),
                                 'icon' => 'cube',
-                                'url' => ['/equipment/index']
+                                'url' => ['/equipment/index'],
+                                'active' => \Yii::$app->controller->id === 'equipment',
                             ]
                         ]
                     ], [
@@ -80,11 +86,13 @@
                             [
                                 'label' => \Yii::t('app', 'Properties'),
                                 'icon' => '',
-                                'url' => ['/property/index']
+                                'url' => ['/property/index'],
+                                'active' => \Yii::$app->controller->id === 'property',
                             ], [
                                 'label' => \Yii::t('app', 'Dimensions'),
                                 'icon' => '',
-                                'url' => ['/dimension/index']
+                                'url' => ['/dimension/index'],
+                                'active' => \Yii::$app->controller->id === 'dimension',
                             ]
                         ],
                     ]

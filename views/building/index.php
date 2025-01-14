@@ -26,6 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'tableOptions' => [
             'class' => 'table table-striped'
         ],
+        'summary' => false,
         'columns' => [
             'title',
             'location_id',
