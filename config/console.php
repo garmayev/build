@@ -37,6 +37,10 @@ $config = [
                 ],
             ],
         ],
+        'urlManager' => [
+            'baseUrl' => 'https://build.amgcompany.ru/',
+            'hostInfo' => 'https://build.amgcompany.ru',
+        ],
         'db' => $db,
     ],
     'params' => $params,

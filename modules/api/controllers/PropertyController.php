@@ -22,7 +22,6 @@ class PropertyController extends Controller
 
     public function actionByCategory($id = null)
     {
-        \Yii::error($id);
         if (\Yii::$app->request->isPost && isset($_POST['depdrop_all_params'])) {
             $category_id = $_POST['depdrop_all_params']['category_id'];
             $category = Category::findOne($category_id);

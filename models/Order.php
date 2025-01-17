@@ -59,6 +59,9 @@ class Order extends \yii\db\ActiveRecord
         foreach ($this->filters as $filter) {
             $filter->delete();
         }
+        foreach ($this->telegramMessages as $message) {
+            $message->remove();
+        }
         return parent::beforeDelete();
     }
 
@@ -94,6 +97,7 @@ class Order extends \yii\db\ActiveRecord
             'date' => Yii::t('app', 'Date'),
             'typeName' => Yii::t('app', 'Order Type'),
             'comment' => Yii::t('app', 'Comment'),
+            'attachments' => Yii::t('app', 'Attachments'),
         ];
     }
 
@@ -115,7 +119,6 @@ class Order extends \yii\db\ActiveRecord
     public function setAttachments($data)
     {
         $this->save(false);
-        \Yii::error($this->files);
         foreach ($this->files as $item) {
             $attach = new Attachment();
             $attach->file = $item;
@@ -275,6 +278,11 @@ class Order extends \yii\db\ActiveRecord
         return $query;
     }
 
+    public function getTelegramMessages()
+    {
+        return $this->hasMany(TelegramMessage::class, ['order_id' => 'id']);
+    }
+
     public function filterCoworker()
     {
         $query = Coworker::find();
@@ -312,23 +320,23 @@ class Order extends \yii\db\ActiveRecord
                 $message = new TelegramMessage();
                 $data = [
                     'TelegramMessage' => [
-                        'text' => "Order #$this->id",
+                        'text' => $this->generateTelegramText(\Yii::t('app', 'New Order').' #'.$this->id),
                         'chat_id' => $user->chat_id,
                         'order_id' => $this->id,
                         'status' => TelegramMessage::STATUS_NEW,
                         'reply_markup' => json_encode([
                             'inline_keyboard' => [
                                 [
-                                    ["text" => "Ok", "callback_data" => "order_id={$this->id}&action=ok"]
+                                    ["text" => \Yii::t("app", "Agree"), "callback_data" => "order_id={$this->id}&action=ok"]
                                 ], [
-                                    ["text" => "Cancel", "callback_data" => "order_id={$this->id}&action=cancel"]
+                                    ["text" => \Yii::t("app", "Disagree"), "callback_data" => "order_id={$this->id}&action=cancel"]
                                 ]
                             ]
                         ])
                     ]
                 ];
-                if ($message->load($data)) {
-//                    $message->send();
+                if ($message->load($data) && $message->save()) {
+                    $message->send();
 //                    $result[$user->chat_id] = $message->send();
                 }
             } else if ($user->device_id) {
@@ -359,5 +367,29 @@ class Order extends \yii\db\ActiveRecord
     {
         $coworker = Coworker::findOne(['user_id' => $user->id]);
         $this->link('coworkers', $coworker);
+    }
+
+    public function generateTelegramText($header)
+    {
+        $building = $this->building;
+        $location = $building->location;
+        $result = "<b>$header</b>\n\n";
+        $result .= \Yii::t('app', 'Building').": {$building->title}\n";
+        $result .= \Yii::t('app', 'Address').": <a href='https://2gis.ru/geo/{$location->longitude}%2C{$location->latitude}?m={$location->longitude}%2C{$location->latitude}%2F14'>{$location->address}</a>\n";
+        $result .= \Yii::t('app', 'Date').": ".\Yii::$app->formatter->asDate($this->date)."\n";
+        $result .= \Yii::t('app', 'Requirement').":\n";
+        foreach ($this->filters as $filter) {
+            $category = $filter->category;
+            $result .= "\t\t\t\t{$category->title}: {$filter->count}\n";
+            foreach ($filter->requirements as $requirement) {
+                $result .= "\t\t\t\t\t\t\t\t{$requirement->property->title} {$requirement->type} {$requirement->value} {$requirement->dimension->title}\n";
+            }
+        }
+        $result .= \Yii::t('app', 'Comment').": ".$this->comment."\n";
+        $result .= \Yii::t('app', 'Attachments').":\n";
+        foreach ($this->attachments as $attach) {
+            $result .= \yii\helpers\Url::to($attach->url, true)."\n";
+        }
+        return $result;
     }
 }

@@ -17,12 +17,16 @@
  * NOTE: this file must be saved in UTF-8 encoding.
  */
 return [
+    'Account' => 'Аккаунт',
     'Add Filter' => 'Добавить фильтр',
     'Add Requirement' => 'Добавить требования',
     'Add Property' => 'Добавить свойства',
     'Address' => 'Адрес',
+    'Agree' => 'Согласен',
     'Are you sure you want to delete this item?' => 'Вы уверены, что хотите удалить элемент?',
     'Attachments' => 'Вложения',
+    'Biography' => 'Биография',
+    'Birthday' => 'Дата рождения',
     'Building' => 'Объект',
     'Building ID' => '',
     'Buildings' => 'Объекты',
@@ -51,6 +55,7 @@ return [
     'Device' => 'Устройство',
     'Dimension ID' => '',
     'Dimensions' => 'Ед. изм',
+    'Disagree' => 'Отказываюсь',
     'Equal' => 'Равно',
     'Equipment' => 'Оборудование',
     'Filter ID' => '',
@@ -87,10 +92,11 @@ return [
     'Patronymic' => 'Отчество',
     'Please fill out the following fields to login' => 'Пожалуйста, заполните поля для входа',
     'Price' => 'Цена',
+    'Profile' => 'Профиль',
     'Properties' => 'Свойства',
     'Property' => 'Свойство',
     'Property ID' => '',
-    'Requirement' => 'Тербование',
+    'Requirement' => 'Требование',
     'Reset' => '',
     'Save' => 'Сохранить',
     'Search' => 'Поиск',
@@ -102,6 +108,7 @@ return [
     'Technique ID' => '',
     'Techniques' => 'Техники',
     'The requested page does not exist.' => 'Запрашиваемая страница отсутствует',
+    'The building <b>{name}</b> at the address <b>{address}</b> requires:' => 'На объект "<b>{name}</b>" по адресу <i>{address}</i> требуется:',
     'Title' => 'Название',
     'Type' => 'Тип',
     'Update' => 'Обновить',
@@ -115,5 +122,6 @@ return [
     'Update Technique: {name}' => 'Обновить технику: {name}',
     'User ID' => '',
     'Value' => 'Значение',
-    'View Order: {name}' => 'Просмотр заказа: {name}'
+    'View Order: {name}' => 'Просмотр заказа: {name}',
+    'You have agreed to complete the order' => 'Вы согласились на выполнение заказа'
 ];

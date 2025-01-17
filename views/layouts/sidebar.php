@@ -57,7 +57,8 @@
                             ], [
                                 'label' => \Yii::t('app', 'Materials'),
                                 'icon' => 'crop',
-                                'url' => ['/material/index'],
+                                'badge' => '<span class="right badge badge-danger">DEV</span>',
+                                'url' => ['#'],
                                 'active' => \Yii::$app->controller->id === 'material',
                             ], [
                                 'label' => \Yii::t('app', 'Coworkers'),
@@ -67,12 +68,14 @@
                             ], [
                                 'label' => \Yii::t('app', 'Technique'),
                                 'icon' => 'cube',
-                                'url' => ['/technique/index'],
+                                'badge' => '<span class="right badge badge-danger">DEV</span>',
+                                'url' => ['#'],
                                 'active' => \Yii::$app->controller->id === 'technique',
                             ], [
                                 'label' => \Yii::t('app', 'Equipment'),
                                 'icon' => 'cube',
-                                'url' => ['/equipment/index'],
+                                'badge' => '<span class="right badge badge-danger">DEV</span>',
+                                'url' => ['#'],
                                 'active' => \Yii::$app->controller->id === 'equipment',
                             ]
                         ]

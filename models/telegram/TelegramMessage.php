@@ -49,6 +49,7 @@ class TelegramMessage extends ActiveRecord
         $data = [
             "chat_id" => $this->chat_id,
             "text" => $this->text,
+            "parse_mode" => "html",
             "reply_markup" => $this->reply_markup,
         ];
 
@@ -62,27 +63,54 @@ class TelegramMessage extends ActiveRecord
             \Yii::error(curl_error($curl));
         }
         $raw = json_decode($result, true);
-        \Yii::error($raw);
-        $this->id = $raw["result"]["message_id"];
-        $this->save();
-
-        curl_close($curl);
-        return $result;
+        if ($raw["ok"]) {
+            $this->id = $raw["result"]["message_id"];
+            $this->save();
+            curl_close($curl);
+            return $result;
+        } else {
+            \Yii::error($raw);
+            curl_close($curl);
+            return "So,ething wrong";
+        }
     }
 
-    public function edit()
+    public function editKeyboard()
+    {
+        $curl = curl_init();
+        $bot_id = \Yii::$app->params['bot_id'];
+        $data = [
+            "chat_id" => $this->chat_id,
+            "message_id" => $this->id,
+            "reply_markup" => [],
+        ];
+
+        curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/editMessageReplyMarkup");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, false);
+
+        if ( ($result = curl_exec($curl)) === false ) {
+            \Yii::error(curl_error($curl));
+            return curl_error($curl);
+        } else {
+            \Yii::error($result);
+            curl_close($curl);
+            return $result;
+        }
+    }
+
+    public function editText()
     {
         $curl = curl_init();
         $bot_id = \Yii::$app->params['bot_id'];
         $data = [
             "chat_id" => $this->chat_id,
             "text" => $this->text,
+            "parse_mode" => "html",
             "message_id" => $this->id,
         ];
-
-        if ( isset($this->reply_markup) ) {
-            $data["reply_markup"] = $this->reply_markup;
-        }
 
         curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/editMessageText");
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -95,8 +123,10 @@ class TelegramMessage extends ActiveRecord
             return curl_error($curl);
         } else {
             curl_close($curl);
+//            \Yii::error($result);
             return $result;
         }
+
     }
 
     public function remove()

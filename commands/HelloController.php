@@ -31,4 +31,13 @@ class HelloController extends Controller
 
         return ExitCode::OK;
     }
+
+    public function actionTest($order_id)
+    {
+        $order = \app\models\Order::findOne($order_id);
+        echo count($order->telegramMessages)."\n";
+//        $result = $order->notify();
+//        \Yii::error($result);
+//        echo $result;
+    }
 }

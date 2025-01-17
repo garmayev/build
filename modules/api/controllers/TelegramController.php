@@ -35,8 +35,9 @@ class TelegramController extends \yii\web\Controller {
         if (!$order->check()) {
             $order->addCoworker($user);
             $message = TelegramMessage::findOne(['id' => $this->query['callback_query']['message']['message_id']]);
-            if ( $message->load(["TelegramMessage" => ["text" => "You are agree for this order!", "status" => TelegramMessage::STATUS_AGREE, "reply_markup" => null]]) && $message->save() ) {
-                $message->edit();
+            if ( $message->load(["TelegramMessage" => ["text" => $order->generateTelegramText(\Yii::t('app', 'You have agreed to complete the order')." #{$order->id}"), "status" => TelegramMessage::STATUS_AGREE, "reply_markup" => null]]) && $message->save() ) {
+                $message->editText();
+//                $message->editKeyboard();
             } else {
                 \Yii::error($message->getErrorSummary(true));
             }
@@ -48,6 +49,7 @@ class TelegramController extends \yii\web\Controller {
         } else {
             $messages = TelegramMessage::find()->where(['order_id' => $order->id])->andWhere(['status' => TelegramMessage::STATUS_NEW])->all();
         }
+        return [];
     }
 
     private function cancel()

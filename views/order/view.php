@@ -30,18 +30,19 @@ echo DetailView::widget([
             }
         ],
         'typeName',
+        'comment',
         [
             'attribute' => 'attachments',
+            'label' => \Yii::t('app', 'Attachments'),
             'format' => 'raw',
             'value' => function (Order $model) {
                 $result = "";
                 foreach ($model->attachments as $attachment) {
-                    $result .= Html::tag('p', Html::a($attachment->url, $attachment->url));
+                    $result .= Html::tag('p', Html::a($attachment->url, $attachment->url, ['target' => '_blank']));
                 }
                 return $result;
             }
         ],
-        'comment',
     ],
     'options' => [
         'class' => 'table table-striped'
@@ -91,7 +92,21 @@ if (count($data)) {
         ]),
         'summary' => false,
         'columns' => [
-            'user.name'
+            [
+                'attribute' => 'user.name',
+                'label' => \Yii::t('app', 'Coworkers'),
+            ], [
+                'attribute' => 'coworkerProperties',
+                'label' => \Yii::t('app', 'Properties'),
+                'format' => 'raw',
+                'value' => function (app\models\Coworker $model) {
+                    $result = "";
+                    foreach ($model->coworkerProperties as $coworkerProperty) {
+                        $result .= Html::tag("p", "{$coworkerProperty->property->title} {$coworkerProperty->value} {$coworkerProperty->dimension->title}");
+                    }
+                    return $result;
+                }
+            ],
         ],
         'tableOptions' => [
             'class' => 'table table-striped'

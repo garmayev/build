@@ -25,6 +25,7 @@ echo GridView::widget([
     'columns' => [
         [
             'attribute' => 'id',
+            'label' => '#',
             'value' => function (Order $model) {
                 return "#{$model->id}";
             }
