@@ -5,6 +5,7 @@ namespace app\models;
 use app\models\telegram\TelegramMessage;
 use Yii;
 use yii\base\InvalidConfigException;
+use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
 use yii\web\UploadedFile;
 
@@ -45,6 +46,17 @@ class Order extends \yii\db\ActiveRecord
     const TYPE_COWORKER = 1;
     const TYPE_MATERIAL = 2;
     const TYPE_TECHNIQUE = 3;
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => TimestampBehavior::class,
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => false
+            ]
+        ];
+    }
 
     /**
      * {@inheritdoc}
