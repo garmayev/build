@@ -1,14 +1,15 @@
 <?php
 
 use app\models\Coworker;
-use app\models\Dimension;
-use app\models\Property;
+use app\models\CoworkerProperty;
+use kartik\depdrop\DepDrop;
+use kartik\select2\Select2;
+use yii\bootstrap4\Modal;
 use yii\helpers\Html;
-use yii\helpers\Json;
+use yii\helpers\Url;
+use yii\web\JsExpression;
 use yii\web\View;
 use yii\widgets\ActiveForm;
-use app\models\Category;
-use yii\helpers\ArrayHelper;
 
 /**
  * @var View $this
@@ -20,232 +21,177 @@ $this->registerCssFile("https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css
 $this->registerJsFile("https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js", [
     'depends' => \yii\web\JqueryAsset::class
 ]);
+$terms = new JsExpression('function(params) { return {q:params.term}; }');
 ?>
-
-    <div class="coworker-form">
-
-        <?php $form = ActiveForm::begin(); ?>
-
-        <?= $form->field($model, 'user_id')->dropDownList(
-            ArrayHelper::map(\app\models\User::find()->all(), 'id', 'name')
-        )->label(false) ?>
-
-        <div id="new">
-            <div class="row" id="user">
-                <div class="col-4">
-
-                    <?= $form->field($model, 'user[profile][first_name]')->textInput()->label(\Yii::t('app', 'First Name')) ?>
-
-                </div>
-                <div class="col-4">
-
-                    <?= $form->field($model, 'user[profile][last_name]')->textInput()->label(\Yii::t('app', 'Last Name')) ?>
-
-                </div>
-                <div class="col-4">
-
-                    <?= $form->field($model, 'user[profile][patronymic]')->textInput()->label(\Yii::t('app', 'Patronymic')) ?>
-
-                </div>
-            </div>
-            <div class="row" id="profile">
+    <div class="nav nav-tabs" id="tabs" role="tabList">
+        <a class="nav-link active" href="#account" data-toggle="tab" role="tab" aria-selected="true">
+            <?= \Yii::t('app', 'Account') ?>
+        </a>
+        <a class="nav-link <?= ($model->isNewRecord) ? 'disabled' : '' ?>" href="#profile" data-toggle="tab" role="tab"
+           aria-selected="false">
+            <?= \Yii::t('app', 'Profile') ?>
+        </a>
+        <a class="nav-link <?= ($model->isNewRecord) ? 'disabled' : '' ?>" href="#properties" data-toggle="tab"
+           role="tab" aria-selected="false">
+            <?= \Yii::t('app', 'Properties') ?>
+        </a>
+    </div>
+    <div class="tab-content mb-3" id="tabContent">
+        <div class="tab-pane fade show active" id="account">
+            <?php
+            $userModel = new \app\models\forms\UserRegisterForm();
+            $form = ActiveForm::begin([
+                'enableAjaxValidation' => true,
+                'validationUrl' => Url::toRoute(['/user/validate-register'])
+            ]);
+            ?>
+            <div class="p-3">
                 <?php
                 $isNew = $model->isNewRecord;
-                ?>
-                <div class="col-<?= $isNew ? 4 : 6 ?>">
-
-                    <?= $form->field($model, 'user[username]')->textInput(['disabled' => isset($model->user)])->label(\Yii::t('app', 'Login')) ?>
-
-                </div>
-                <div class="col-<?= $isNew ? 4 : 6 ?>">
-
-                    <?= $form->field($model, 'user[email]')->textInput(['disabled' => isset($model->user)])->label(\Yii::t('app', 'Email')) ?>
-
-                </div>
-                <?php
+                echo $form->field($userModel, 'username')->textInput()->label(\Yii::t('app', 'Username'));
+                echo $form->field($userModel, 'email')->textInput()->label(\Yii::t('app', 'Email'));
                 if ($isNew) {
-                    ?>
-                    <div class="col-4">
-
-                        <?= $form->field($model, 'user[password]')->passwordInput(['disabled' => isset($model->user)])->label(\Yii::t('app', 'Password')) ?>
-
-                    </div>
-                    <?php
+                    echo $form->field($userModel, 'new_password')->passwordInput()->label(\Yii::t('app', 'New Password'));
                 }
                 ?>
+                <p class="d-flex justify-content-end">
+                    <a class="btn btn-success next-submit" href="#profile" data-target="#profile" data-toggle="tab"
+                       role="tab" aria-selected="false">
+                        <?= \Yii::t('app', 'Next') ?>
+                    </a>
+                </p>
             </div>
-        </div>
-
-        <?= $form->field($model, 'category_id')->dropDownList(ArrayHelper::map(Category::find()->all(), 'id', 'title'))->label(\Yii::t('app', 'Category')) ?>
-
-        <?php
-        if (!$model->isNewRecord) {
-            ?>
-
-            <div class="form-group">
-                <span class="btn btn-primary" id="add-property"><?= \Yii::t('app', 'Add Property') ?></span>
-            </div>
-
-            <div id="property-list">
-                <?php
-                foreach ($model->coworkerProperties as $key => $coworkerProperty) {
-                    ?>
-                    <div class="row" data-key="<?= $key ?>">
-                        <div class="col-4">
-                            <?= $form
-                                ->field($model, "coworkerProperties[$key][property_id]")
-                                ->dropDownList(ArrayHelper::map(Property::find()->all(), 'id', 'title'), [
-                                    'id' => "coworker-properties-$key-property-property_id",
-                                    'class' => 'property form-control'
-                                ])
-                            ?>
-                        </div>
-                        <div class="col-4">
-                            <?= $form->field($model, "coworkerProperties[$key][value]")->textInput([
-                                'type' => 'number',
-                                'class' => 'value form-control',
-                                'id' => "coworker-properties-$key-value"
-                            ]) ?>
-                        </div>
-                        <div class="col-3">
-                            <?= $form
-                                ->field($model, "coworkerProperties[$key][dimension_id]")
-                                ->dropDownList(ArrayHelper::map(Dimension::find()->all(), 'id', 'title'), [
-                                    'id' => "coworker-properties-$key-property-dimension_id",
-                                    'class' => 'dimension form-control'
-                                ]) ?>
-                        </div>
-                        <div class="col-1 d-flex justify-content-center align-items-center">
-                            <a href="#" class="fas fa-trash"></a>
-                        </div>
-                    </div>
-                    <?php
-                }
-                ?>
-            </div>
-
             <?php
-        }
-        ?>
-
-        <?= $form->field($model, 'isset_user')->checkbox(['label' => \Yii::t('app', 'Already registered?'), 'class' => 'mb-3']) ?>
-
-        <div class="form-group">
-            <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>
+            ActiveForm::end();
+            ?>
         </div>
+        <div class="tab-pane fade" id="profile">
+            <?php
+            $form = ActiveForm::begin([
+                'enableAjaxValidation' => true,
+                'validationUrl' => Url::toRoute(['/user/profile-register'])
+            ]);
+            ?>
+            <div class="p-3">
+                <?php
+                echo $form->field($model, 'user[profile][first_name]')->textInput()->label(\Yii::t('app', 'First Name'));
+                echo $form->field($model, 'user[profile][last_name]')->textInput()->label(\Yii::t('app', 'Last Name'));
+                echo $form->field($model, 'user[profile][patronymic]')->textInput()->label(\Yii::t('app', 'Patronymic'));
+                echo $form->field($model, 'user[profile][birthday]')->textInput(['type' => 'date'])->label(\Yii::t('app', 'Birthday'));
+                echo $form->field($model, 'user[profile][biography]')->textarea()->label(\Yii::t('app', 'Biography'));
+                ?>
+                <p class="d-flex justify-content-between">
+                    <a class="btn btn-default next-submit" href="#account" data-target="#account" data-toggle="tab"
+                       role="tab" aria-selected="false">
+                        <?= \Yii::t('app', 'Back') ?>
+                    </a>
+                    <a class="btn btn-success next-submit" href="#properties" data-target="#properties"
+                       data-toggle="tab"
+                       role="tab" aria-selected="false">
+                        <?= \Yii::t('app', 'Next') ?>
+                    </a>
+                </p>
+            </div>
+            <?php
+            ActiveForm::end();
+            ?>
+        </div>
+        <div class="tab-pane fade" id="properties">
+            <div class="p-3">
+                <?php
+                echo Html::beginTag('div', ['class' => 'form-group']);
+                echo Html::label(\Yii::t('app', 'Category'), 'category_id', ['class' => 'control-label']);
+                echo Select2::widget([
+                    'id' => 'category_id',
+                    'name' => 'category_id',
+                    'pluginOptions' => [
+                        'ajax' => [
+                            'url' => '/api/category/index',
+                            'dataType' => 'json',
+                            'data' => $terms
+                        ],
+                        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                        'templateResult' => new JsExpression('function(city) { return city.title; }'),
+                        'templateSelection' => new JsExpression('function (city) { return city.title; }'),
+                    ]
+                ]);
+                echo Html::endTag('div');
 
-        <?php ActiveForm::end(); ?>
-        <div class="row example" id="example">
-            <div class="col-4">
-                <?= $form
-                    ->field($model, 'coworkerProperties[][property_id]')
-                    ->dropDownList(ArrayHelper::map(Property::find()->all(), 'id', 'title'), [
-                        'id' => "coworker-properties--property_id",
-                        'class' => 'property_example form-control',
-                        'style' => 'display: none;'
-                    ]) ?>
-            </div>
-            <div class="col-4">
-                <?= $form
-                    ->field($model, 'coworkerProperties[][value]')
-                    ->textInput([
-                        'type' => 'number',
-                        'class' => 'value_example form-control',
-                        'id' => "coworker-properties--value"
-                    ]) ?>
-            </div>
-            <div class="col-3">
-                <?= $form
-                    ->field($model, 'coworkerProperties[][dimension_id]')
-                    ->dropDownList(ArrayHelper::map(Dimension::find()->all(), 'id', 'title'), [
-                        'id' => "coworker-properties--property-dimension_id",
-                        'class' => 'dimension_example form-control'
-                    ]) ?>
-            </div>
-            <div class="col-1 d-flex justify-content-center align-items-center">
-                <a href="#" class="fas fa-trash"></a>
+                echo Html::tag('button', \Yii::t('app', 'Add Property'), [
+                    'class' => 'btn btn-primary mb-3',
+                    'type' => 'button',
+                    'data' => [
+                        'toggle' => 'modal',
+                        'target' => '#addProperty',
+                    ]
+                ]);
+                ?>
+                <div id="dynamicTable"></div>
+                <p class="w-100 d-flex justify-content-between">
+                    <a class="btn btn-default next-submit" href="#profile" data-target="#profile" data-toggle="tab"
+                       role="tab" aria-selected="false">
+                        <?= \Yii::t('app', 'Back') ?>
+                    </a>
+                    <button class="btn btn-success"><?= \Yii::t('app', 'Save') ?></button>
+                </p>
             </div>
         </div>
     </div>
 <?php
-$this->registerCss(<<<CSS
-.field-coworker-user_id {
-    display: none;
-}
-.carousel-inner {
-    display: block;
-    height: 260px;
-}
-#example {
-    display: none;
-}
-.select2-container {
-    width: 100% !important;
-}
-.select2-container:nth-child(2) {
-    display: none;
-}
-CSS
-);
-
-$this->registerJsVar('index', count($model->properties));
-$t = Json::encode([
-    'property.placeholder' => \Yii::t('app', 'Search for a category ...')
+$cProperty = new CoworkerProperty();
+Modal::begin([
+    'id' => 'addProperty',
+    'title' => \Yii::t('app', 'Add Property'),
+    'size' => Modal::SIZE_LARGE,
+    'footer' => Html::beginTag('div', ['class' => 'w-100 d-flex justify-content-between']).
+        Html::tag('button', \Yii::t('app', 'Cancel'), ['class' => 'btn btn-secondary', 'type' => 'button', 'data-dismiss' => 'modal']).
+        Html::tag('button', \Yii::t('app', 'Apply'), ['class' => 'btn btn-success', 'type' => 'button', 'id' => 'btn-apply']).
+        Html::endTag('div')
 ]);
 
+$propertyForm = ActiveForm::begin();
+
+echo $propertyForm->field($cProperty, 'property_id')->widget(DepDrop::class, [
+    'pluginOptions' => [
+        'depends' => [
+            'category_id',
+        ],
+        'url' => "/api/property/by-category",
+    ]
+])->label(\Yii::t('app', 'Property'));
+
+echo $propertyForm->field($cProperty, 'value')->textInput()->label(\Yii::t('app', 'Value'));
+
+echo $propertyForm->field($cProperty, 'dimension_id')->widget(DepDrop::class, [
+    'type' => DepDrop::TYPE_SELECT2,
+    'pluginOptions' => [
+        'depends' => [Html::getInputId($cProperty, 'property_id')],
+        'url' => "/api/dimension/by-property",
+    ]
+])->label(\Yii::t('app', 'Dimension'));
+
+ActiveForm::end();
+
+Modal::end();
+
 $this->registerJs(<<<JS
-yii.t = $t
-
-const propertySelectConfig = {
-    ajax: {
-        url: `/api/property/by-category?id=` + $('#coworker-category_id').val(),
-        dataType: 'json'
-    },
-    placeholder: yii.t['property.placeholder'],
-    minimumResultsForSearch: Infinity,
-    templateSelection: (item) => {
-        return item.text;
-    },
-    templateResult: (item) => {
-        return item.title
-    }
-};
-
-$(".property").select2(propertySelectConfig);
-
-const timeout = 500;
-const checkbox = $('#coworker-isset_user');
-
-function removeItem(e)
-{
-    $(`.example[data-key=\${\$(e.target).attr('data-target')}]`).remove();
-}
-$('.fa-trash').on('click', removeItem)
-
-$("#add-property").on("click", function () {
-    let clone = $("#example").clone().attr('id', '');
-    clone.attr('data-key', index);
-    clone.find('.fa-trash').attr('data-target', index).on('click', removeItem)
-    clone.find('.property_example').attr('id', `coworker-properties-\${index}-property_id`).toggleClass('property_example').toggleClass('property').attr('name', `Coworker[coworkerProperties][\${index}][property_id]`).select2(propertySelectConfig)
-    clone.find('.value_example').attr('id', `coworker-properties-\${index}-value`).attr('name', `Coworker[coworkerProperties][\${index}][value]`).toggleClass('value_example').toggleClass('value')
-    clone.find('.dimension_example').attr('id', `coworker-properties-\${index}-dimension_id`).attr('name', `Coworker[coworkerProperties][\${index}][dimension_id]`).toggleClass('dimension_example').toggleClass('dimension')
-    index++;
-    $("#property-list").append(clone)
-})
-
-function clickHandler(value) {
-    if (value) {
-        $('.field-coworker-user_id').show(timeout);
-        $('#new').hide(timeout);
-    } else {
-        $('.field-coworker-user_id').hide(timeout);
-        $('#new').show(timeout);
-    }
-}
-
-clickHandler(checkbox.is(":checked"));
-checkbox.on('change', function(e) {
-    clickHandler($(this).is(":checked"))
+$(() => {
+    $('#btn-apply').click(function () {
+        const form = $('.modal').find('form input, form select');
+    })
+    $(".next-submit").click(function() {
+        const target = $(this).attr("data-target");
+        $(`[href="\${target}"]`).removeClass("disabled").tab("show");
+    })
 })
 JS
+);
+$this->registerCss(<<<CSS
+.tab-pane {
+    background-color: #fff;
+    border-left: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+}
+CSS
 );

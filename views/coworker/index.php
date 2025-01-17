@@ -12,6 +12,12 @@ use yii\grid\GridView;
 
 $this->title = Yii::t('app', 'Coworkers');
 $this->params['breadcrumbs'][] = $this->title;
+$this->registerCss(<<<CSS
+.table p {
+    padding: 0;
+    margin: 0;
+}
+CSS);
 ?>
 <div class="coworker-index">
 
@@ -23,7 +29,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
         'summary' => false,
         'tableOptions' => [
             'class' => 'table table-striped',
@@ -38,6 +43,26 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             'category.title',
+            [
+                'attribute' => 'coworkerProperties',
+                'label' => \Yii::t('app', 'Properties'),
+                'format' => 'raw',
+                'value' => function (Coworker $model) {
+                    $result = "";
+                    foreach ($model->coworkerProperties as $coworkerProperty) {
+                        $result .= "<p>";
+                        if ($coworkerProperty->property) {
+                            $result .= $coworkerProperty->property->title;
+                        }
+                        $result .= " $coworkerProperty->value";
+                        if ($coworkerProperty->dimension) {
+                            $result .= " {$coworkerProperty->dimension->title}";
+                        }
+                        $result .= "</p>";
+                    }
+                    return $result;
+                }
+            ],
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Coworker $model, $key, $index, $column) {

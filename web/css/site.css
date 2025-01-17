@@ -86,3 +86,8 @@ a.desc:after {
 .form-group {
     margin-bottom: 1rem;
 }
+
+.table p {
+    padding: 0;
+    margin: 0;
+}

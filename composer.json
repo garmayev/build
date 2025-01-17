@@ -22,7 +22,9 @@
         "bower-asset/font-awesome": "^6.3",
         "ext-curl": "*",
         "kartik-v/yii2-widget-select2": "dev-master",
-      "ext-json": "*"
+      "ext-json": "*",
+        "kartik-v/yii2-widget-depdrop": "dev-master",
+        "kartik-v/yii2-widget-datetimepicker": "dev-master"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

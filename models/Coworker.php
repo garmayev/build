@@ -80,7 +80,6 @@ class Coworker extends \yii\db\ActiveRecord
         foreach ($this->coworkerProperties as $coworkerProperty) {
             $this->unlink('coworkerProperties', $coworkerProperty, true);
         }
-        \Yii::error($data);
         foreach ($data as $item) {
             $link = new CoworkerProperty(array_merge($item, ['coworker_id' => $this->id]));
             if ($link->save()) {
@@ -143,9 +142,7 @@ class Coworker extends \yii\db\ActiveRecord
     {
         $this->save(false);
         $user = new User();
-        if (!isset($data['password'])) {
-            $data['password_hash'] = \Yii::$app->security->generatePasswordHash( \Yii::$app->security->generateRandomString(16) );
-        } else {
+        if (isset($data['password'])) {
             $data['password_hash'] = \Yii::$app->security->generatePasswordHash( $data['password'] );
         }
         if ($user->load(['User' => $data]) && $user->save()) {

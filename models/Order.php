@@ -6,6 +6,7 @@ use app\models\telegram\TelegramMessage;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\db\ActiveQuery;
+use yii\web\UploadedFile;
 
 /**
  * This is the model class for table "order".
@@ -15,6 +16,7 @@ use yii\db\ActiveQuery;
  * @property int|null $building_id
  * @property int|null $date
  * @property int|null $type
+ * @property string $comment
  *
  * @property string $statusTitle
  * @property array $statusList
@@ -28,9 +30,13 @@ use yii\db\ActiveQuery;
  * @property OrderMaterial[] $orderMaterials
  * @property OrderTechnique[] $orderTechniques
  * @property Technique[] $techniques
+ * @property Attachment[] $attachments
  */
 class Order extends \yii\db\ActiveRecord
 {
+    public $datetime;
+    public $files;
+
     const STATUS_NEW = 0;
     const STATUS_PROCESS = 1;
     const STATUS_BUILD = 2;
@@ -56,6 +62,13 @@ class Order extends \yii\db\ActiveRecord
         return parent::beforeDelete();
     }
 
+    public function beforeValidate()
+    {
+        $this->date = \Yii::$app->formatter->asTimestamp($this->datetime);
+        $this->attachments = $this->files;
+        return parent::beforeValidate();
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -64,7 +77,8 @@ class Order extends \yii\db\ActiveRecord
         return [
             [['status', 'building_id', 'date', 'type'], 'integer'],
             [['building_id'], 'exist', 'skipOnError' => true, 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
-            [['filters'], 'safe'],
+            [['comment'], 'string'],
+            [['filters', 'datetime', 'attachments'], 'safe'],
         ];
     }
 
@@ -78,6 +92,8 @@ class Order extends \yii\db\ActiveRecord
             'status' => Yii::t('app', 'Status'),
             'building_id' => Yii::t('app', 'Building ID'),
             'date' => Yii::t('app', 'Date'),
+            'typeName' => Yii::t('app', 'Order Type'),
+            'comment' => Yii::t('app', 'Comment'),
         ];
     }
 
@@ -89,6 +105,25 @@ class Order extends \yii\db\ActiveRecord
     public function getBuilding(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Building::class, ['id' => 'building_id']);
+    }
+
+    public function getAttachments()
+    {
+        return $this->hasMany(Attachment::class, ['target_id' => 'id']);
+    }
+
+    public function setAttachments($data)
+    {
+        $this->save(false);
+        \Yii::error($this->files);
+        foreach ($this->files as $item) {
+            $attach = new Attachment();
+            $attach->file = $item;
+            $attach->target_class = Order::className();
+            if ($attach->upload() && $attach->save()) {
+                $this->link('attachments', $attach, ['target_class' => Order::className()]);
+            }
+        }
     }
 
     /**
@@ -132,6 +167,19 @@ class Order extends \yii\db\ActiveRecord
             Order::STATUS_BUILD => \Yii::t('app', 'Order building'),
             Order::STATUS_COMPLETE => \Yii::t('app', 'Order completed'),
         ];
+    }
+
+    public function getTypeName($type = null)
+    {
+        $list = [
+            Order::TYPE_COWORKER => \Yii::t('app', 'Coworker'),
+            Order::TYPE_MATERIAL => \Yii::t('app', 'Material'),
+            Order::TYPE_TECHNIQUE => \Yii::t('app', 'Technique')
+        ];
+        if (isset($type)) {
+            return $list[$type];
+        }
+        return $list[$this->type];
     }
 
     public function setFilters($data)
@@ -281,7 +329,7 @@ class Order extends \yii\db\ActiveRecord
                 ];
                 if ($message->load($data)) {
 //                    $message->send();
-                    $result[$user->chat_id] = $message->send();
+//                    $result[$user->chat_id] = $message->send();
                 }
             } else if ($user->device_id) {
                 \Yii::error('Push notification');
@@ -290,23 +338,24 @@ class Order extends \yii\db\ActiveRecord
         return $result;
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function check()
     {
+        // TODO: Реализовать проверку соответствия сотрудника и требований к заказу
+        // TODO: Реализовать пул (список) согласившихся сотрудников
+        // TODO: Через промежуток времени проверить "заполненность" заказа
         switch ( $this->type ) {
             case Order::TYPE_COWORKER:
-//                $query = Coworker::find()->where(['user_id' => $target->id])->andWhere(['category_id' => \yii\helpers\ArrayHelper::map($this->filters, 'category_id', 'category_id')])->all();
-//                foreach ( $this->filters as $filter ) {
-//                    if ()
-//                }
                 $f = $this->getFilters()->joinWith('orderFilters')->andWhere(['order_filter.order_id' => $this->id])->one();
                 $count = OrderCoworker::find()->where(['order_id' => $this->id])->all();
                 break;
         }
-//        return $f;
         return $f->count === count($count);
     }
 
-    public function addCoworker($user) 
+    public function addCoworker($user)
     {
         $coworker = Coworker::findOne(['user_id' => $user->id]);
         $this->link('coworkers', $coworker);

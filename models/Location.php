@@ -24,7 +24,7 @@ class Location extends \yii\db\ActiveRecord
             'blameable' => [
                 'class' => BlameableBehavior::class,
                 'createdByAttribute' => 'user_id',
-                'updateByAttribute' => false,
+                'updatedByAttribute' => false,
                 'attributes' => [
                     ActiveRecord::EVENT_BEFORE_VALIDATE => ['user_id']
                 ]

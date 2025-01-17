@@ -7,6 +7,7 @@ use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
+use yii\web\UploadedFile;
 
 class OrderController extends Controller
 {
@@ -44,6 +45,7 @@ class OrderController extends Controller
         }
 
         if (\Yii::$app->request->isPost) {
+            $model->files = UploadedFile::getInstances($model, 'files');
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
                 $model->notify();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));

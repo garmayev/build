@@ -61,20 +61,20 @@ echo GridView::widget([
             'class' => \yii\grid\ActionColumn::class,
             'buttons' => [
                 'view' => function ($url, $model, $key) {
-                    return Html::a('view',$url);
+                    return Html::a(Html::tag('i', '', ['class' => 'fas fa-eye']),$url);
                 },
                 'update' => function ($url, $model, $key) {
                     switch ($model->type) {
                         case Order::TYPE_COWORKER:
-                            return Html::a('update', ['coworker', 'id' => $model->id]);
+                            return Html::a(Html::tag('i', '', ['class' => 'fa-solid fa-pencil']), ['coworker', 'id' => $model->id]);
                         case Order::TYPE_MATERIAL:
-                            return Html::a('update', ['material', 'id' => $model->id]);
+                            return Html::a(Html::tag('i', '', ['class' => 'fas fa-pencil']), ['material', 'id' => $model->id]);
                         case Order::TYPE_TECHNIQUE:
-                            return Html::a('update', ['technique', 'id' => $model->id]);
+                            return Html::a(Html::tag('i', '', ['class' => 'fas fa-pencil']), ['technique', 'id' => $model->id]);
                     }
                 },
                 'delete' => function ($url, $model, $key) {
-                    return Html::a('delete',$url);
+                    return Html::a(Html::tag('i', '', ['class' => 'fas fa-trash']),$url);
                 },
             ]
         ]

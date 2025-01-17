@@ -50,6 +50,7 @@ class Building extends ActiveRecord
             [['title'], 'string', 'max' => 255],
             [['location_id'], 'exist', 'skipOnError' => true, 'targetClass' => Location::class, 'targetAttribute' => ['location_id' => 'id']],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
+            [['location'], 'safe']
         ];
     }
 
@@ -73,6 +74,26 @@ class Building extends ActiveRecord
     public function getLocation()
     {
         return $this->hasOne(Location::class, ['id' => 'location_id']);
+    }
+
+    public function setLocation($data)
+    {
+        $location = Location::find()
+            ->where(['address' => $data['address']])
+            ->andWhere(['latitude' => $data['latitude']])
+            ->andWhere(['longitude' => $data['longitude']])
+            ->one();
+        $this->save(false);
+        if ($location) {
+            $this->link('location', $location);
+        } else {
+            $location = new Location($data);
+            if ($location->save()) {
+                $this->link('location', $location);
+            } else {
+                \Yii::error($location->getErrorSummary(true));
+            }
+        }
     }
 
     /**

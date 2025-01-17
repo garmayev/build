@@ -1,38 +1,38 @@
-const Helper = {
-    createElement: (tagName, attributes = {}, events = {}) => {
-        const el = document.createElement(tagName);
-        if (attributes) {
-            for (const key in attributes) {
-                el.setAttribute(key, attributes[key]);
+const Helper =
+    {
+        createElement: (tagName, attributes = {}, events = {}) => {
+            const el = document.createElement(tagName);
+            if (attributes) {
+                for (const key in attributes) {
+                    el.setAttribute(key, attributes[key]);
+                }
             }
-        }
-        if (events) {
-            for (const key in events) {
-                el.addEventListener(key, events[key]);
+            if (events) {
+                for (const key in events) {
+                    el.addEventListener(key, events[key]);
+                }
             }
-        }
-        return el;
-    },
-    resolve: (path, obj) => {
-        if (path) {
-            return path.split('.').reduce(function (prev, curr) {
-                return prev ? prev[curr] : null
-            }, obj || self)
-        }
-    },
-    findById: (array, id) => {
-        let selected = null;
-        for (let i = 0; i < array.length; i++) {
-            if (array[i].id === id) {
-                selected = array[i];
+            return el;
+        },
+        resolve: (path, obj) => {
+            if (path) {
+                return path.split('.').reduce(function (prev, curr) {
+                    return prev ? prev[curr] : null
+                }, obj || self)
             }
+        },
+        findById: (array, id) => {
+            let selected = null;
+            for (let i = 0; i < array.length; i++) {
+                if (array[i].id === id) {
+                    selected = array[i];
+                }
+            }
+            return selected;
         }
-        return selected;
     }
-}
 
-function Requirement({propertyUrl, categoryId, setRequirements, requirements, dataKey})
-{
+function Requirement({propertyUrl, categoryId, setRequirements, requirements, dataKey}) {
     const types = [
         yii.t['modal.type.less'],
         yii.t['modal.type.more'],
@@ -51,11 +51,13 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
             .then(response => response.json())
             .then(result => {
                 const res = result.results;
-                setPropertyList(res);
-                setSelectedProperty(res[0])
-                setSelectedType(types[0]);
-                setDimensionList(res[0].dimensions)
-                setSelectedDimension(res[0].dimensions[0])
+                if (res) {
+                    setPropertyList(res);
+                    setSelectedProperty(res[0])
+                    setSelectedType(types[0]);
+                    setDimensionList(res[0].dimensions)
+                    setSelectedDimension(res[0].dimensions[0])
+                }
             })
     }, [categoryId])
 
@@ -65,7 +67,7 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
         setRequirements(requirements.map((item, index) => {
             // console.log(dataKey, index)
             return index === dataKey ? my : item
-        } ))
+        }))
     }, [selectedProperty, selectedType, selectedDimension, value]);
 
     return (
@@ -75,7 +77,7 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
                     setSelectedProperty(Helper.findById(propertyList, Number.parseInt(e.target.value)));
                     // setRequirements(dataKey, {property: Helper.findById(propertyList, Number.parseInt(e.target.value))})
                 }}>
-                    {propertyList.map((property, index) => (
+                    {propertyList && propertyList.map((property, index) => (
                         <option key={index} value={property.id}>{property.title}</option>))}
                 </select>
             </div>
@@ -84,7 +86,7 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
                     setSelectedType(types[e.target.value])
                     // setRequirements(dataKey, {type: types[e.target.value]})
                 }}>
-                    {types.map((type, index) => (
+                    {types && types.map((type, index) => (
                         <option key={index} value={index}>{type}</option>))}
                 </select>
             </div>
@@ -99,7 +101,7 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
                     setSelectedDimension(Helper.findById(dimensionList, Number.parseInt(e.target.value)));
                     // setRequirements(dataKey, {dimension: Helper.findById(dimensionList, Number.parseInt(e.target.value))})
                 }}>
-                    {dimensionList.map((dimension, index) => (
+                    {dimensionList && dimensionList.map((dimension, index) => (
                         <option key={index} value={dimension.id}>{dimension.title}</option>))}
                 </select>
             </div>
@@ -119,8 +121,7 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
  * @returns {JSX.Element}
  * @constructor
  */
-function Table({data, header, formName})
-{
+function Table({data, header, formName}) {
     const [list, setList] = React.useState(data);
 
     return (
@@ -166,9 +167,9 @@ function Table({data, header, formName})
                                         value = Helper.resolve(head.inputValue, item);
                                         let text = Helper.resolve(head.key, item)
                                         result = <p>{text}
-                                                    <input type={'hidden'} name={`${formName}[${index}]${head.inputName}`}
-                                                        value={value}/>
-                                                </p>;
+                                            <input type={'hidden'} name={`${formName}[${index}]${head.inputName}`}
+                                                   value={value}/>
+                                        </p>;
                                     }
                                     return (
                                         <td key={`column-${index}-${headIndex}`}>{result}</td>
@@ -188,8 +189,7 @@ function Table({data, header, formName})
     )
 }
 
-function Modal({categoryUrl, propertyUrl, onClick})
-{
+function Modal({categoryUrl, propertyUrl, onClick}) {
     const [categoryList, setCategoryList] = React.useState([]);
     const [requirements, setRequirements] = React.useState([]);
     const [category, _setCategory] = React.useState({});
@@ -206,8 +206,9 @@ function Modal({categoryUrl, propertyUrl, onClick})
         fetch(categoryUrl)
             .then(response => response.json())
             .then(result => {
-                setCategoryList(result);
-                setCategory(result[0]);
+                console.log(result)
+                setCategoryList(result.results);
+                setCategory(result.results[0]);
             })
     }, [])
     React.useEffect(() => {
@@ -238,35 +239,39 @@ function Modal({categoryUrl, propertyUrl, onClick})
                                 <select className={'form-control'} onChange={(e) => {
                                     const t = Helper.findById(categoryList, Number.parseInt(e.target.value));
                                     setCategory(t)
-                                }} >
-                                    {categoryList.map((item, index) => (
+                                }}>
+                                    {categoryList && categoryList.map((item, index) => (
                                         <option key={index} value={item.id}>{item.title}</option>))}
                                 </select>
                             </div>
                             <div className={'form-group'}>
                                 <input type={'number'} className={'form-control'} value={count} onChange={(event) => {
                                     setCount(event.target.value);
-                                }} />
+                                }}/>
                             </div>
                             <div className={'form-group'}>
                                 <button type={'button'} className={'btn btn-primary'} onClick={() => {
-                                    setRequirements([ ...requirements, {}]);
+                                    setRequirements([...requirements, {}]);
                                 }}>{yii.t['modal.addRequirement']}</button>
                             </div>
-                            {requirements.map((item, index) => (
+                            {requirements && requirements.map((item, index) => (
                                 <Requirement
                                     key={index}
                                     dataKey={index}
                                     categoryId={category.id}
                                     propertyUrl={propertyUrl}
                                     requirements={requirements}
-                                    setRequirements={setRequirements} />
+                                    setRequirements={setRequirements}/>
                             ))}
                         </div>
                         <div className={'modal-footer'}>
                             <button type={'button'} className={'btn btn-success'} data-dismiss={'modal'}
                                     onClick={() => {
-                                        onClick?.call(this, {category: category, count: count, requirements: requirements})
+                                        onClick?.call(this, {
+                                            category: category,
+                                            count: count,
+                                            requirements: requirements
+                                        })
                                     }}>{yii.t['modal.save']}</button>
                             <button type={'button'} className={'btn btn-danger'}
                                     data-dismiss={'modal'}>{yii.t['modal.close']}</button>

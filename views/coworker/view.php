@@ -27,66 +27,99 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
         ]) ?>
     </p>
-
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            [
-                'attribute' => 'user_id',
-                'label' => \Yii::t('app', 'Username'),
-                'value' => function (Coworker $model) {
-                    return $model->user->name;
-                }
-            ], [
-                'attribute' => 'user.username',
-                'label' => \Yii::t('app', 'Login')
-            ], [
-                'attribute' => 'user.email',
-                'label' => \Yii::t('app', 'Email')
-            ], [
-                'attribute' => 'user.chat_id',
-                'label' => 'Telegram',
-                'format' => 'raw',
-                'value' => function (Coworker $model) {
-                    return $model->user->chat_id;
-                }
-            ], [
-                'attribute' => 'user.device_id',
-                'label' => 'Device ID',
-                'value' => function (Coworker $model) {
-                    return $model->user->device_id;
-                }
-            ], [
-                'attribute' => 'category_id',
-                'value' => function (Coworker $model) {
-                    return $model->category->title;
-                }
-            ],
-        ],
-    ]) ?>
-
-    <?= GridView::widget([
-        'dataProvider' => new ArrayDataProvider([
-            'allModels' => $model->coworkerProperties
-        ]),
-        'summary' => false,
-        'columns' => [
-            [
-                'attribute' => 'property_id',
-                'label' => \Yii::t('app', 'Property'),
-                'value' => function (CoworkerProperty $model) {
-                    return $model->property->title;
-                }
-            ],
-            'value',
-            [
-                'attribute' => 'dimension_id',
-                'label' => \Yii::t('app', 'Dimension'),
-                'value' => function (CoworkerProperty $model) {
-                    return $model->dimension->title;
-                }
-            ]
-        ]
-    ]) ?>
-
+    <nav>
+        <div class="nav nav-tabs" id="tabs" role="tabList">
+            <a class="nav-link active" href="#account" data-toggle="tab" role="tab" aria-selected="true">
+                <?= \Yii::t('app', 'Account') ?>
+            </a>
+            <a class="nav-link" href="#profile" data-toggle="tab" role="tab" aria-selected="false">
+                <?= \Yii::t('app', 'Profile') ?>
+            </a>
+            <a class="nav-link" href="#properties" data-toggle="tab" role="tab" aria-selected="false">
+                <?= \Yii::t('app', 'Properties') ?>
+            </a>
+        </div>
+    </nav>
+    <div class="tab-content" id="tabContent">
+        <div class="tab-pane fade show active" id="account">
+            <?= DetailView::widget([
+                'model' => $model->user,
+                'attributes' => [
+                    [
+                        'attribute' => 'username',
+                        'label' => \Yii::t('app', 'Login')
+                    ], [
+                        'attribute' => 'email',
+                        'label' => \Yii::t('app', 'Email')
+                    ], [
+                        'attribute' => 'chat_id',
+                        'label' => 'Telegram',
+                    ], [
+                        'attribute' => 'device_id',
+                        'label' => 'Device',
+                    ],
+                ],
+                'options' => [
+                    'class' => 'table table-striped',
+                ],
+            ]) ?>
+        </div>
+        <div class="tab-pane fade" id="profile">
+            <?= DetailView::widget([
+                'model' => $model->user->profile,
+                'attributes' => [
+                    [
+                        'attribute' => 'first_name',
+                        'label' => \Yii::t('app', 'First Name')
+                    ], [
+                        'attribute' => 'last_name',
+                        'label' => \Yii::t('app', 'Last Name')
+                    ], [
+                        'attribute' => 'patronymic',
+                        'label' => \Yii::t('app', 'Patronymic'),
+                    ], [
+                        'attribute' => 'birthday',
+                        'label' => \Yii::t('app', 'Birthday'),
+                    ], [
+                        'attribute' => 'biography',
+                        'label' => \Yii::t('app', 'Biography'),
+                    ],
+                ],
+                'options' => [
+                    'class' => 'table table-striped',
+                ],
+            ]) ?>
+        </div>
+        <div class="tab-pane fade" id="properties">
+            <?= GridView::widget([
+                'dataProvider' => new ArrayDataProvider([
+                    'allModels' => $model->coworkerProperties
+                ]),
+                'summary' => false,
+                'columns' => [
+                    [
+                        'attribute' => 'property_id',
+                        'label' => \Yii::t('app', 'Property'),
+                        'value' => function (CoworkerProperty $model) {
+                            return $model->property->title;
+                        }
+                    ],
+                    [
+                        'attribute' => 'value',
+                        'label' => \Yii::t('app', 'Value')
+                    ],
+                    [
+                        'attribute' => 'dimension_id',
+                        'label' => \Yii::t('app', 'Dimensions'),
+                        'value' => function (CoworkerProperty $model) {
+                            return $model->dimension->title;
+                        }
+                    ]
+                ],
+                'tableOptions' => [
+                    'class' => 'table table-striped',
+                ],
+            ]) ?>
+        </div>
+    </div>
 </div>

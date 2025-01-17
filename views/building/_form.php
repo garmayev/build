@@ -11,31 +11,8 @@ use yii\widgets\ActiveForm;
  * @var ActiveForm $form
  */
 
-$this->registerJsFile('//api-maps.yandex.ru/2.1/?apikey=0bb42c7c-0a9c-4df9-956a-20d4e56e2b6b&lang=ru_RU', ['position' => View::POS_HEAD]);
+$this->registerJsFile('//api-maps.yandex.ru/2.1/?apikey=0bb42c7c-0a9c-4df9-956a-20d4e56e2b6b&suggest_apikey=589c9c6f-9d2f-4233-9eb2-789dbc720a6c&lang=ru_RU', ['position' => View::POS_HEAD]);
 $this->registerJsFile('/js/map.js', ['position' => View::POS_HEAD]);
-$position = \yii\helpers\Json::encode($model->location ? [$model->location->latitude, $model->location->longitude] : [51.838814, 107.590673]);
-
-$this->registerJs(<<<JS
-$('#show-map').on('click', function () {
-    const group = $(this).closest('.form-group');
-
-    group.toggleClass('show');
-    if (group.hasClass('show')) {
-        window.initMap( 'map', {$position}, 'Building[location]' )
-    } else {
-        window.destroyMap();
-    }
-})
-JS);
-
-$this->registerCss(<<<CSS
-#map {
-    display: none;
-}
-.show #map {
-    display: block;
-}
-CSS);
 ?>
 
 <div class="building-form">
@@ -47,7 +24,7 @@ CSS);
     <div class="form-group">
         <label for="building-location_id"><?= \Yii::t('app', 'Location') ?></label>
         <div class="input-group">
-            <input class="form-control" id="building-location_id" />
+            <input class="form-control" name="Building[location][address]" id="building-address" value="<?= $model->location ? $model->location->address : '' ?>" />
             <div class="input-group-append">
                 <span class="input-group-text" id="show-map"><i class="fas fa-map-marker-alt"></i></span>
             </div>
@@ -62,3 +39,30 @@ CSS);
     <?php ActiveForm::end(); ?>
 
 </div>
+<?php
+$location = $model->location ? $model->location : ["latitude" => 51.838814, "longitude" => 107.590673, "address" => ""];
+$this->registerJsVar('position', $location);
+$this->registerJs(<<<JS
+console.log(position)
+$(() => {
+    $('#show-map').on('click', function () {
+        const group = $(this).closest('.form-group');
+        group.toggleClass('show');
+    })
+
+    ymaps.ready(init)
+    
+    function init() {
+        const map = new Map( 'map', position, 'Building[location]', 'building-address' )
+    }
+})
+JS);
+
+$this->registerCss(<<<CSS
+#map {
+    display: none;
+}
+.show #map {
+    display: block;
+}
+CSS);

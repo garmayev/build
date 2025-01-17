@@ -2,6 +2,7 @@
 
 use app\models\Building;
 use app\models\Order;
+use kartik\datetime\DateTimePicker;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 use yii\web\View;
@@ -15,7 +16,11 @@ use yii\widgets\ActiveForm;
 
 \app\assets\ReactAsset::register($this);
 
-$form = ActiveForm::begin();
+$form = ActiveForm::begin([
+    'options' => [
+        'enctype' => 'multipart/form-data'
+    ]
+]);
 
 $this->title = \Yii::t('app', 'Order coworker');
 
@@ -38,7 +43,22 @@ echo $form->field($model, 'building_id')->dropDownList(
     )
 )->label(\Yii::t('app', 'Select building'));
 
-echo $form->field($model, 'date');
+echo $form->field($model, 'datetime')->widget(DateTimePicker::class, [
+    'convertFormat' => true,
+    'pluginOptions' => [
+        'autoclose' => true,
+        'startDate' => date('Y.m.d'),
+        'minView' => 2,
+        'format' => 'dd.MM.yyyy',
+        'daysOfWeekDisabled' => [0, 6],
+    ]
+])->label(\Yii::t('app', 'Select date'));
+
+echo $form->field($model, 'files[]')->fileInput([
+    'multiple' => true,
+])->label(\Yii::t('app', 'Attachments'));
+
+echo $form->field($model, 'comment')->textarea(['rows' => 6]);
 
 echo $form->field($model, 'orderFilters')->hiddenInput(['value' => Json::encode($model->orderFilters)])->label(false);
 
@@ -109,8 +129,5 @@ $script = <<<JS
         />
     )
 JS;
-
-
-
 
 echo Html::script($script, ['type' => 'text/babel']);

@@ -15,8 +15,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="technique-index">
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
     <p>
         <?= Html::a(Yii::t('app', 'Create Technique'), ['create'], ['class' => 'btn btn-success']) ?>
     </p>
@@ -27,11 +25,9 @@ $this->params['breadcrumbs'][] = $this->title;
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
         'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
             'id',
             'title',
-            'coworker_id',
+            'coworker.user.name',
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Technique $model, $key, $index, $column) {
@@ -39,6 +35,9 @@ $this->params['breadcrumbs'][] = $this->title;
                  }
             ],
         ],
+        'tableOptions' => [
+            'class' => 'table table-striped'
+        ]
     ]); ?>
 
 

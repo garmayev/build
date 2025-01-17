@@ -24,7 +24,6 @@ class TelegramController extends \yii\web\Controller {
     public function actionCallback() {
         if ( isset($this->data) ) {
             $this->{$this->data['action']}();
-//            \Yii::error( $this->query );
         }
         return [];
     }
@@ -51,7 +50,7 @@ class TelegramController extends \yii\web\Controller {
         }
     }
 
-    private function cancel() 
+    private function cancel()
     {
         $message = TelegramMessage::find()->where(['id' => $this->query['callback_query']['message']['message_id']])->one();
         $message->remove();

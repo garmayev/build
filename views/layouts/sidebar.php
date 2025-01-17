@@ -42,8 +42,9 @@
                         'icon' => 'tachometer-alt',
                     ], [
                         'label' => \Yii::t('app', 'Building'),
-                        'icon' => '',
-                        'url' => ['/building/index']
+                        'icon' => 'building',
+                        'url' => ['/building/index'],
+                        'active' => \Yii::$app->controller->id === 'building' || \Yii::$app->controller->id === 'location',
                     ], [
                         'label' => \Yii::t('app', 'Control Panel'),
                         'icon' => 'th',
@@ -78,7 +79,8 @@
                     ], [
                         'label' => \Yii::t('app', 'Orders'),
                         'icon' => 'swatchbook',
-                        'url' => ['/order/index']
+                        'url' => ['/order/index'],
+                        'active' => \Yii::$app->controller->id === 'order',
                     ], [
                         'label' => \Yii::t('app', 'Configuration'),
                         'icon' => 'cog',

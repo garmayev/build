@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\Building;
 use app\models\search\BuildingSearch;
+use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -26,7 +27,7 @@ class BuildingController extends Controller
                     'class' => AccessControl::class,
                     'rules' => [
                         [
-                            'actions' => ['index', 'view', 'update', 'create'],
+                            'actions' => ['index', 'view', 'update', 'create', 'delete'],
                             'allow' => true,
                             'roles' => ['@'],
                         ],
@@ -34,12 +35,6 @@ class BuildingController extends Controller
                     'denyCallback' => function () {
                         return $this->redirect(['/site/login']);
                     }
-                ],
-                'verbs' => [
-                    'class' => VerbFilter::className(),
-                    'actions' => [
-                        'delete' => ['POST'],
-                    ],
                 ],
             ]
         );
@@ -52,11 +47,11 @@ class BuildingController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new BuildingSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = new ActiveDataProvider([
+            'query' => Building::find()->where(['user_id' => \Yii::$app->user->id])
+        ]);
 
         return $this->render('index', [
-            'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }

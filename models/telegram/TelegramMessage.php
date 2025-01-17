@@ -61,7 +61,9 @@ class TelegramMessage extends ActiveRecord
         if ( ($result = curl_exec($curl)) === false ) {
             \Yii::error(curl_error($curl));
         }
-        $this->id = json_decode($result, true)["result"]["message_id"];
+        $raw = json_decode($result, true);
+        \Yii::error($raw);
+        $this->id = $raw["result"]["message_id"];
         $this->save();
 
         curl_close($curl);

@@ -3,6 +3,7 @@
 use app\models\Order;
 use yii\data\ArrayDataProvider;
 use yii\grid\GridView;
+use yii\helpers\Html;
 use yii\web\View;
 use yii\widgets\DetailView;
 
@@ -17,7 +18,34 @@ $this->params['breadcrumbs'][] = ['label' => \Yii::t('app', 'Orders'), 'url' => 
 $this->params['breadcrumbs'][] = $this->title;
 
 echo DetailView::widget([
-    'model' => $model
+    'model' => $model,
+    'attributes' => [
+        'building.title',
+        'building.location.address',
+        'date:date',
+        [
+            'attribute' => 'status',
+            'value' => function (Order $model) {
+                return $model->statusTitle;
+            }
+        ],
+        'typeName',
+        [
+            'attribute' => 'attachments',
+            'format' => 'raw',
+            'value' => function (Order $model) {
+                $result = "";
+                foreach ($model->attachments as $attachment) {
+                    $result .= Html::tag('p', Html::a($attachment->url, $attachment->url));
+                }
+                return $result;
+            }
+        ],
+        'comment',
+    ],
+    'options' => [
+        'class' => 'table table-striped'
+    ]
 ]);
 
 echo GridView::widget([
@@ -41,6 +69,9 @@ echo GridView::widget([
             }
         ],
     ],
+    'tableOptions' => [
+        'class' => 'table table-striped'
+    ]
 ]);
 
 
@@ -62,5 +93,8 @@ if (count($data)) {
         'columns' => [
             'user.name'
         ],
+        'tableOptions' => [
+            'class' => 'table table-striped'
+        ]
     ]);
 }

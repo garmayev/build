@@ -1,15 +1,18 @@
 <?php
 
+use app\models\Building;
 use yii\helpers\Html;
+use yii\web\View;
+use yii\web\YiiAsset;
 use yii\widgets\DetailView;
 
-/** @var yii\web\View $this */
-/** @var app\models\Building $model */
+/** @var View $this */
+/** @var Building $model */
 
 $this->title = $model->title;
 $this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Buildings'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
-\yii\web\YiiAsset::register($this);
+YiiAsset::register($this);
 ?>
 <div class="building-view">
 
@@ -27,9 +30,16 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'id',
             'title',
-            'location_id',
+            'location.address',
+            [
+                'attribute' => 'location',
+                'label' => \Yii::t('app', 'Map'),
+                'format' => 'html',
+                'value' => function (Building $model) {
+                    return Html::tag("div", "", ["id" => "map", $model->location->attributes]);
+                }
+            ]
         ],
     ]) ?>
 

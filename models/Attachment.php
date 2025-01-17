@@ -1,0 +1,37 @@
+<?php
+
+namespace app\models;
+
+use yii\db\ActiveRecord;
+
+/**
+ * @property string $url
+ * @property string $target_class
+ * @property int $target_id
+ */
+class Attachment extends ActiveRecord
+{
+    public $file;
+
+    public static function tableName()
+    {
+        return "attachment";
+    }
+
+    public function rules()
+    {
+        return [
+            [['url', 'target_class'], 'string'],
+            [['target_id'], 'integer'],
+            [['file'], 'file', 'skipOnEmpty' => false]
+        ];
+    }
+
+    public function upload()
+    {
+        $name = md5($this->file->baseName);
+        $filename = "{$name}.{$this->file->extension}";
+        $this->url = "/upload/$filename";
+        return $this->file->saveAs(\Yii::getAlias('@webroot')."/upload/$filename");
+    }
+}

@@ -10,6 +10,7 @@ use Yii;
  * @property int $coworker_id
  * @property int $property_id
  * @property int $dimension_id
+ * @property int $value
  *
  * @property Coworker $coworker
  * @property Property $property
@@ -17,6 +18,7 @@ use Yii;
  */
 class CoworkerProperty extends \yii\db\ActiveRecord
 {
+    public $category_id;
     /**
      * {@inheritdoc}
      */
@@ -31,8 +33,8 @@ class CoworkerProperty extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['coworker_id', 'property_id'], 'required'],
-            [['coworker_id', 'property_id'], 'integer'],
+            [['coworker_id', 'property_id', 'value'], 'required'],
+            [['coworker_id', 'property_id', 'value'], 'integer'],
             [['coworker_id', 'property_id'], 'unique', 'targetAttribute' => ['coworker_id', 'property_id']],
             [['coworker_id'], 'exist', 'skipOnError' => true, 'targetClass' => Coworker::class, 'targetAttribute' => ['coworker_id' => 'id']],
             [['property_id'], 'exist', 'skipOnError' => true, 'targetClass' => Property::class, 'targetAttribute' => ['property_id' => 'id']],
