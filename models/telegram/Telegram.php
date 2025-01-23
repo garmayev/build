@@ -1,6 +1,6 @@
 <?php
 
-namespace app\models;
+namespace app\models\telegram;
 
 use yii\base\Model;
 
@@ -19,17 +19,15 @@ class Telegram extends Model
 
     public static function setWebhook()
     {
-        $bot_id = \Yii::$app->params['bot_id'];
         $args = http_build_query([
             "url" => "https://build.amgcompany.ru/api/telegram/callback"
         ]);
 
-        return Telegram::send("https://api.telegram.org/bot{$bot_id}/setwebhook?$args");
+        return Telegram::send("setwebhook?$args");
     }
 
     public static function sendMessage($chat_id, $message, $keyboard)
     {
-        $bot_id = \Yii::$app->params['bot_id'];
         $data = [
             "chat_id" => urlencode($chat_id),
             "text" => urlencode($message),
@@ -38,12 +36,11 @@ class Telegram extends Model
             ])
         ];
 
-        return Telegram::send("https://api.telegram.org/bot{$bot_id}/sendMessage", $data);
+        return Telegram::send("sendMessage", $data);
     }
 
     public static function editMessage($chat_id, $message_id, $message, $keyboard)
     {
-        $bot_id = \Yii::$app->params['bot_id'];
         $data = [
             "chat_id" => $chat_id,
             "text" => $message,
@@ -56,7 +53,7 @@ class Telegram extends Model
             ]);
         }
 
-        return Telegram::send("https://api.telegram.org/bot{$bot_id}/editMessageText", $data);
+        return Telegram::send("editMessageText", $data);
     }
 
     public static function deleteMessage()
@@ -66,7 +63,8 @@ class Telegram extends Model
     public static function send($url, $data = null)
     {
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
+        $bot_id = \Yii::$app->params["bot_id"];
+        curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/{$url}");
         curl_setopt($curl, CURLOPT_POST, true);
         curl_setopt($curl, CURLOPT_HEADER, false);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
@@ -77,7 +75,7 @@ class Telegram extends Model
             return null;
         }
 
-        curl_close($curl)
+        curl_close($curl);
         return $result;
     }
 }

@@ -2,10 +2,10 @@
 
 namespace app\modules\api\controllers;
 
-use app\models\Order;
+use app\models\Building;
 use yii\rest\Controller;
 
-class OrderController extends Controller
+class BuildingController extends Controller
 {
     public function behaviors()
     {
@@ -26,8 +26,8 @@ class OrderController extends Controller
                 'access' => [
                     'class' => \yii\filters\AccessControl::class,
                     'rules' => [
-                        [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'detail'] ],
-                        [ 'allow' => true, 'roles' => ['@'], 'actions' => ['options', 'preflight', 'detail'] ],
+                        [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view'] ],
+                        [ 'allow' => true, 'roles' => ['@'], 'actions' => ['options', 'preflight', 'view'] ],
                     ],
                 ],
                 'authenticator' => [
@@ -37,32 +37,19 @@ class OrderController extends Controller
                         \yii\filters\auth\HttpBasicAuth::class,
                         \yii\filters\auth\QueryParamAuth::class,
                     ],
-                    'except' => ['OPTIONS', 'PREFLIGHT', 'index', 'login', 'list', 'detail']
+                    'except' => ['OPTIONS', 'PREFLIGHT', 'index', 'view']
                 ]
             ]
         );
     }
 
-    public function actionIndex()
+    public function actionIndex() 
     {
-        return Order::find()->all();
+        return Building::find()->all();
     }
 
-    public function beforeAction($action)
+    public function actionView($id)
     {
-        $this->response->format = \yii\web\Response::FORMAT_JSON;
-        return parent::beforeAction($action);
+        return Building::findOne($id);
     }
-
-    public function actionDetail($id)
-    {
-        if ($id) {
-            $model = Order::findOne($id);
-
-            return $model->filters;
-        }
-        return [];
-    }
-
-
 }

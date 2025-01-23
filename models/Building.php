@@ -66,6 +66,16 @@ class Building extends ActiveRecord
         ];
     }
 
+    public function fields()
+    {
+        return [
+            'title',
+            'location' => function (Building $model) {
+                return $model->location;
+            }
+        ];
+    }
+
     /**
      * Gets query for [[Location]].
      *

@@ -27,4 +27,9 @@ class UserController extends Controller
         }
         return null;
     }
+
+    public function actionPassword($username, $password)
+    {
+        
+    }
 }

@@ -113,6 +113,24 @@ class Order extends \yii\db\ActiveRecord
         ];
     }
 
+    public function fields()
+    {
+        return [
+            'id',
+            'status' => function (Order $model) {
+                return $model->statusTitle;
+            },
+            'type' => function (Order $model) {
+                return $model->typeName;
+            },
+            'date',
+            'comment',
+            'building' => function (Order $model) {
+                return $model->building;
+            }
+        ];
+    }
+
     /**
      * Gets query for [[Building]].
      *

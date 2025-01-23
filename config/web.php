@@ -14,7 +14,6 @@ $config = [
     ],
     'components' => [
         'request' => [
-            // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'ozwR_KOqraPzu1M3-F3MUZ8FTUzr1mYY',
         ],
         'cache' => [
@@ -30,7 +29,6 @@ $config = [
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
             'viewPath' => '@app/mail',
-            // send all mails to a file by default.
             'useFileTransport' => true,
         ],
         'log' => [
@@ -63,11 +61,19 @@ $config = [
                 ],
             ],
         ],
+        'telegram' => [
+            'class' => \app\modules\messenger\components\Telegram::class,
+        ],
     ],
     'modules' => [
         'api' => [
             'class' => \app\modules\api\ApiModule::class,
-        ]
+        ],
+        'messenger' => [
+            'class' => \app\modules\messenger\MessengerModule::class,
+            'telegram_bot_id' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
+            'use_database' => true,
+        ],
     ],
     'params' => $params,
 ];

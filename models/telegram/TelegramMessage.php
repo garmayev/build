@@ -41,14 +41,14 @@ class TelegramMessage extends ActiveRecord
         return $this->hasOne(Order::class, ['id' => 'order_id']);
     }
 
-    public function send()
+    public function send($text = null, $test = false)
     {
         $curl = curl_init();
         $bot_id = \Yii::$app->params['bot_id'];
 
         $data = [
             "chat_id" => $this->chat_id,
-            "text" => $this->text,
+            "text" => $text ?? $this->text,
             "parse_mode" => "html",
             "reply_markup" => $this->reply_markup,
         ];
@@ -65,7 +65,9 @@ class TelegramMessage extends ActiveRecord
         $raw = json_decode($result, true);
         if ($raw["ok"]) {
             $this->id = $raw["result"]["message_id"];
-            $this->save();
+            if ($test) {
+                $this->save();
+            }
             curl_close($curl);
             return $result;
         } else {
@@ -73,6 +75,8 @@ class TelegramMessage extends ActiveRecord
             curl_close($curl);
             return "So,ething wrong";
         }
+
+        Telegram::send("");
     }
 
     public function editKeyboard()

@@ -52,6 +52,7 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+//        \Yii::error(\Yii::$app->telegram);
         return $this->render('index');
     }
 

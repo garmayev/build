@@ -43,15 +43,21 @@ class Coworker extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['category_id', 'priority', 'notify_date'], 'integer'],
+            [['category_id', 'priority', 'notify_date', 'user_id'], 'integer'],
             [['firstname', 'lastname', 'phone', 'email'], 'string', 'max' => 255],
             [['coworkerProperties'], 'safe'],
             [['phone', 'email'], 'unique'],
+            [['phone'], 'filter', 'filter' => [$this, 'normalizePhone']],
             [['firstname', 'lastname', 'phone', 'email'], 'default', 'value' => ''],
             [['priority'], 'default', 'value' => self::PRIORITY_LOW],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id']],
-            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
+//            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
+    }
+
+    public function normalizePhone($value)
+    {
+        return preg_replace("/(\+\(\)\ \-)/", "", $value);
     }
 
     /**

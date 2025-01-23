@@ -50,7 +50,7 @@ class BuildingController extends Controller
         $dataProvider = new ActiveDataProvider([
             'query' => Building::find()->where(['user_id' => \Yii::$app->user->id])
         ]);
-
+//        $bot = \Yii::$app->telegram;
         return $this->render('index', [
             'dataProvider' => $dataProvider,
         ]);
