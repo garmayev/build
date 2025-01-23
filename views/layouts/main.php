@@ -5,6 +5,7 @@
 
 use yii\helpers\Html;
 
+\app\assets\AppAsset::register($this);
 \hail812\adminlte3\assets\FontAwesomeAsset::register($this);
 \hail812\adminlte3\assets\AdminLteAsset::register($this);
 $this->registerCssFile('https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback');
@@ -13,6 +14,11 @@ $assetDir = Yii::$app->assetManager->getPublishedUrl('@vendor/almasaeed2010/admi
 
 $publishedRes = Yii::$app->assetManager->publish('@vendor/hail812/yii2-adminlte3/src/web/js');
 $this->registerJsFile($publishedRes[1].'/control_sidebar.js', ['depends' => '\hail812\adminlte3\assets\AdminLteAsset']);
+$this->registerJs(<<<JS
+$(() => {
+    $("[type='phone']").mask("(999) 999-99-99");
+})
+JS);
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>

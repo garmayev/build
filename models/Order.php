@@ -297,7 +297,7 @@ class Order extends \yii\db\ActiveRecord
 
     public function filterCoworker()
     {
-        $query = Coworker::find();
+        $query = Coworker::find()->where(['priority' => Coworker::PRIORITY_HIGH]);
         $query->joinWith('properties');
         foreach ($this->filters as $filter) {
             $query->where(['category_id' => $filter->category_id]);
@@ -333,7 +333,7 @@ class Order extends \yii\db\ActiveRecord
                 $data = [
                     'TelegramMessage' => [
                         'text' => $this->generateTelegramText(\Yii::t('app', 'New Order').' #'.$this->id),
-                        'chat_id' => $user->chat_id,
+                        'chat_id' => $item->chat_id,
                         'order_id' => $this->id,
                         'status' => TelegramMessage::STATUS_NEW,
                         'reply_markup' => json_encode([
@@ -348,7 +348,7 @@ class Order extends \yii\db\ActiveRecord
                     ]
                 ];
                 if ($message->load($data) && $message->save()) {
-                    $message->send();
+//                    $message->send();
 //                    $result[$user->chat_id] = $message->send();
                 }
             } else if ($user->device_id) {

@@ -21,11 +21,7 @@
             <div class="info">
                 <a href="#" class="d-block">
                     <?php
-                    if (\Yii::$app->user->identity->profile->name) {
-                        echo \Yii::$app->user->identity->profile->name;
-                    } else {
-                        echo \Yii::$app->user->identity->username;
-                    }
+                    echo \Yii::$app->user->identity->username;
                     ?>
                 </a>
             </div>

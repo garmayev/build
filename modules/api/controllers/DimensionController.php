@@ -17,7 +17,7 @@ class DimensionController extends Controller
     public function actionByProperty()
     {
         if ( \Yii::$app->request->isPost && isset($_POST['depdrop_all_params']) ) {
-            $id = $_POST['depdrop_all_params']['coworkerproperty-property_id'];
+            $id = $_POST['depdrop_all_params']['property_id'];
             $property = Property::findOne($id);
             $result = [];
             if ($property) {

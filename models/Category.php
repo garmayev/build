@@ -174,6 +174,7 @@ class Category extends \yii\db\ActiveRecord
 
     public function setProperties($data)
     {
+        $this->save(false);
         foreach ( $this->properties as $property ) $this->unlink('properties', $property, true);
         foreach ( $data as $item ) {
             $property = Property::findOne($item);

@@ -17,7 +17,8 @@ $this->registerCss(<<<CSS
     padding: 0;
     margin: 0;
 }
-CSS);
+CSS
+);
 ?>
 <div class="coworker-index">
 
@@ -34,15 +35,17 @@ CSS);
             'class' => 'table table-striped',
         ],
         'columns' => [
+            'firstname',
+            'lastname',
+            'email:email',
+            'phone',
             [
-                'attribute' => 'user_id',
-                'label' => \Yii::t('app', 'Coworker'),
-                'format' => 'raw',
-                'value' => function (Coworker $model) {
-                    return Html::a($model->user->name, ['view', 'id' => $model->id]);
+                'attribute' => 'category_id',
+                'label' => \Yii::t('app', 'Category'),
+                'value' => function ($model) {
+                    return $model->category->title;
                 }
             ],
-            'category.title',
             [
                 'attribute' => 'coworkerProperties',
                 'label' => \Yii::t('app', 'Properties'),
@@ -64,10 +67,31 @@ CSS);
                 }
             ],
             [
+                'attribute' => 'priority',
+                'label' => \Yii::t('app', 'Priority'),
+                'format' => 'raw',
+                'value' => function (Coworker $model) {
+                    $list = [
+                        Coworker::PRIORITY_LOW => \Yii::t('app', 'Priority low'),
+                        Coworker::PRIORITY_NORMAL => \Yii::t('app', 'Priority normal'),
+                        Coworker::PRIORITY_HIGH => \Yii::t('app', 'Priority high'),
+                    ];
+                    return $list[$model->priority];
+                }
+            ],
+            [
+                'attribute' => 'user.chat_id',
+                'label' => \Yii::t('app', 'Invite'),
+                'format' => 'raw',
+                'value' => function (Coworker $model) {
+                    return Html::a("Invite link", "https://t.me/".\Yii::$app->params["bot_name"]."?start=".$model->id, ['target' => '_blank']);
+                }
+            ],
+            [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Coworker $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
-                 }
+                }
             ],
         ],
     ]); ?>

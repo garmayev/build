@@ -17,7 +17,7 @@ class CoworkerSearch extends Coworker
     public function rules()
     {
         return [
-            [['id', 'user_id', 'category_id'], 'integer'],
+            [['id', 'category_id'], 'integer'],
         ];
     }
 
@@ -58,7 +58,6 @@ class CoworkerSearch extends Coworker
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'user_id' => $this->user_id,
             'category_id' => $this->category_id,
         ]);
 
