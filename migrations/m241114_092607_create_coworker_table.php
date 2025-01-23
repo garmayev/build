@@ -14,8 +14,13 @@ class m241114_092607_create_coworker_table extends Migration
     {
         $this->createTable('{{%coworker}}', [
             'id' => $this->primaryKey(),
-            'user_id' => $this->integer(),
-            'category_id' => $this->integer(),
+            'firstname' => $this->string()->notNull(),
+            'lastname' => $this->string()->notNull(),
+            'email' => $this->string()->notNull(),
+            'phone' => $this->string()->notNull(),
+            'priority' => $this->integer()->notNull(),
+            'user_id' => $this->integer()->notNull(),
+            'category_id' => $this->integer()->notNull(),
         ]);
         $this->createIndex(
             'idx-coworker-user_id',

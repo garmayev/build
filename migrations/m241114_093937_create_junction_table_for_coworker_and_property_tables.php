@@ -19,7 +19,9 @@ class m241114_093937_create_junction_table_for_coworker_and_property_tables exte
         $this->createTable('{{%coworker_property}}', [
             'coworker_id' => $this->integer(),
             'property_id' => $this->integer(),
-            'PRIMARY KEY(coworker_id, property_id)',
+            'dimension_id' => $this->integer(),
+            'value' => $this->integer(),
+            'PRIMARY KEY(coworker_id, property_id, dimension_id)',
         ]);
 
         // creates index for column `coworker_id`

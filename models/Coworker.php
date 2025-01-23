@@ -14,6 +14,7 @@ use Yii;
  * @property string $email
  * @property int|null $category_id
  * @property int $priority
+ * @property int $notify_date
  * @property int $user_id
  *
  * @property Category $category
@@ -42,7 +43,7 @@ class Coworker extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['category_id', 'priority'], 'integer'],
+            [['category_id', 'priority', 'notify_date'], 'integer'],
             [['firstname', 'lastname', 'phone', 'email'], 'string', 'max' => 255],
             [['coworkerProperties'], 'safe'],
             [['phone', 'email'], 'unique'],

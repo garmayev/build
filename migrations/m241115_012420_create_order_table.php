@@ -17,7 +17,10 @@ class m241115_012420_create_order_table extends Migration
             'status' => $this->integer(),
             'building_id' => $this->integer(),
             'date' => $this->integer(),
-            'type' => $this->integer()
+            'type' => $this->integer(),
+            'created_at' => $this->integer(),
+            'notify_date' => $this->integer(),
+            'comment' => 'LONGTEXT',
         ]);
         $this->createIndex(
             'idx-order-building_id',
