@@ -51,7 +51,7 @@ class User extends ActiveRecord implements IdentityInterface
             'username',
             'email',
             'access_token',
-            'name',
+//            'name',
         ];
     }
 
@@ -117,7 +117,7 @@ class User extends ActiveRecord implements IdentityInterface
         return \Yii::$app->security->validatePassword($password, $this->password_hash);
     }
 
-    public function getProfile(): \yii\db\ActiveQuery
+/*    public function getProfile(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Profile::class, ['id' => 'id']);
     }
@@ -132,7 +132,7 @@ class User extends ActiveRecord implements IdentityInterface
                 return ["ok" => false];
             }
         }
-    }
+    } */
 
     public function getCoworker()
     {
@@ -141,10 +141,11 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function getName(): string
     {
-        $profileName = "{$this->profile->last_name} {$this->profile->patronymic} {$this->profile->first_name}";
-        if (strlen($profileName) > 2) {
-            return $profileName;
-        }
+//        $profileName = "{$this->profile->last_name} {$this->profile->patronymic} {$this->profile->first_name}";
+//        if (strlen($profileName) > 2) {
+//            return $profileName;
+//        }
+//        return $this->username;
         return $this->username;
     }
 }
