@@ -30,6 +30,8 @@ class Coworker extends \yii\db\ActiveRecord
     const PRIORITY_LOW = 0;
     const PRIORITY_NORMAL = 1;
     const PRIORITY_HIGH = 2;
+    const TYPE_CUSTOMER = 0;
+    const TYPE_WORKER = 1;
     public $files;
 
     public static function tableName()
@@ -50,6 +52,7 @@ class Coworker extends \yii\db\ActiveRecord
             [['phone'], 'filter', 'filter' => [$this, 'normalizePhone']],
             [['firstname', 'lastname', 'phone', 'email'], 'default', 'value' => ''],
             [['priority'], 'default', 'value' => self::PRIORITY_LOW],
+            [['type'], 'default', 'value' => self::TYPE_WORKER],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id']],
 //            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
