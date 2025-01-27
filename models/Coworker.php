@@ -14,8 +14,11 @@ use Yii;
  * @property string $email
  * @property int|null $category_id
  * @property int $priority
+<<<<<<< HEAD
  * @property int $notify_date
  * @property int $user_id
+=======
+>>>>>>> a0d55bd (Server Fix)
  *
  * @property Category $category
  * @property CoworkerProperty[] $coworkerProperties
@@ -32,6 +35,9 @@ class Coworker extends \yii\db\ActiveRecord
     const PRIORITY_HIGH = 2;
     public $files;
 
+    /**
+     * {@inheritdoc}
+     */
     public static function tableName()
     {
         return 'coworker';
@@ -202,5 +208,27 @@ class Coworker extends \yii\db\ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    public function getPriorityName($id = null)
+    {
+        $list = [
+            Coworker::PRIORITY_GROUP => \Yii::t('app', 'PRIORITY_GROUP'),
+            Coworker::PRIORITY_MEET => \Yii::t('app', 'PRIORITY_MEET'),
+            Coworker::PRIORITY_UNKNOWN => \Yii::t('app', 'PRIORITY_UNKNOWN'),
+        ];
+        return $list[$this->priority];
+    }
+
+    public function setUser($data)
+    {
+        $this->save(false);
+        $user = new User();
+        if (isset($data['password'])) {
+            $data['password_hash'] = \Yii::$app->security->generatePasswordHash( $data['password'] );
+        }
+        if ($user->load(['User' => $data]) && $user->save()) {
+            $this->link('user', $user);
+        }
     }
 }
