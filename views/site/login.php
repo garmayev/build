@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'id' => 'login-form',
                 'fieldConfig' => [
                     'template' => "{label}\n{input}\n{error}",
-                    'labelOptions' => ['class' => 'col-form-label'],
+                    'labelOptions' => ['class' => 'col-form-label mr-lg-3'],
                     'inputOptions' => ['class' => 'form-control'],
                     'errorOptions' => ['class' => 'invalid-feedback'],
                 ],

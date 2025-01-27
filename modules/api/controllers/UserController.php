@@ -47,6 +47,7 @@ class UserController extends Controller
     public function actionLogin() {
         $data = json_decode(file_get_contents("php://input"), true);
         $model = User::findOne(['username' => $data['username']]);
+        sleep(2);
         if ( $model && $model->validatePassword($data['password']) ) {
             return [ 'ok' => true, 'user' => $model, 'token' => $model->access_token ];
         }
