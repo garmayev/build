@@ -2,13 +2,11 @@
 
 use app\models\Category;
 use app\models\Coworker;
-use app\models\CoworkerProperty;
 use kartik\depdrop\DepDrop;
 use kartik\select2\Select2;
 use yii\bootstrap4\Modal;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\web\JsExpression;
 use yii\web\View;
 use yii\widgets\ActiveForm;
@@ -30,14 +28,18 @@ echo $form->field($model, "lastname")->textInput()->label(\Yii::t('app', 'Last N
 echo $form->field($model, "firstname")->textInput()->label(\Yii::t('app', 'First Name'));
 echo $form->field($model, "email")->textInput(['type' => 'email'])->label(\Yii::t('app', 'Email'));;
 echo $form->field($model, "phone")->textInput(['type' => 'phone'])->label(\Yii::t('app', 'Phone'));
-echo $form->field($model, 'files')->fileInput([
-    'multiple' => true,
-])->label(\Yii::t('app', 'Attachments'));
 echo $form->field($model, "priority")->dropDownList([
     Coworker::PRIORITY_LOW => \Yii::t('app', 'Priority low'),
     Coworker::PRIORITY_NORMAL => \Yii::t('app', 'Priority normal'),
     Coworker::PRIORITY_HIGH => \Yii::t('app', 'Priority high'),
 ])->label(\Yii::t('app', 'Priority'));
+echo $form->field($model, "type")->dropDownList([
+    Coworker::TYPE_WORKER => \Yii::t('app', 'Coworker'),
+    Coworker::TYPE_CUSTOMER => \Yii::t('app', 'Customer'),
+])->label(\Yii::t('app', 'Type'));
+echo $form->field($model, 'files')->fileInput([
+    'multiple' => true,
+])->label(\Yii::t('app', 'Attachments'));
 echo $form->field($model, "category_id")->dropDownList(
     ArrayHelper::map(Category::find()->all(), 'id', 'title'),
     ['prompt' => \Yii::t('app', 'Select category'), 'id' => 'category_id']
@@ -54,9 +56,10 @@ echo Html::tag('button', \Yii::t('app', 'Add Property'), [
 ?>
     <table class="table table-striped" id="dynamic-table">
         <thead>
-            <th><?= \Yii::t('app', 'Property') ?></th>
-            <th><?= \Yii::t('app', 'Value') ?></th>
-            <th><?= \Yii::t('app', 'Dimension') ?></th>
+        <th><?= \Yii::t('app', 'Property') ?></th>
+        <th><?= \Yii::t('app', 'Value') ?></th>
+        <th><?= \Yii::t('app', 'Dimension') ?></th>
+        <th></th>
         </thead>
         <tbody>
         <?php
@@ -65,6 +68,13 @@ echo Html::tag('button', \Yii::t('app', 'Add Property'), [
             echo Html::tag('td', $coworkerProperty->property->title);
             echo Html::tag('td', $coworkerProperty->value);
             echo Html::tag('td', $coworkerProperty->dimension->title);
+            echo Html::tag('td',
+                Html::a(
+                    Html::tag('i', '', ['class' => 'fas fa-trash']),
+                    '#',
+                    ['class' => 'remove']
+                )
+            );
             echo Html::endTag('tr');
         }
         ?>
@@ -79,9 +89,9 @@ Modal::begin([
     'id' => 'addProperty',
     'title' => \Yii::t('app', 'Add Property'),
     'size' => Modal::SIZE_LARGE,
-    'footer' => Html::beginTag('div', ['class' => 'w-100 d-flex justify-content-between']).
-        Html::tag('button', \Yii::t('app', 'Cancel'), ['class' => 'btn btn-secondary', 'type' => 'button', 'data-dismiss' => 'modal']).
-        Html::tag('button', \Yii::t('app', 'Apply'), ['class' => 'btn btn-success', 'type' => 'button', 'id' => 'btn-apply']).
+    'footer' => Html::beginTag('div', ['class' => 'w-100 d-flex justify-content-between']) .
+        Html::tag('button', \Yii::t('app', 'Cancel'), ['class' => 'btn btn-secondary', 'type' => 'button', 'data-dismiss' => 'modal']) .
+        Html::tag('button', \Yii::t('app', 'Apply'), ['class' => 'btn btn-success', 'type' => 'button', 'id' => 'btn-apply']) .
         Html::endTag('div')
 ]);
 
@@ -94,7 +104,7 @@ echo DepDrop::widget([
         'depends' => [
             'category_id',
         ],
-        'url' => "/api/property/by-category",
+        'url' => "/api/property/by-category?id=1",
     ]
 ]);
 echo Html::endTag('div');
@@ -123,6 +133,10 @@ Modal::end();
 $this->registerJs(<<<JS
 $(() => {
     let index = $('tbody tr').length;
+    $('#category_id').trigger('change');
+    $('tbody .remove').on('click', function(e) {
+        e.currentTarget.closest('tr').remove();
+    })
     $('#btn-apply').click(function () {
         const modal = $(".modal");
         

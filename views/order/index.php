@@ -67,7 +67,7 @@ echo GridView::widget([
                 'update' => function ($url, $model, $key) {
                     switch ($model->type) {
                         case Order::TYPE_COWORKER:
-                            return Html::a(Html::tag('i', '', ['class' => 'fa-solid fa-pencil']), ['coworker', 'id' => $model->id]);
+                            return Html::a(Html::tag('i', '', ['class' => 'fa fa-pencil']), ['coworker', 'id' => $model->id]);
                         case Order::TYPE_MATERIAL:
                             return Html::a(Html::tag('i', '', ['class' => 'fas fa-pencil']), ['material', 'id' => $model->id]);
                         case Order::TYPE_TECHNIQUE:

@@ -5,8 +5,10 @@ namespace app\commands;
 use app\models\Building;
 use app\models\Category;
 use app\models\Coworker;
+use app\models\Dimension;
 use app\models\Location;
 use app\models\Order;
+use app\models\Property;
 use app\models\Telegram;
 use app\models\User;
 use Faker\Factory;
@@ -15,19 +17,36 @@ use yii\helpers\Json;
 
 class DataController extends Controller
 {
-    protected $locations = [
+    protected $building = [
         [
-            'address' => 'г.Улан-Удэ, ул.Революции 1905 г., 42',
-            'latitude' => 51.838814,
-            'longitude' => 107.590673,
+            'title' => "Объект 1",
+            'user_id' => 1,
+            'location' => [
+                'address' => 'г.Улан-Удэ, ул.Революции 1905 г., 42',
+                'latitude' => 51.838814,
+                'longitude' => 107.590673,
+                'user_id' => 1
+            ]
+        ]
+    ];
+    protected $dimension = [
+        [
+            'title' => 'Лет',
+            'multiplier' => 1,
+            'short' => 'л',
+        ]
+    ];
+    protected $properties = [
+        [
+            'title' => 'Возраст',
+            'dimensions' => [
+                1
+            ]
         ], [
-            'address' => 'г.Улан-Удэ, 111-й микрорайон, 3/1',
-            'latitude' => 51.771460,
-            'longitude' => 107.585060,
-        ], [
-            'address' => 'г.Улфн-Удэ, ул.Революции 1905 г., 102',
-            'latitude' => 51.850472,
-            'longitude' => 107.569824,
+            'title' => 'Опыт',
+            'dimensions' => [
+                1
+            ]
         ]
     ];
     protected $categories = [
@@ -36,57 +55,45 @@ class DataController extends Controller
             'title' => 'Монтажник',
             'type' => 1,
             'parent_id' => null,
-        ], [
-            'id' => 2,
-            'title' => 'Штукатурщик',
-            'type' => 1,
-            'parent_id' => 1,
-        ], [
-            'id' => 3,
-            'title' => 'Сварщик',
-            'type' => 1,
-            'parent_id' => 1,
-        ], [
-            'id' => 4,
-            'title' => 'Шпатлевщик',
-            'type' => 1,
-            'parent_id' => 1,
+            'properties' => [
+                1, 2
+            ]
         ],
     ];
     public function actionDemo()
     {
-        $faker = Factory::create('ru-RU');
+        if ($this->createUser()) {
+            foreach ($this->building as $item) {
+                $build = new Building();
+                $build->load(["Building" => $item]);
+                $build->save();
+            }
+            foreach ($this->dimension as $item) {
+                $dimension = new Dimension($item);
+                $dimension->save();
+            }
+            foreach ($this->properties as $item) {
+                $property = new Property($item);
+                $property->save();
+            }
+            foreach ($this->categories as $item) {
+                $category = new Category($item);
+                $category->save();
+            }
+        }
+    }
 
-        foreach ($this->locations as $location) {
-            $l = new Location($location);
-            $l->save();
-        }
-        for ($i = 0; $i < 2; $i++) {
-            $building = new Building([
-                'title' => $faker->address,
-                'location_id' => $i
-            ]);
-            $building->save();
-        }
-        foreach ($this->categories as $category) {
-            $category = new Category($category);
-            $category->save();
-        }
-        for ($i = 0; $i < 16; $i++) {
-            $user = new User([
-                'username' => $faker->userName,
-                'email' => $faker->email,
-                'password' => $faker->password,
-                'auth_key' => \Yii::$app->security->generateRandomString(),
-                'access_token' => \Yii::$app->security->generateRandomString(),
-            ]);
-            $user->save();
-            $coworker = new Coworker([
-                'user_id' => $user->id,
-                'category_id' => 1
-            ]);
-            $coworker->save();
-        }
+    protected function createUser(): bool
+    {
+        $user = new User([
+            'username' => 'garmayev',
+            'email' => 'garmayev@yandex.ru',
+            'password_hash' => \Yii::$app->security->generatePasswordHash('rhbcnbyfgfrekjdf'),
+            'auth_key' => \Yii::$app->security->generateRandomString(),
+            'access_token' => \Yii::$app->security->generateRandomString(),
+            'status' => User::STATUS_ACTIVE,
+        ]);
+        return $user->save();
     }
 
     public function actionFilter($order_id)

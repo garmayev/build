@@ -22,7 +22,12 @@ echo DetailView::widget([
     'attributes' => [
         'building.title',
         'building.location.address',
-        'date:date',
+        [
+            'attribute' => 'date',
+            'value' => function ($model) {
+                return Yii::$app->formatter->asDate($model->date, 'php:d m Y');
+            }
+        ],
         [
             'attribute' => 'status',
             'value' => function (Order $model) {
@@ -93,8 +98,11 @@ if (count($data)) {
         'summary' => false,
         'columns' => [
             [
-                'attribute' => 'user.name',
+                'attribute' => 'name',
                 'label' => \Yii::t('app', 'Coworkers'),
+                'value' => function (\app\models\Coworker $model) {
+                    return "{$model->lastname} {$model->firstname}";
+                }
             ], [
                 'attribute' => 'coworkerProperties',
                 'label' => \Yii::t('app', 'Properties'),

@@ -54,6 +54,7 @@ class CoworkerController extends Controller
         $model = new Coworker();
 
         if ($this->request->isPost) {
+            $model->user_id = \Yii::$app->user->identity->id;
             $model->files = UploadedFile::getInstances($model, 'files');
             if ($model->load($this->request->post()) && $model->upload() && $model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);

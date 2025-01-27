@@ -49,6 +49,7 @@ return [
     'Create Material' => 'Добавить материал',
     'Create Property' => 'Добавить свойство',
     'Create Technique' => 'Добавить технику',
+    'Customer' => 'Заказчик',
     'Dashboard' => 'Главная',
     'Date' => 'Дата',
     'Delete' => 'Удалить',
@@ -62,6 +63,7 @@ return [
     'First Name' => 'Имя',
     'ID' => '',
     'Image' => 'Изображение',
+    'Invite' => 'Ссылка-приглашение',
     'Last Name' => 'Фамилия',
     'Latitude' => 'Широта',
     'Less' => 'Меньше',
@@ -129,5 +131,5 @@ return [
     'User ID' => '',
     'Value' => 'Значение',
     'View Order: {name}' => 'Просмотр заказа: {name}',
-    'You have agreed to complete the order' => 'Вы согласились на выполнение заказа'
+    'You have agreed to complete the order' => 'Вы согласились на выполнение заказа',
 ];

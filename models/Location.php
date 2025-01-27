@@ -15,6 +15,7 @@ use yii\db\ActiveRecord;
  * @property float|null $longitude
  *
  * @property Building[] $buildings
+ * @property string $link
  */
 class Location extends \yii\db\ActiveRecord
 {
@@ -72,5 +73,10 @@ class Location extends \yii\db\ActiveRecord
     public function getBuildings()
     {
         return $this->hasMany(Building::class, ['location_id' => 'id']);
+    }
+
+    public function getLink()
+    {
+        return "<a href='https://2gis.ru/geo/{$this->longitude}%2C{$this->latitude}?m={$this->longitude}%2C{$this->latitude}%2F14'>{$this->address}</a>";
     }
 }

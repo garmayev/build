@@ -16,7 +16,7 @@ $publishedRes = Yii::$app->assetManager->publish('@vendor/hail812/yii2-adminlte3
 $this->registerJsFile($publishedRes[1].'/control_sidebar.js', ['depends' => '\hail812\adminlte3\assets\AdminLteAsset']);
 $this->registerJs(<<<JS
 $(() => {
-    $("[type='phone']").mask("(999) 999-99-99");
+    $("[type='phone']").mask("+7 (999) 999-99-99");
 })
 JS);
 ?>

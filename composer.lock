@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "395596d9650d0e8eeddfd12580764765",
+    "content-hash": "34e02e93d63e332c22235d0d86777424",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -422,6 +422,57 @@
                 "source": "https://github.com/ezyang/htmlpurifier/tree/v4.18.0"
             },
             "time": "2024-11-01T03:51:45+00:00"
+        },
+        {
+            "name": "floor12/yii2-phone",
+            "version": "2.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/floor12/yii2-phone.git",
+                "reference": "ba1f3859f726cf0688ba36bee9fcee70bc543a15"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/floor12/yii2-phone/zipball/ba1f3859f726cf0688ba36bee9fcee70bc543a15",
+                "reference": "ba1f3859f726cf0688ba36bee9fcee70bc543a15",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1.0",
+                "yiisoft/yii2": "~2.0.13"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "*"
+            },
+            "type": "yii2-component",
+            "autoload": {
+                "psr-4": {
+                    "floor12\\phone\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "floor12",
+                    "email": "floor12@floor12.net",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Yii2 phone formatter and validator.",
+            "keywords": [
+                "floor12",
+                "formatter",
+                "phone",
+                "validator"
+            ],
+            "support": {
+                "issues": "https://github.com/floor12/yii2-phone/issues",
+                "source": "https://github.com/floor12/yii2-phone/tree/2.2.3"
+            },
+            "time": "2023-07-25T18:42:41+00:00"
         },
         {
             "name": "hail812/yii2-adminlte-widgets",
@@ -6065,9 +6116,9 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "kartik-v/yii2-widget-select2": 20,
+        "kartik-v/yii2-widget-datetimepicker": 20,
         "kartik-v/yii2-widget-depdrop": 20,
-        "kartik-v/yii2-widget-datetimepicker": 20
+        "kartik-v/yii2-widget-select2": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
@@ -6076,6 +6127,6 @@
         "ext-curl": "*",
         "ext-json": "*"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }

@@ -160,8 +160,32 @@ class Filter extends \yii\db\ActiveRecord
         }
     }
 
-    public function getCoworker()
+    public function getCoworker($priority = Coworker::PRIORITY_HIGH)
     {
-        
+        $query = Coworker::find()->joinWith('properties')->where(['priority' => $priority]);
+        $query->where(['category_id' => $this->category_id]);
+        foreach ($this->requirements as $requirement) {
+            $query->andWhere(['property.id' => $requirement->property_id]);
+            switch ($requirement->type) {
+                case \Yii::t('app', 'Less'):
+                    $query->andWhere(['<=', 'coworker_property.value', $requirement->value]);
+                    break;
+                case \Yii::t('app', 'More'):
+                    $query->andWhere(['>=', 'coworker_property.value', $requirement->value]);
+                    break;
+                case \Yii::t('app', 'Equal'):
+                    $query->andWhere(['=', 'coworker_property.value', $requirement->value]);
+                    break;
+                case \Yii::t('app', 'Not Equal'):
+                    $query->andWhere(['<>', 'coworker_property.value', $requirement->value]);
+                    break;
+            }
+        }
+        return $query;
+    }
+
+    public function getCoworkersByOrder($order_id)
+    {
+
     }
 }

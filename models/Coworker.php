@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use floor12\phone\PhoneValidator;
 use Yii;
 
 /**
@@ -14,7 +15,6 @@ use Yii;
  * @property string $email
  * @property int|null $category_id
  * @property int $priority
- * @property int $notify_date
  * @property int $user_id
  *
  * @property Category $category
@@ -30,6 +30,9 @@ class Coworker extends \yii\db\ActiveRecord
     const PRIORITY_LOW = 0;
     const PRIORITY_NORMAL = 1;
     const PRIORITY_HIGH = 2;
+
+    const TYPE_WORKER = 1;
+    const TYPE_CUSTOMER = 2;
     public $files;
 
     public static function tableName()
@@ -43,13 +46,14 @@ class Coworker extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['category_id', 'priority', 'notify_date', 'user_id'], 'integer'],
+            [['category_id', 'priority', 'user_id', 'type'], 'integer'],
             [['firstname', 'lastname', 'phone', 'email'], 'string', 'max' => 255],
             [['coworkerProperties'], 'safe'],
             [['phone', 'email'], 'unique'],
-            [['phone'], 'filter', 'filter' => [$this, 'normalizePhone']],
+            [['phone'], PhoneValidator::className()],
             [['firstname', 'lastname', 'phone', 'email'], 'default', 'value' => ''],
             [['priority'], 'default', 'value' => self::PRIORITY_LOW],
+            [['type'], 'default', 'value' => self::TYPE_WORKER],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id']],
 //            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
@@ -97,13 +101,15 @@ class Coworker extends \yii\db\ActiveRecord
 
     public function upload()
     {
-        $this->save(false);
-        foreach ($this->files as $item) {
-            $attach = new Attachment();
-            $attach->file = $item;
-            $attach->target_class = Coworker::className();
-            if ($attach->upload() && $attach->save()) {
-                $this->link('attachments', $attach, ['target_class' => Coworker::className()]);
+        if ($this->files) {
+            $this->save(false);
+            foreach ($this->files as $item) {
+                $attach = new Attachment();
+                $attach->file = $item;
+                $attach->target_class = Coworker::className();
+                if ($attach->upload() && $attach->save()) {
+                    $this->link('attachments', $attach, ['target_class' => Coworker::className()]);
+                }
             }
         }
         return true;
@@ -202,5 +208,9 @@ class Coworker extends \yii\db\ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    public function isCustomer(): bool{
+        return $this->type === self::TYPE_CUSTOMER;
     }
 }
