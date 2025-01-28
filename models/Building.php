@@ -15,6 +15,7 @@ use yii\db\ActiveRecord;
  *
  * @property Location $location
  * @property Order[] $orders
+ * @property Coworker[] $customers
  */
 class Building extends ActiveRecord
 {
@@ -114,5 +115,22 @@ class Building extends ActiveRecord
     public function getOrders()
     {
         return $this->hasMany(Order::class, ['building_id' => 'id']);
+    }
+
+    public function getCustomers()
+    {
+        return $this->hasMany(Coworker::class, ['id' => 'customer_id'])->viaTable('building_coworker', ['building_id' => 'id']);
+    }
+
+    public function setCustomers($data)
+    {
+        $this->save(false);
+        foreach ($this->customers as $customer) {
+            $this->unlink('customers', $customer);
+        }
+        foreach ($data as $customer_id) {
+            $customer = Coworker::findOne($customer_id);
+            $this->link('customers', $customer);
+        }
     }
 }

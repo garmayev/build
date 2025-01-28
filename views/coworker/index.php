@@ -43,7 +43,7 @@ CSS
                 'attribute' => 'category_id',
                 'label' => \Yii::t('app', 'Category'),
                 'value' => function ($model) {
-                    return $model->category->title;
+                    return $model->category ? $model->category->title : "";
                 }
             ],
             [

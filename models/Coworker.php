@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use floor12\phone\PhoneValidator;
 use Yii;
 
 /**
@@ -23,6 +24,7 @@ use Yii;
  * @property Property[] $properties
  * @property Technique[] $techniques
  * @property Attachment[] $attachments
+ * @property string $name
  */
 class Coworker extends \yii\db\ActiveRecord
 {
@@ -31,6 +33,10 @@ class Coworker extends \yii\db\ActiveRecord
     const PRIORITY_HIGH = 2;
     const TYPE_CUSTOMER = 0;
     const TYPE_WORKER = 1;
+
+    const SCENARIO_COWORKER = 'coworker';
+    const SCENARIO_CUSTOMER = 'customer';
+
     public $files;
 
     public static function tableName()
@@ -46,14 +52,23 @@ class Coworker extends \yii\db\ActiveRecord
         return [
             [['category_id', 'priority', 'notify_date', 'user_id'], 'integer'],
             [['firstname', 'lastname', 'phone', 'email'], 'string', 'max' => 255],
+            [['firstname'], 'default', 'value' => ''],
             [['coworkerProperties'], 'safe'],
             [['phone', 'email'], 'unique'],
-            [['phone'], 'filter', 'filter' => [$this, 'normalizePhone']],
+            [['phone'], PhoneValidator::className()],
             [['firstname', 'lastname', 'phone', 'email'], 'default', 'value' => ''],
             [['priority'], 'default', 'value' => self::PRIORITY_LOW],
             [['type'], 'default', 'value' => self::TYPE_WORKER],
-            [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id']],
-//            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
+            [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id'], 'on' => self::SCENARIO_COWORKER],
+            [['category_id'], 'default', 'value' => 0, 'on' => self::SCENARIO_COWORKER],
+        ];
+    }
+
+    public function scenarios()
+    {
+        return [
+            self::SCENARIO_COWORKER => ['firstname', 'lastname', 'phone', 'email', 'type', 'category_id', 'priority', 'user_id'],
+            self::SCENARIO_CUSTOMER => ['firstname', 'lastname', 'phone', 'email', 'type', 'priority', 'user_id'],
         ];
     }
 
@@ -204,5 +219,10 @@ class Coworker extends \yii\db\ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    public function getName()
+    {
+        return $this->firstname ? $this->firstname . ' ' . $this->lastname : $this->user->username;
     }
 }

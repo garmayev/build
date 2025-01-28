@@ -15,30 +15,39 @@ $this->registerJsFile('//api-maps.yandex.ru/2.1/?apikey=0bb42c7c-0a9c-4df9-956a-
 $this->registerJsFile('/js/map.js', ['position' => View::POS_HEAD]);
 ?>
 
-<div class="building-form">
+    <div class="building-form">
 
-    <?php $form = ActiveForm::begin(); ?>
+        <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
+        <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
-    <div class="form-group">
-        <label for="building-location_id"><?= \Yii::t('app', 'Location') ?></label>
-        <div class="input-group">
-            <input class="form-control" name="Building[location][address]" id="building-address" value="<?= $model->location ? $model->location->address : '' ?>" />
-            <div class="input-group-append">
-                <span class="input-group-text" id="show-map"><i class="fas fa-map-marker-alt"></i></span>
+        <div class="form-group">
+            <label for="building-location_id"><?= \Yii::t('app', 'Location') ?></label>
+            <div class="input-group">
+                <input class="form-control" name="Building[location][address]" id="building-address"
+                       value="<?= $model->location ? $model->location->address : '' ?>"/>
+                <div class="input-group-append">
+                    <span class="input-group-text" id="show-map"><i class="fas fa-map-marker-alt"></i></span>
+                </div>
             </div>
+            <div id="map" class="mt-3" style="height: 400px"></div>
         </div>
-        <div id="map" class="mt-3" style="height: 400px"></div>
+
+        <?= $form->field($model, 'customers[]')->widget(\kartik\select2\Select2::class, [
+            'data' => \yii\helpers\ArrayHelper::map(\app\models\Coworker::find()->where(['type' => \app\models\Coworker::TYPE_CUSTOMER])->all(), 'id', 'name'),
+            'pluginOptions' => [
+                'allowClear' => true,
+                'multiple' => true,
+            ]
+        ]) ?>
+
+        <div class="form-group">
+            <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>
+        </div>
+
+        <?php ActiveForm::end(); ?>
+
     </div>
-
-    <div class="form-group">
-        <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>
-    </div>
-
-    <?php ActiveForm::end(); ?>
-
-</div>
 <?php
 $location = $model->location ? $model->location : ["latitude" => 51.838814, "longitude" => 107.590673, "address" => ""];
 $this->registerJsVar('position', $location);
@@ -56,7 +65,8 @@ $(() => {
         const map = new Map( 'map', position, 'Building[location]', 'building-address' )
     }
 })
-JS);
+JS
+);
 
 $this->registerCss(<<<CSS
 #map {
@@ -65,4 +75,5 @@ $this->registerCss(<<<CSS
 .show #map {
     display: block;
 }
-CSS);
+CSS
+);

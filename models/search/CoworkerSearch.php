@@ -39,7 +39,7 @@ class CoworkerSearch extends Coworker
      */
     public function search($params)
     {
-        $query = Coworker::find();
+        $query = Coworker::find()->where(['type' => Coworker::TYPE_WORKER]);
 
         // add conditions that should always apply here
 
