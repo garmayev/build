@@ -51,7 +51,7 @@ class Building extends ActiveRecord
             [['title'], 'string', 'max' => 255],
             [['location_id'], 'exist', 'skipOnError' => true, 'targetClass' => Location::class, 'targetAttribute' => ['location_id' => 'id']],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
-            [['location'], 'safe']
+            [['location', 'customers'], 'safe']
         ];
     }
 
@@ -119,7 +119,7 @@ class Building extends ActiveRecord
 
     public function getCustomers()
     {
-        return $this->hasMany(Coworker::class, ['id' => 'customer_id'])->viaTable('building_coworker', ['building_id' => 'id']);
+        return $this->hasMany(Coworker::class, ['id' => 'coworker_id'])->viaTable('building_coworker', ['building_id' => 'id']);
     }
 
     public function setCustomers($data)

@@ -42,6 +42,17 @@ $this->registerJsFile('/js/map.js');
                 'value' => function (Building $model) {
                     return Html::tag("div", "", ["id" => "map", 'data' => $model->location->attributes, 'class' => 'col-6', 'style' => 'height: 400px']);
                 }
+            ], [
+                'attribute' => 'customers',
+                'label' => \Yii::t('app', 'Customers'),
+                'format' => 'raw',
+                'value' => function (Building $model) {
+                    $result = "";
+                    foreach ($model->customers as $customer) {
+                        $result .= Html::tag('p', Html::a($customer->name, ['/coworker/view', 'id' => $customer->id]));
+                    }
+                    return $result;
+                }
             ]
         ],
     ]) ?>

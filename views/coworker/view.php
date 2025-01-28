@@ -89,24 +89,27 @@ $invite_link = "https://t.me/" . \Yii::$app->params["bot_name"] . "?start=" . $m
             ],
         ]) ?>
 
-        <?= GridView::widget([
-            'dataProvider' => new ArrayDataProvider([
-                'allModels' => $model->coworkerProperties,
-            ]),
-            'summary' => false,
-            'columns' => [
-                [
-                    'attribute' => 'property.title',
+        <?php
+        if ($model->type == Coworker::TYPE_WORKER) {
+            echo GridView::widget([
+                'dataProvider' => new ArrayDataProvider([
+                    'allModels' => $model->coworkerProperties,
+                ]),
+                'summary' => false,
+                'columns' => [
+                    [
+                        'attribute' => 'property.title',
+                    ],
+                    'value',
+                    [
+                        'attribute' => 'dimension.title',
+                    ]
                 ],
-                'value',
-                [
-                    'attribute' => 'dimension.title',
+                'tableOptions' => [
+                    'class' => 'table table-striped',
                 ]
-            ],
-            'tableOptions' => [
-                'class' => 'table table-striped',
-            ]
-        ]) ?>
+            ]);
+        } ?>
     </div>
 <?php
 $this->registerJsVar("bot_name", \Yii::$app->params['bot_name']);
