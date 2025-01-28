@@ -14,7 +14,6 @@ use Yii;
  * @property string $email
  * @property int|null $category_id
  * @property int $priority
- * @property int $notify_date
  * @property int $user_id
  *
  * @property Category $category

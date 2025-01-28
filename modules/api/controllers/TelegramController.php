@@ -23,17 +23,19 @@ class TelegramController extends \yii\web\Controller {
         if ( isset($this->query['message']) && isset($this->query['message']['entities']) ) {
             foreach ($this->query['message']['entities'] as $entity) {
                 if ($entity['type'] === 'bot_command') {
-                    \Yii::error( substr($this->query['message']['text'], 0, $entity['length']) );
+//                    \Yii::error( substr($this->query['message']['text'], 0, $entity['length']) );
                 }
             }
         }
-
+        $args = explode(" ", substr($this->query['message']['text'], 1, strlen($this->query['message']['text']) - 1));
         if ( isset($this->query['callback_query']) ) {
             parse_str( $this->query['callback_query']['data'], $this->params );
         } else {
-            $this->params["action"] = "invite";
+            $this->params["action"] = array_shift($args);
+            $this->params["data"] = $args;
         }
 
+//        \Yii::error($this->params);
         return parent::beforeAction($action);
     }
 
@@ -83,7 +85,20 @@ class TelegramController extends \yii\web\Controller {
         $message->remove();
     }
 
+    private function start()
+    {
+        $coworker = \app\models\Coworker::findOne($this->params["data"]);
+        $user = User::findOne($coworker->user_id);
+        $user->chat_id = "".$this->query['message']['from']['id'];
+        if ( $user->save() ) {
+            \Yii::error( $user->attributes );
+        } else {
+            \Yii::error( $user->getErrorSummary(true) );
+        }
+    }
+
     private function invite()
     {
+        
     }
 }

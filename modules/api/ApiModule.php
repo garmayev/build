@@ -19,11 +19,7 @@ class ApiModule extends \yii\base\Module
     {
         parent::init();
 
-<<<<<<< HEAD
 //        $telegram = \Yii::$app->telegram;
-=======
-        $telegram = \Yii::$app->telegram;
->>>>>>> a0d55bd (Server Fix)
         // custom initialization code goes here
     }
 }
