@@ -41,8 +41,6 @@ class CoworkerSearch extends Coworker
     {
         $query = Coworker::find();
 
-        // add conditions that should always apply here
-
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
@@ -50,8 +48,6 @@ class CoworkerSearch extends Coworker
         $this->load($params);
 
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
             return $dataProvider;
         }
 

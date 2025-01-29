@@ -6,6 +6,7 @@ use app\models\Coworker;
 use app\models\Profile;
 use app\models\search\CoworkerSearch;
 use app\models\User;
+use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
@@ -15,6 +16,23 @@ use yii\web\UploadedFile;
  */
 class CoworkerController extends Controller
 {
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::class,
+                'only' => ['index', 'view', 'create', 'update', 'delete'],
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['index', 'view', 'create', 'update', 'delete'],
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
+        ];
+    }
+
     /**
      * Lists all Coworker models.
      *
@@ -102,7 +120,9 @@ class CoworkerController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        $model->user->delete();
+        $model->delete();
 
         return $this->redirect(['index']);
     }

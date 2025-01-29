@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
+//        'filterModel' => $searchModel,
         'summary' => false,
         'tableOptions' => [
             'class' => 'table table-striped'
@@ -41,7 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     return $list[$model->type];
                 }
             ],
-            'parent_id',
+//            'parent_id',
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Category $model, $key, $index, $column) {

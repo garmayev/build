@@ -24,6 +24,7 @@ use Yii;
  * @property Property[] $properties
  * @property Technique[] $techniques
  * @property Attachment[] $attachments
+ * @property User $user
  * @property string $name
  */
 class Coworker extends \yii\db\ActiveRecord
@@ -98,7 +99,7 @@ class Coworker extends \yii\db\ActiveRecord
             $user = new User([
                 'email' => $this->email,
                 'username' => explode('@', $this->email)[0],
-                'password_hash' => Yii::$app->security->generatePasswordHash($this->phone),
+                'password_hash' => Yii::$app->security->generatePasswordHash(preg_replace("/\(\)\+\-\ /", "", $this->phone)),
                 'auth_key' => Yii::$app->security->generateRandomString(),
                 'access_token' => Yii::$app->security->generateRandomString(),
                 'status' => User::STATUS_ACTIVE,
