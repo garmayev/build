@@ -126,11 +126,13 @@ class Building extends ActiveRecord
     {
         $this->save(false);
         foreach ($this->customers as $customer) {
-            $this->unlink('customers', $customer);
+            $this->unlink('customers', $customer, true);
         }
-        foreach ($data as $customer_id) {
-            $customer = Coworker::findOne($customer_id);
-            $this->link('customers', $customer);
+        if ($data) {
+            foreach ($data as $customer_id) {
+                $customer = Coworker::findOne($customer_id);
+                $this->link('customers', $customer);
+            }
         }
     }
 }

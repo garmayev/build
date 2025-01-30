@@ -17,7 +17,7 @@ class TelegramController extends \yii\web\Controller {
         $this->enableCsrfValidation = false;
         $this->query = json_decode( file_get_contents("php://input"), true );
 
-        \Yii::error($this->query);
+//        \Yii::error($this->query);
 
         $message = isset($this->query['message']) ? $this->query['message'] : $this->query['callback_query'];
         if ( isset($this->query['message']) && isset($this->query['message']['entities']) ) {
@@ -26,8 +26,8 @@ class TelegramController extends \yii\web\Controller {
 //                    \Yii::error( substr($this->query['message']['text'], 0, $entity['length']) );
                 }
             }
+            $args = explode(" ", substr($this->query['message']['text'], 1, strlen($this->query['message']['text']) - 1));
         }
-        $args = explode(" ", substr($this->query['message']['text'], 1, strlen($this->query['message']['text']) - 1));
         if ( isset($this->query['callback_query']) ) {
             parse_str( $this->query['callback_query']['data'], $this->params );
         } else {
@@ -62,9 +62,10 @@ class TelegramController extends \yii\web\Controller {
         $user = User::findOne(['chat_id' => $this->query['callback_query']['from']['id']]);
         if (!$order->check()) {
             $order->addCoworker($user);
-            $message = TelegramMessage::findOne(['id' => $this->query['callback_query']['message']['message_id']]);
+            $message = TelegramMessage::findOne(['message_id' => $this->query['callback_query']['message']['message_id']]);
             if ( $message->load(["TelegramMessage" => ["text" => $order->generateTelegramText(\Yii::t('app', 'You have agreed to complete the order')." #{$order->id}"), "status" => TelegramMessage::STATUS_AGREE, "reply_markup" => null]]) && $message->save() ) {
                 $message->editText();
+                $message->editKeyboard();
             }
             if ( $order->check() ) {
                 foreach ( TelegramMessage::find()->where(['order_id' => $order->id])->andWhere(['status' => TelegramMessage::STATUS_NEW])->all() as $message ) {
@@ -88,12 +89,14 @@ class TelegramController extends \yii\web\Controller {
     private function start()
     {
         $coworker = \app\models\Coworker::findOne($this->params["data"]);
-        $user = User::findOne($coworker->user_id);
-        $user->chat_id = "".$this->query['message']['from']['id'];
-        if ( $user->save() ) {
-            \Yii::error( $user->attributes );
-        } else {
-            \Yii::error( $user->getErrorSummary(true) );
+        if ($coworker) {
+            $user = User::findOne($coworker->user_id);
+            $user->chat_id = "".$this->query['message']['from']['id'];
+            if ( $user->save() ) {
+                \Yii::error( $user->attributes );
+            } else {
+                \Yii::error( $user->getErrorSummary(true) );
+            }
         }
     }
 

@@ -221,7 +221,7 @@ class Order extends \yii\db\ActiveRecord
     public function setFilters($data)
     {
         $this->save(false);
-        \Yii::error($data);
+//        \Yii::error($data);
         foreach ($this->filters as $filter) {
             $filter->unlink('filters', $filter, true);
         }
@@ -363,7 +363,7 @@ class Order extends \yii\db\ActiveRecord
                     $data = [
                         'TelegramMessage' => [
                             'text' => $this->generateTelegramText(\Yii::t('app', 'New Order').' #'.$this->id),
-                            'chat_id' => $item->chat_id,
+                            'chat_id' => $user->chat_id,
                             'order_id' => $this->id,
                             'status' => TelegramMessage::STATUS_NEW,
                             'reply_markup' => json_encode([
@@ -378,7 +378,7 @@ class Order extends \yii\db\ActiveRecord
                         ]
                     ];
                     if ($message->load($data) && $message->save()) {
-//                    $message->send();
+                        $message->send();
 //                    $result[$user->chat_id] = $message->send();
                     }
                 } else if ($user->device_id) {

@@ -63,11 +63,13 @@ class TelegramMessage extends ActiveRecord
             \Yii::error(curl_error($curl));
         }
         $raw = json_decode($result, true);
+        \Yii::error($raw);
         if ($raw["ok"]) {
             $this->id = $raw["result"]["message_id"];
-            if ($test) {
+            $this->message_id = $raw["result"]["message_id"];
+//            if ($test) {
                 $this->save();
-            }
+//            }
             curl_close($curl);
             return $result;
         } else {
@@ -85,7 +87,7 @@ class TelegramMessage extends ActiveRecord
         $bot_id = \Yii::$app->params['bot_id'];
         $data = [
             "chat_id" => $this->chat_id,
-            "message_id" => $this->id,
+            "message_id" => $this->message_id,
             "reply_markup" => [],
         ];
 
@@ -113,7 +115,7 @@ class TelegramMessage extends ActiveRecord
             "chat_id" => $this->chat_id,
             "text" => $this->text,
             "parse_mode" => "html",
-            "message_id" => $this->id,
+            "message_id" => $this->message_id,
         ];
 
         curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/editMessageText");

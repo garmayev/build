@@ -68,7 +68,7 @@ class Coworker extends \yii\db\ActiveRecord
     public function scenarios()
     {
         return [
-            self::SCENARIO_COWORKER => ['firstname', 'lastname', 'phone', 'email', 'type', 'category_id', 'priority', 'user_id'],
+            self::SCENARIO_DEFAULT => ['firstname', 'lastname', 'phone', 'email', 'type', 'category_id', 'priority', 'user_id', 'coworkerProperties'],
             self::SCENARIO_CUSTOMER => ['firstname', 'lastname', 'phone', 'email', 'type', 'priority', 'user_id'],
         ];
     }
@@ -99,7 +99,7 @@ class Coworker extends \yii\db\ActiveRecord
             $user = new User([
                 'email' => $this->email,
                 'username' => explode('@', $this->email)[0],
-                'password_hash' => Yii::$app->security->generatePasswordHash(preg_replace("/\(\)\+\-\ /", "", $this->phone)),
+                'password_hash' => Yii::$app->security->generatePasswordHash(preg_replace("/[\(\)\+\-\ ]*/", "", $this->phone)),
                 'auth_key' => Yii::$app->security->generateRandomString(),
                 'access_token' => Yii::$app->security->generateRandomString(),
                 'status' => User::STATUS_ACTIVE,

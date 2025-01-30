@@ -177,7 +177,7 @@ function Table({data, header, formName}) {
                                 })
                             }
                             <td data-target={index}>
-                                <a className={'fas fa-pen'} href={'#'}></a>
+<!--                                <a className={'fas fa-pen'} href={'#'}></a> -->
                                 <a className={'fas fa-trash'} href={'#'}></a>
                             </td>
                         </tr>

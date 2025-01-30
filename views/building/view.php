@@ -67,7 +67,7 @@ $(() => {
         console.log(mapContainer.getAttribute('data-latitude'));
         console.log(mapContainer.getAttribute('data-longitude'));
         const map = new Map( "map", {latitude: mapContainer.getAttribute('data-latitude'), longitude: mapContainer.getAttribute('data-longitude')} )
-        map.address = mapContainer.getAttribute('data-address');
+//        map.address = mapContainer.getAttribute('data-address');
     }
 //    const map = new Map(mapContainer, [mapContainer.getAttribute('data-latitude'), mapContainer.getAttribute('data-longitude')], '');
 });

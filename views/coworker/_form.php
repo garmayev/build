@@ -65,9 +65,9 @@ echo Html::tag('button', \Yii::t('app', 'Add Property'), [
         <?php
         foreach ($model->coworkerProperties as $index => $coworkerProperty) {
             echo Html::beginTag('tr', ['key' => $index]);
-            echo Html::tag('td', $coworkerProperty->property->title);
-            echo Html::tag('td', $coworkerProperty->value);
-            echo Html::tag('td', $coworkerProperty->dimension->title);
+            echo Html::tag('td', $coworkerProperty->property->title.Html::tag('input', '', ['type' => 'hidden', 'name' => "Coworker[coworkerProperties][$index][property_id]", 'value' => $coworkerProperty->property_id]));
+            echo Html::tag('td', $coworkerProperty->value.Html::tag('input', '', ['type' => 'hidden', 'name' => "Coworker[coworkerProperties][$index][value]", 'value' => $coworkerProperty->value]));
+            echo Html::tag('td', $coworkerProperty->dimension->title.Html::tag('input', '', ['type' => 'hidden', 'name' => "Coworker[coworkerProperties][$index][dimension_id]", 'value' => $coworkerProperty->dimension_id]));
             echo Html::tag('td',
                 Html::a(
                     Html::tag('i', '', ['class' => 'fas fa-trash']),
@@ -134,7 +134,9 @@ $this->registerJs(<<<JS
 $(() => {
     let index = $('tbody tr').length;
     $('#category_id').trigger('change');
-    $('tbody .remove').on('click', function(e) {
+    $(document).on('click', 'tbody .remove', function(e) {
+        e.preventDefault();
+        console.log(e);
         e.currentTarget.closest('tr').remove();
     })
     $("#coworker-type").on('change', function(e) {
@@ -160,9 +162,10 @@ $(() => {
         
         $("#dynamic-table").find("tbody").append(`
         <tr key="\${index}">
-            <td>\${property_value}<input type="hidden" value="\${property_id}" name="Coworker[coworkerProperties][\${index}][property_id]"/></td>
-            <td>\${value}<input type="hidden" value="\${value}" name="Coworker[coworkerProperties][\${index}][value]"/></td>
+            <td>\${property_value}<input type="hidden" value="\${property_id}" value="\${property_id}" name="Coworker[coworkerProperties][\${index}][property_id]"/></td>
+            <td>\${value}<input type="hidden" value="\${value}" value="\${value}" name="Coworker[coworkerProperties][\${index}][value]"/></td>
             <td>\${dimension_value}<input type="hidden" value="\${dimension_id}" name="Coworker[coworkerProperties][\${index}][dimension_id]"/></td>
+            <td><a class="remove" href="#"><i class="fas fa-trash"></i></a></td>
         </tr>
         `);
         index++;

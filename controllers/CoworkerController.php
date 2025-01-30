@@ -121,7 +121,9 @@ class CoworkerController extends Controller
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
-        $model->user->delete();
+//        if (isset($model->user)) {
+//            $model->user->delete();
+//        }
         $model->delete();
 
         return $this->redirect(['index']);
