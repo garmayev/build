@@ -6,6 +6,7 @@ use app\models\telegram\TelegramMessage;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\behaviors\TimestampBehavior;
+use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveQuery;
 use yii\helpers\ArrayHelper;
 use yii\web\UploadedFile;
@@ -24,6 +25,7 @@ use yii\web\UploadedFile;
  *
  * @property string $statusTitle
  * @property array $statusList
+ * @property array $details
  *
  * @property Building $building
  * @property Coworker[] $coworkers
@@ -56,7 +58,11 @@ class Order extends \yii\db\ActiveRecord
             [
                 'class' => TimestampBehavior::class,
                 'createdAtAttribute' => 'created_at',
-                'updatedAtAttribute' => false
+                'updatedAtAttribute' => false,
+            ], [
+                'class' => BlameableBehavior::class,
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => false,
             ]
         ];
     }
@@ -130,7 +136,13 @@ class Order extends \yii\db\ActiveRecord
             'comment',
             'building' => function (Order $model) {
                 return $model->building;
-            }
+            },
+            'attachments' => function (Order $model) {
+                return Attachment::find()->where(['target_class' => Order::class])->andWhere(['target_id' => $model->id])->all();
+            },
+            'filters' => function (Order $model) {
+                return $model->filters;
+            },
         ];
     }
 
@@ -179,10 +191,10 @@ class Order extends \yii\db\ActiveRecord
      * @return ActiveQuery
      * @throws InvalidConfigException
      */
-    public function getFilters(): ActiveQuery
+/*    public function getFilters(): ActiveQuery
     {
         return $this->hasMany(Filter::class, ['id' => 'filter_id'])->viaTable('order_filter', ['order_id' => 'id']);
-    }
+    } */
 
     public function getStatusTitle()
     {
@@ -263,6 +275,11 @@ class Order extends \yii\db\ActiveRecord
     public function getOrderFilters()
     {
         return $this->hasMany(OrderFilter::class, ['order_id' => 'id']);
+    }
+
+    public function getFilters()
+    {
+        return $this->hasMany(Filter::class, ['id' => 'filter_id'])->viaTable('order_filter', ['order_id' => 'id']);
     }
 
     /**
@@ -450,5 +467,25 @@ class Order extends \yii\db\ActiveRecord
         if (!$coworker->isCustomer()) {
             $coworker->canWork();
         }
+    }
+
+    public function getDetails()
+    {
+//        $filters = [];
+//        foreach ($this->orderFilters as $orderFilter) {
+//            $filters[] = $orderFilter->filter;
+//        }
+//        \Yii::error($this->filters);
+        return [
+            "id" => $this->id,
+            "building" => $this->building,
+            "status" => $this->statusTitle,
+            "type" => $this->typeName,
+            "date" => $this->date,
+            "comment" => $this->comment,
+            "coworkers" => $this->coworkers,
+            "filters" => $this->filters,
+            "attachments" => $this->attachments,
+        ];
     }
 }

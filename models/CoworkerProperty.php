@@ -52,6 +52,15 @@ class CoworkerProperty extends \yii\db\ActiveRecord
         ];
     }
 
+    public function fields()
+    {
+        return [
+            'coworker' => $this->coworker,
+            'property' => $this->property,
+            'value',
+        ];
+    }
+
     /**
      * Gets query for [[Coworker]].
      *

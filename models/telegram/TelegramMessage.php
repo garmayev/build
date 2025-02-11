@@ -63,7 +63,7 @@ class TelegramMessage extends ActiveRecord
             \Yii::error(curl_error($curl));
         }
         $raw = json_decode($result, true);
-        \Yii::error($raw);
+//        \Yii::error($raw);
         if ($raw["ok"]) {
             $this->id = $raw["result"]["message_id"];
             $this->message_id = $raw["result"]["message_id"];
@@ -101,7 +101,7 @@ class TelegramMessage extends ActiveRecord
             \Yii::error(curl_error($curl));
             return curl_error($curl);
         } else {
-            \Yii::error($result);
+//            \Yii::error($result);
             curl_close($curl);
             return $result;
         }

@@ -73,6 +73,23 @@ class Coworker extends \yii\db\ActiveRecord
         ];
     }
 
+    public function fields()
+    {
+        return [
+            'id',
+            'name' => function (Coworker $model) {
+                return $model->name;
+            },
+            'phone',
+            'email',
+            'category' => function (Coworker $model) {
+                return $model->category;
+            },
+            'priority',
+//            'coworkerProperties',
+        ];
+    }
+
     public function normalizePhone($value)
     {
         return preg_replace("/(\+\(\)\ \-)/", "", $value);
@@ -224,6 +241,6 @@ class Coworker extends \yii\db\ActiveRecord
 
     public function getName()
     {
-        return $this->firstname ? $this->firstname . ' ' . $this->lastname : $this->user->username;
+        return $this->firstname . ' ' . $this->lastname;
     }
 }

@@ -122,6 +122,7 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
  * @constructor
  */
 function Table({data, header, formName}) {
+    console.log(data);
     const [list, setList] = React.useState(data);
 
     return (
@@ -177,7 +178,7 @@ function Table({data, header, formName}) {
                                 })
                             }
                             <td data-target={index}>
-<!--                                <a className={'fas fa-pen'} href={'#'}></a> -->
+                                <a className={'fas fa-pen'} href={'#'}></a>
                                 <a className={'fas fa-trash'} href={'#'}></a>
                             </td>
                         </tr>

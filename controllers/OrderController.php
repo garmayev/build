@@ -32,7 +32,7 @@ class OrderController extends Controller
     {
         return $this->render('index', [
             'dataProvider' => new ActiveDataProvider([
-                'query' => Order::find()
+                'query' => Order::find()->where(['created_by' => \Yii::$app->user->identity->getId()])
             ])
         ]);
     }

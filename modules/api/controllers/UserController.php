@@ -27,18 +27,19 @@ class UserController extends Controller
                 'access' => [
                     'class' => \yii\filters\AccessControl::class,
                     'rules' => [
-                        [ 'allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check', 'list'] ],
-                        [ 'allow' => true, 'roles' => ['@'], 'actions' => ['options', 'preflight'] ],
+                        [ 'allow' => true, 'roles' => ['?'], 'actions' => ['check', 'list', 'login', 'register'] ],
+                        [ 'allow' => true, 'roles' => ['@'], 'actions' => ['options', 'preflight', 'login', 'register', 'check-username', 'check-email'] ],
                     ],
                 ],
                 'authenticator' => [
+//                    'class' => \yii\filters\auth\HttpBearerAuth::class,
                     'class' => \yii\filters\auth\CompositeAuth::class,
                     'authMethods' => [
                         \yii\filters\auth\HttpBearerAuth::class,
                         \yii\filters\auth\HttpBasicAuth::class,
                         \yii\filters\auth\QueryParamAuth::class,
                     ],
-                    'except' => ['OPTIONS', 'PREFLIGHT', 'check', 'login', 'list']
+                    'except' => ['OPTIONS', 'PREFLIGHT', 'login', 'register', 'check', 'check-username', 'check-email']
                 ]
             ]
         );
@@ -47,6 +48,9 @@ class UserController extends Controller
     public function actionLogin() {
         $data = json_decode(file_get_contents("php://input"), true);
         $model = User::findOne(['username' => $data['username']]);
+        if (empty($data['username']) || empty($data['password'])) {
+            return [ "ok" => false, "message" => "Missing Username or Password" ];
+        }
         sleep(2);
         if ( $model && $model->validatePassword($data['password']) ) {
             return [ 'ok' => true, 'user' => $model, 'token' => $model->access_token ];
@@ -69,7 +73,7 @@ class UserController extends Controller
         $model = User::findOne(['access_token' => $data["access_token"]]);
         if (isset($model)) {
             // $user = User::findOne(\Yii::$app->user->identity->id);
-            return ['ok' => true, 'user' => $model];
+            return ['ok' => true, 'user' => $model, 'token' => $model->access_token];
         }
         return ["ok" => false, 'message' => 'Unknown user'];
 
@@ -90,5 +94,19 @@ class UserController extends Controller
         } else {
             return ['ok' => false, 'message' => $model->getErrorSummary(true)];
         }
+    }
+
+    public function actionCheckUsername()
+    {
+        $data = json_decode(file_get_contents("php://input"), true);
+        $model = User::find()->where(['username' => $data['username']])->one();
+        return ['ok' => empty($model), 'message' => 'This username is already taken'];
+    }
+
+    public function actionCheckEmail()
+    {
+        $data = json_decode(file_get_contents("php://input"), true);
+        $model = User::find()->where(['email' => $data['email']])->one();
+        return ['ok' => empty($model), 'message' => 'This email is already taken'];
     }
 }

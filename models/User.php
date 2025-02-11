@@ -51,6 +51,7 @@ class User extends ActiveRecord implements IdentityInterface
             'username',
             'email',
             'access_token',
+            'status',
 //            'name',
         ];
     }

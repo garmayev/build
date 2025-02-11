@@ -70,6 +70,7 @@ class Building extends ActiveRecord
     public function fields()
     {
         return [
+            'id',
             'title',
             'location' => function (Building $model) {
                 return $model->location;

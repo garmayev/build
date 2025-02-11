@@ -54,7 +54,10 @@ class Requirement extends \yii\db\ActiveRecord
                 return $model->dimension;
             },
             'value',
-            'type'
+            'type',
+            'coworkers' => function (Requirement $model) {
+                return $model->getCoworkers();
+            },
         ];
     }
 
@@ -111,5 +114,33 @@ class Requirement extends \yii\db\ActiveRecord
     public function setProperty($data)
     {
         $this->property_id = $data['id'];
+    }
+
+    public function getCoworkers()
+    {
+        $query = Coworker::find()
+            ->select('filter.*, coworker.*')
+//            ->joinWith('coworkerProperties')
+//            ->leftJoin('filter', "filter.id = $this->filter_id")
+            ->where(['filter.id' => $this->filter_id])
+            ->andWhere(['filter.category_id' => 'coworker.category_id'])
+            ->andWhere(['property_id' => $this->property_id]);
+        switch ($this->type) {
+            case \Yii::t('app', 'Less'):
+                $query->andWhere(['<=', 'value', $this->value]);
+                break;
+            case \Yii::t('app', 'More'):
+                $query->andWhere(['>=', 'value', $this->value]);
+                break;
+            case \Yii::t('app', 'Equal'):
+                $query->andWhere(['=', 'value', $this->value]);
+                break;
+            case \Yii::t('app', 'Not Equal'):
+                $query->andWhere(['<>', 'value', $this->value]);
+                break;
+        }
+        \Yii::error( $query->createCommand()->getRawSql() );
+        \Yii::error( count($query->all()) );
+        return $query->all();
     }
 }

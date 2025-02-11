@@ -39,7 +39,7 @@ class CoworkerSearch extends Coworker
      */
     public function search($params)
     {
-        $query = Coworker::find();
+        $query = Coworker::find()->where(['user_id' => \Yii::$app->user->identity->getId()]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,

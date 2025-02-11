@@ -88,7 +88,7 @@ $this->registerJsVar('filters', $model->filters); ;
 $script = <<<JS
     yii.t = $t ;
     const root = ReactDOM.createRoot(document.getElementById('dynamicTable'));
-    
+
     root.render(
         <DynamicTable 
             data={filters} 
