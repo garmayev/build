@@ -14,6 +14,7 @@ use yii\db\ActiveRecord;
  * @property integer $updated_at
  * @property integer $order_id
  * @property integer $status
+ * @property integer $message_id
  */
 class TelegramMessage extends ActiveRecord
 {
@@ -30,7 +31,7 @@ class TelegramMessage extends ActiveRecord
     {
         return [
             [['chat_id', 'device_id', 'text', 'reply_markup'], 'string'],
-            [['created_at', 'updated_at', 'status'], 'integer'],
+            [['created_at', 'updated_at', 'status', 'message_id'], 'integer'],
             [['order_id'], 'exist', 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']],
             [['status'], 'default', 'value' => self::STATUS_NEW],
         ];
@@ -59,62 +60,37 @@ class TelegramMessage extends ActiveRecord
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
         curl_setopt($curl, CURLOPT_HEADER, false);
 
-        if ( ($result = curl_exec($curl)) === false ) {
+        if (($result = curl_exec($curl)) === false) {
             \Yii::error(curl_error($curl));
         }
         $raw = json_decode($result, true);
-//        \Yii::error($raw);
         if ($raw["ok"]) {
             $this->id = $raw["result"]["message_id"];
             $this->message_id = $raw["result"]["message_id"];
-//            if ($test) {
-                $this->save();
-//            }
+            $this->save();
             curl_close($curl);
             return $result;
         } else {
             \Yii::error($raw);
             curl_close($curl);
-            return "So,ething wrong";
-        }
-
-        Telegram::send("");
-    }
-
-    public function editKeyboard()
-    {
-        $curl = curl_init();
-        $bot_id = \Yii::$app->params['bot_id'];
-        $data = [
-            "chat_id" => $this->chat_id,
-            "message_id" => $this->message_id,
-            "reply_markup" => [],
-        ];
-
-        curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/editMessageReplyMarkup");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_HEADER, false);
-
-        if ( ($result = curl_exec($curl)) === false ) {
-            \Yii::error(curl_error($curl));
-            return curl_error($curl);
-        } else {
-//            \Yii::error($result);
-            curl_close($curl);
-            return $result;
+            return "Something wrong";
         }
     }
 
-    public function editText()
+    public function editText($chat_id = null, $text = null, $reply_markup = null, $message_id = null)
     {
+        $this->chat_id = $chat_id ?? $this->chat_id;
+        $this->text = $text ?? $this->text;
+        $this->reply_markup = $reply_markup ?? $this->reply_markup;
+        $this->message_id = $message_id ?? $this->message_id;
+
         $curl = curl_init();
         $bot_id = \Yii::$app->params['bot_id'];
         $data = [
             "chat_id" => $this->chat_id,
             "text" => $this->text,
             "parse_mode" => "html",
+            "reply_markup" => $this->reply_markup,
             "message_id" => $this->message_id,
         ];
 
@@ -124,15 +100,17 @@ class TelegramMessage extends ActiveRecord
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
         curl_setopt($curl, CURLOPT_HEADER, false);
 
-        if ( ($result = curl_exec($curl)) === false ) {
+        if (($result = curl_exec($curl)) === false) {
             \Yii::error(curl_error($curl));
-            return curl_error($curl);
-        } else {
-            curl_close($curl);
-//            \Yii::error($result);
-            return $result;
         }
 
+        curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/editMessageReplyMarkup");
+
+        if ($result = curl_exec($curl) === false) {
+            \Yii::error(curl_error($curl));
+        }
+
+        $this->save();
     }
 
     public function remove()
@@ -150,7 +128,7 @@ class TelegramMessage extends ActiveRecord
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
         curl_setopt($curl, CURLOPT_HEADER, false);
 
-        if ( ($result = curl_exec($curl)) === false ) {
+        if (($result = curl_exec($curl)) === false) {
             \Yii::error(curl_error($curl));
             return curl_error($curl);
         } else {

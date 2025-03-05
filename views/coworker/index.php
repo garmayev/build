@@ -17,6 +17,10 @@ $this->registerCss(<<<CSS
     padding: 0;
     margin: 0;
 }
+.table td {
+    display: table-cell;
+    vertical-align: middle;
+}
 CSS
 );
 ?>
@@ -35,6 +39,9 @@ CSS
             'class' => 'table table-striped',
         ],
         'columns' => [
+            [
+                'class' => 'yii\grid\SerialColumn',
+            ],
             'firstname',
             'lastname',
             'email:email',

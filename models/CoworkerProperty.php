@@ -55,8 +55,8 @@ class CoworkerProperty extends \yii\db\ActiveRecord
     public function fields()
     {
         return [
-            'coworker' => $this->coworker,
-            'property' => $this->property,
+            'coworker' => function (CoworkerProperty $model) { return $model->coworker; },
+            'property' => function (CoworkerProperty $model) { return $model->property; },
             'value',
         ];
     }
@@ -84,5 +84,10 @@ class CoworkerProperty extends \yii\db\ActiveRecord
     public function getDimension()
     {
         return $this->hasOne(Dimension::class, ['id' => 'dimension_id']);
+    }
+
+    public function getFromCoworker()
+    {
+
     }
 }

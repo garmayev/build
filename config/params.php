@@ -7,5 +7,5 @@ return [
     'bot_id' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
     'bot_name' => 'garmayev_media_bot',
     'bsVersion' => '4.6.0',
-    'notify_delay' => 7200,
+    'notify_delay' => 1200,
 ];

@@ -30,6 +30,13 @@ class UserController extends Controller
 
     public function actionPassword($username, $password)
     {
-        
+        $model = User::findOne(['username' => $username]);
+        $model->password_hash = \Yii::$app->security->generatePasswordHash($password);
+        if ($model->save()) {
+            $this->stdout("\nUser '$username' password is changed");
+        } else {
+            $this->stdout("\nPassword is not changed");
+        }
+        return null;
     }
 }

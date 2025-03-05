@@ -8,9 +8,13 @@ use app\models\Coworker;
 
 /**
  * CoworkerSearch represents the model behind the search form of `app\models\Coworker`.
+ * @property int $id
+ * @property int $category_id
+ * @property string $text
  */
 class CoworkerSearch extends Coworker
 {
+    public $text = "";
     /**
      * {@inheritdoc}
      */
@@ -18,6 +22,7 @@ class CoworkerSearch extends Coworker
     {
         return [
             [['id', 'category_id'], 'integer'],
+            [['text'], 'string']
         ];
     }
 
@@ -45,8 +50,8 @@ class CoworkerSearch extends Coworker
             'query' => $query,
         ]);
 
-        $this->load($params);
-
+//        $this->load($params);
+//
         if (!$this->validate()) {
             return $dataProvider;
         }
@@ -56,6 +61,9 @@ class CoworkerSearch extends Coworker
             'id' => $this->id,
             'category_id' => $this->category_id,
         ]);
+        $query->andFilterWhere(['or', ['like', 'phone', $this->text], ['like', 'firstname', $this->text], ['like', 'lastname', $this->text], ['like', 'email', $this->text]]);
+
+//        \Yii::error($query->createCommand()->getRawSql());
 
         return $dataProvider;
     }

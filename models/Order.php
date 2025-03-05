@@ -9,6 +9,7 @@ use yii\behaviors\TimestampBehavior;
 use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveQuery;
 use yii\helpers\ArrayHelper;
+use yii\web\Linkable;
 use yii\web\UploadedFile;
 
 /**
@@ -22,6 +23,7 @@ use yii\web\UploadedFile;
  * @property string $comment
  * @property int $notify_stage
  * @property int $notify_date
+ * @property int $created_by
  *
  * @property string $statusTitle
  * @property array $statusList
@@ -41,7 +43,7 @@ use yii\web\UploadedFile;
 class Order extends \yii\db\ActiveRecord
 {
     public $datetime;
-    public $files;
+    public $files = [];
 
     const STATUS_NEW = 0;
     const STATUS_PROCESS = 1;
@@ -88,8 +90,10 @@ class Order extends \yii\db\ActiveRecord
 
     public function beforeValidate()
     {
-        $this->date = \Yii::$app->formatter->asTimestamp($this->datetime);
-        $this->attachments = $this->files;
+        $this->date = $this->date ?? \Yii::$app->formatter->asTimestamp($this->datetime);
+        if (count($this->files)) {
+            $this->attachments = $this->files;
+        }
         return parent::beforeValidate();
     }
 
@@ -99,7 +103,7 @@ class Order extends \yii\db\ActiveRecord
     public function rules(): array
     {
         return [
-            [['status', 'building_id', 'date', 'type', 'notify_date', 'notify_stage'], 'integer'],
+            [['status', 'building_id', 'date', 'type', 'notify_date', 'notify_stage', 'created_by', 'created_at'], 'integer'],
             [['building_id'], 'exist', 'skipOnError' => true, 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
             [['comment'], 'string'],
             [['filters', 'datetime', 'attachments'], 'safe'],
@@ -164,12 +168,26 @@ class Order extends \yii\db\ActiveRecord
     public function setAttachments($data)
     {
         $this->save(false);
-        foreach ($this->files as $item) {
-            $attach = new Attachment();
-            $attach->file = $item;
-            $attach->target_class = Order::className();
-            if ($attach->upload() && $attach->save()) {
-                $this->link('attachments', $attach, ['target_class' => Order::className()]);
+        if (count($this->files)) {
+            foreach ($this->files as $item) {
+                $attach = new Attachment();
+                $attach->file = $item;
+                $attach->target_class = Order::className();
+                if ($attach->upload() && $attach->save()) {
+                    $this->link('attachments', $attach, ['target_class' => Order::className()]);
+                }
+            }
+        } else if ($data) {
+            foreach ($this->attachments as $attachment) {
+                $this->unlink('attachments', $attachment, true);
+            }
+            foreach ($data as $item) {
+                $attach = new Attachment();
+                $attach->url = $item;
+                $attach->target_class = Order::className();
+                if ($attach->save()) {
+                    $this->link('attachments', $attach, ['target_class' => Order::className()]);
+                }
             }
         }
     }
@@ -191,10 +209,10 @@ class Order extends \yii\db\ActiveRecord
      * @return ActiveQuery
      * @throws InvalidConfigException
      */
-/*    public function getFilters(): ActiveQuery
-    {
-        return $this->hasMany(Filter::class, ['id' => 'filter_id'])->viaTable('order_filter', ['order_id' => 'id']);
-    } */
+    /*    public function getFilters(): ActiveQuery
+        {
+            return $this->hasMany(Filter::class, ['id' => 'filter_id'])->viaTable('order_filter', ['order_id' => 'id']);
+        } */
 
     public function getStatusTitle()
     {
@@ -287,20 +305,20 @@ class Order extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getOrderMaterials()
-    {
-        return $this->hasMany(OrderMaterial::class, ['order_id' => 'id']);
-    }
+//    public function getOrderMaterials()
+//    {
+//        return $this->hasMany(OrderMaterial::class, ['order_id' => 'id']);
+//    }
 
     /**
      * Gets query for [[OrderTechniques]].
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getOrderTechniques()
-    {
-        return $this->hasMany(OrderTechnique::class, ['order_id' => 'id']);
-    }
+//    public function getOrderTechniques()
+//    {
+//        return $this->hasMany(OrderTechnique::class, ['order_id' => 'id']);
+//    }
 
     /**
      * Gets query for [[Techniques]].
@@ -308,10 +326,10 @@ class Order extends \yii\db\ActiveRecord
      * @return \yii\db\ActiveQuery
      * @throws InvalidConfigException
      */
-    public function getTechniques()
-    {
-        return $this->hasMany(Technique::class, ['id' => 'technique_id'])->viaTable('order_technique', ['order_id' => 'id']);
-    }
+//    public function getTechniques()
+//    {
+//        return $this->hasMany(Technique::class, ['id' => 'technique_id'])->viaTable('order_technique', ['order_id' => 'id']);
+//    }
 
     public function filter($priority)
     {
@@ -336,10 +354,7 @@ class Order extends \yii\db\ActiveRecord
 
     public function filterCoworker($priority)
     {
-        $query = Coworker::find()->where(['priority' => $priority]);
-        $query->joinWith('properties');
-        foreach ($this->filters as $filter) {
-            $query->where(['category_id' => $filter->category_id]);
+            $query = Coworker::find()->joinWith('properties')->joinWith('orders')->where(['coworker.category_id' => $filter->category_id]);
             foreach ($filter->requirements as $requirement) {
                 $query->andWhere(['property.id' => $requirement->property_id]);
                 switch ($requirement->type) {
@@ -357,67 +372,53 @@ class Order extends \yii\db\ActiveRecord
                         break;
                 }
             }
-        }
-        return $query;
+        return $query->andWhere(['coworker.priority' => $priority]);
     }
 
-    public function notify($priority = Coworker::PRIORITY_HIGH)
+    public function notify($priority = null)
     {
-        $data = $this->filter($priority);
-        if ($data) {
-            while (empty($data) && $priority > 0) {
-                $priority--;
-                $data = $this->filter($priority);
+        foreach ($this->filters as $filter) {
+            if (is_null($priority)) {
+                $priority = Coworker::PRIORITY_HIGH;
             }
-        }
-        $result = [];
-        foreach ($data as $item) {
-            if ($item['priority'] == $priority) {
-                $user = User::findOne($item['user_id']);
-                $result[] = $item;
-                if ($user->chat_id) {
-                    $message = new TelegramMessage();
-                    $data = [
-                        'TelegramMessage' => [
-                            'text' => $this->generateTelegramText(\Yii::t('app', 'New Order').' #'.$this->id),
-                            'chat_id' => $user->chat_id,
-                            'order_id' => $this->id,
-                            'status' => TelegramMessage::STATUS_NEW,
-                            'reply_markup' => json_encode([
-                                'inline_keyboard' => [
-                                    [
-                                        ["text" => \Yii::t("app", "Agree"), "callback_data" => "order_id={$this->id}&action=ok"]
-                                    ], [
-                                        ["text" => \Yii::t("app", "Disagree"), "callback_data" => "order_id={$this->id}&action=cancel"]
-                                    ]
+            $details = $filter->details($this->id, $priority);
+//            echo "Needle: {$details['needle']}\n";
+//            echo "Agree: {$details['agree']}\n";
+            if ($priority >= Coworker::PRIORITY_LOW) {
+                foreach ($details['coworkers'] as $coworker) {
+//                    echo "\tCoworker: $coworker->firstname $coworker->lastname\n";
+                    $coworker->sendMessage(
+                        $this->generateTelegramText(\Yii::t('app', 'New order').' #'.$this->id),
+                        json_encode([
+                            'inline_keyboard' => [
+                                [
+                                    ["text" => \Yii::t("app", "Agree"), "callback_data" => "order_id={$this->id}&action=ok"]
+                                ], [
+                                    ["text" => \Yii::t("app", "Disagree"), "callback_data" => "order_id={$this->id}&action=cancel"]
                                 ]
-                            ])
-                        ]
-                    ];
-                    if ($message->load($data) && $message->save()) {
-                        $message->send();
-//                    $result[$user->chat_id] = $message->send();
-                    }
-                } else if ($user->device_id) {
-                    \Yii::error('Push notification');
+                            ]
+                        ]),
+                        $this->id
+                    );
                 }
                 $this->notify_date = time();
                 $this->notify_stage = $priority;
+                $this->save();
             }
         }
-        return $result;
     }
 
     /**
      * @throws InvalidConfigException
      */
-    public function check()
+    public function checkSuccessfully()
     {
-        // TODO: Реализовать проверку соответствия сотрудника и требований к заказу
-        // TODO: Реализовать пул (список) согласившихся сотрудников
-        // TODO: Через промежуток времени проверить "заполненность" заказа
-        switch ( $this->type ) {
+        switch ($this->type) {
             case Order::TYPE_COWORKER:
+                $count = 0;
+                foreach ($this->filters as $filter) {
+                    $count += $filter->count;
+                }
                 $f = $this->getFilters()->joinWith('orderFilters')->andWhere(['order_filter.order_id' => $this->id])->one();
                 $count = OrderCoworker::find()->where(['order_id' => $this->id])->all();
                 break;
@@ -425,15 +426,9 @@ class Order extends \yii\db\ActiveRecord
         return $f->count === count($count);
     }
 
-    public function addCoworker($user)
-    {
-        $coworker = Coworker::findOne(['user_id' => $user->id]);
-        $this->link('coworkers', $coworker);
-    }
-
     public function countCoworkersByFilter($filter)
     {
-        $coworkers = $filter->getCoworker()->andWhere(['IN', 'coworker.id', ArrayHelper::map($this->coworkers, 'id', 'id')]);
+        $coworkers = $filter->getCoworkers()->andWhere(['IN', 'coworker.id', ArrayHelper::map($this->coworkers, 'id', 'id')]);
         return $coworkers->count();
     }
 
@@ -442,40 +437,37 @@ class Order extends \yii\db\ActiveRecord
         $building = $this->building;
         $location = $building->location;
         $result = "<b>$header</b>\n\n";
-        $result .= \Yii::t('app', 'Building').": {$building->title}\n";
-        $result .= \Yii::t('app', 'Address').": {$location->link}\n";
-        $result .= \Yii::t('app', 'Date').": ".\Yii::$app->formatter->asDate($this->date)."\n";
-        $result .= \Yii::t('app', 'Requirement').":\n";
+        $result .= \Yii::t('app', 'Building') . ": {$building->title}\n";
+        $result .= \Yii::t('app', 'Address') . ": {$location->link}\n";
+        $result .= \Yii::t('app', 'Date') . ": " . \Yii::$app->formatter->asDate($this->date) . "\n";
+        $result .= \Yii::t('app', 'Requirement') . ":\n";
         foreach ($this->filters as $filter) {
             $category = $filter->category;
-            $result .= "\t\t\t\t{$category->title}: {$filter->count}/{$this->countCoworkersByFilter($filter)}\n";
+            $count = $this->countCoworkersByFilter($filter);
+            $result .= "\t\t\t\t{$category->title}: {$count}/{$filter->count}\n";
             foreach ($filter->requirements as $requirement) {
                 $result .= "\t\t\t\t\t\t\t\t{$requirement->property->title} {$requirement->type} {$requirement->value} {$requirement->dimension->title}\n";
             }
         }
-        $result .= \Yii::t('app', 'Comment').": ".$this->comment."\n";
-        $result .= \Yii::t('app', 'Attachments').":\n";
+        $result .= \Yii::t('app', 'Comment') . ": " . $this->comment . "\n";
+        $result .= \Yii::t('app', 'Attachments') . ":\n";
         foreach ($this->attachments as $attach) {
-            $result .= \yii\helpers\Url::to($attach->url, true)."\n";
+            $result .= \yii\helpers\Url::to($attach->url, true) . "\n";
         }
         return $result;
     }
 
-    public function canAddCoworker($coworker_id)
+    public function issetCoworkers($priority)
     {
-        $coworker = Coworker::findOne(['id' => $coworker_id]);
-        if (!$coworker->isCustomer()) {
-            $coworker->canWork();
+        $coworker = [];
+        foreach ($this->filters as $filter) {
+            $coworker = array_merge($coworker, $filter->findCoworkers($priority));
         }
+        return $coworker;
     }
 
     public function getDetails()
     {
-//        $filters = [];
-//        foreach ($this->orderFilters as $orderFilter) {
-//            $filters[] = $orderFilter->filter;
-//        }
-//        \Yii::error($this->filters);
         return [
             "id" => $this->id,
             "building" => $this->building,

@@ -2,8 +2,10 @@
 
 namespace app\models;
 
+use app\models\telegram\TelegramMessage;
 use floor12\phone\PhoneValidator;
 use Yii;
+use yii\behaviors\BlameableBehavior;
 
 /**
  * This is the model class for table "coworker".
@@ -40,6 +42,17 @@ class Coworker extends \yii\db\ActiveRecord
 
     public $files;
 
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'user_id',
+                'updatedByAttribute' => false,
+            ]
+        ];
+    }
+
     public static function tableName()
     {
         return 'coworker';
@@ -54,7 +67,7 @@ class Coworker extends \yii\db\ActiveRecord
             [['category_id', 'priority', 'notify_date', 'user_id'], 'integer'],
             [['firstname', 'lastname', 'phone', 'email'], 'string', 'max' => 255],
             [['firstname'], 'default', 'value' => ''],
-            [['coworkerProperties'], 'safe'],
+            [['coworkerProperties', 'attachments'], 'safe'],
             [['phone', 'email'], 'unique'],
             [['phone'], PhoneValidator::className()],
             [['firstname', 'lastname', 'phone', 'email'], 'default', 'value' => ''],
@@ -85,8 +98,23 @@ class Coworker extends \yii\db\ActiveRecord
             'category' => function (Coworker $model) {
                 return $model->category;
             },
-            'priority',
-//            'coworkerProperties',
+            'priority' => function (Coworker $model) {
+                $list = [
+                    \Yii::t('app', 'Priority low'),
+                    \Yii::t('app', 'Priority normal'),
+                    \Yii::t('app', 'Priority high'),
+                ];
+                return $model->priority;
+            },
+            'coworkerProperties' => function (Coworker $model) {
+                $properties = $model->coworkerProperties;
+                $result = [];
+                foreach ($properties as $property) {
+                    $result[] = ['property' => $property->property, 'value' => $property->value, 'dimension' => $property->dimension];
+                }
+                return $result;
+            },
+            'attachments'
         ];
     }
 
@@ -108,26 +136,6 @@ class Coworker extends \yii\db\ActiveRecord
             'email' => Yii::t('app', 'Email'),
             'category_id' => Yii::t('app', 'Category'),
         ];
-    }
-
-    public function afterSave($insert, $changedAttributes)
-    {
-        if ($insert) {
-            $user = new User([
-                'email' => $this->email,
-                'username' => explode('@', $this->email)[0],
-                'password_hash' => Yii::$app->security->generatePasswordHash(preg_replace("/[\(\)\+\-\ ]*/", "", $this->phone)),
-                'auth_key' => Yii::$app->security->generateRandomString(),
-                'access_token' => Yii::$app->security->generateRandomString(),
-                'status' => User::STATUS_ACTIVE,
-            ]);
-            if ($user->save()) {
-                $this->link('user', $user);
-            } else {
-                \Yii::error($user->getErrorSummary(true));
-            }
-        }
-        parent::afterSave($insert, $changedAttributes);
     }
 
     public function upload()
@@ -234,6 +242,22 @@ class Coworker extends \yii\db\ActiveRecord
         return $this->hasMany(Attachment::class, ['target_id' => 'id']);
     }
 
+    public function setAttachments($data)
+    {
+        $this->save(false);
+        foreach ($this->attachments as $attachment) {
+            $this->unlink('attachments', $attachment, true);
+        }
+        foreach ($data as $item) {
+            $attach = new Attachment();
+            $attach->url = $item;
+            $attach->target_class = self::className();
+            if ($attach->save()) {
+                $this->link('attachments', $attach, ['target_class' => self::className()]);
+            }
+        }
+    }
+
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
@@ -242,5 +266,77 @@ class Coworker extends \yii\db\ActiveRecord
     public function getName()
     {
         return $this->firstname . ' ' . $this->lastname;
+    }
+
+    public static function getPriorityList($priority = null)
+    {
+        $list = [
+            self::PRIORITY_LOW => Yii::t('app', 'Priority low'),
+            self::PRIORITY_NORMAL => Yii::t('app', 'Priority normal'),
+            self::PRIORITY_HIGH => Yii::t('app', 'Priority high'),
+        ];
+        if ($priority !== null) {
+            return $list[$priority];
+        } else {
+            return $list;
+        }
+    }
+
+    public function getPriorityName($priority = null)
+    {
+        $list = [
+            self::PRIORITY_LOW => Yii::t('app', 'Priority low'),
+            self::PRIORITY_NORMAL => Yii::t('app', 'Priority normal'),
+            self::PRIORITY_HIGH => Yii::t('app', 'Priority high'),
+        ];
+        if ($priority !== null) {
+            return $list[$this->priority];
+        } else {
+            return $list[$priority];
+        }
+    }
+
+    public function sendMessage($message, $keyboard, $order_id = null)
+    {
+        if ($this->chat_id) {
+            $telegramMessage = new TelegramMessage([
+                'chat_id' => $this->chat_id,
+                'text' => $message,
+                'reply_markup' => $keyboard,
+                'order_id' => $order_id,
+                'status' => TelegramMessage::STATUS_NEW,
+            ]);
+            $telegramMessage->send();
+            echo "\tMessage sent!\n\n";
+        }
+    }
+
+    public static function searchByFilter($filter, $priority = Coworker::PRIORITY_HIGH, $user_id = null)
+    {
+        $query = Coworker::find()
+            ->joinWith('properties')
+            ->where(['coworker.category_id' => $filter->category_id])
+            ->andWhere(['priority' => $priority]);
+        if ($priority !== Coworker::PRIORITY_LOW) {
+            $query->andWhere(['user_id' => $user_id]);
+        }
+        foreach ($filter->requirements as $requirement) {
+            $query->andWhere(['property.id' => $requirement->property_id]);
+            switch ($requirement->type) {
+                case \Yii::t('app', 'Less'):
+                    $query->andWhere(['<=', 'coworker_property.value', $requirement->value]);
+                    break;
+                case \Yii::t('app', 'More'):
+                    $query->andWhere(['>=', 'coworker_property.value', $requirement->value]);
+                    break;
+                case \Yii::t('app', 'Equal'):
+                    $query->andWhere(['=', 'coworker_property.value', $requirement->value]);
+                    break;
+                case \Yii::t('app', 'Not Equal'):
+                    $query->andWhere(['<>', 'coworker_property.value', $requirement->value]);
+                    break;
+            }
+        }
+        return $query->all();
     }
 }

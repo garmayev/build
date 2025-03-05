@@ -1,6 +1,7 @@
 <?php
 namespace app\commands;
 
+use app\models\telegram\TelegramMessage;
 use yii\console\Controller;
 use yii\helpers\Url;
 
@@ -28,5 +29,11 @@ class TelegramController extends Controller
         ])];
 
         \Yii::error(\app\models\telegram\Telegram::send("setMyCommands", $data));
+    }
+
+    public function actionRemove($message_id)
+    {
+        $telegramMessage = TelegramMessage::findOne($message_id);
+        $telegramMessage->remove();
     }
 }

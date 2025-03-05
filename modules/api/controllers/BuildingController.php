@@ -8,6 +8,10 @@ use yii\rest\ActiveController;
 class BuildingController extends ActiveController
 {
     public $modelClass = Building::class;
+    public $serializer = [
+        'class' => 'yii\rest\Serializer',
+        'collectionEnvelope' => 'data',
+    ];
 
     public function behaviors()
     {
@@ -27,6 +31,12 @@ class BuildingController extends ActiveController
                 ],
                 'authenticator' => [
                     'class' => \yii\filters\auth\HttpBearerAuth::class,
+                ],
+                'contentNegotiator' => [
+                    'class' => \yii\filters\ContentNegotiator::class,
+                    'formats' => [
+                        'application/json' => \yii\web\Response::FORMAT_JSON,
+                    ]
                 ]
             ]
         );
@@ -35,16 +45,15 @@ class BuildingController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
-        unset($actions['index']);
-//        unset($actions['view']);
+        $actions['index']['dataFilter'] = [
+            'class' => \yii\data\ActiveDataFilter::class,
+            'searchModel' => $this->modelClass,
+        ];
         return $actions;
     }
 
-    public function actionIndex()
+    public function actionList()
     {
-        if (\Yii::$app->user->isGuest) {
-            return ["ok" => false, "message" => "Unknown user"];
-        }
-        return ["ok" => true, "data" => Building::find()->where(['user_id' => \Yii::$app->user->getId()])->all()];
+        return ["data" => Building::find()->where(['user_id' => \Yii::$app->user->getId()])->all()];
     }
 }

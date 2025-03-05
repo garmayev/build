@@ -56,7 +56,7 @@ class Requirement extends \yii\db\ActiveRecord
             'value',
             'type',
             'coworkers' => function (Requirement $model) {
-                return $model->getCoworkers();
+//                return $model->getCoworkers();
             },
         ];
     }

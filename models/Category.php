@@ -62,6 +62,21 @@ class Category extends \yii\db\ActiveRecord
         ];
     }
 
+    public function fields()
+    {
+        return [
+            'id',
+            'title',
+            'type',
+            'parent' => function ($model) {
+                return $model->parent;
+            },
+            'properties' => function ($model) {
+                return $model->properties;
+            }
+        ];
+    }
+
     /**
      * Gets query for [[Categories]].
      *

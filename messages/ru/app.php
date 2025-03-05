@@ -132,4 +132,6 @@ return [
     'Value' => 'Значение',
     'View Order: {name}' => 'Просмотр заказа: {name}',
     'You have agreed to complete the order' => 'Вы согласились на выполнение заказа',
+    'This username is already taken' => 'Это имя пользователя уже занято',
+    'This email is already taken' => 'Этот email уже занят',
 ];

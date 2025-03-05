@@ -2,8 +2,12 @@
 
 namespace app\models;
 
+// session_start();
+
 use Yii;
 use yii\base\InvalidConfigException;
+use yii\db\ActiveQuery;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "filter".
@@ -20,6 +24,7 @@ use yii\base\InvalidConfigException;
  * @property Order[] $orders
  * @property Property $property
  * @property Requirement[] $requirements
+ * @property Coworker[] $coworkers
  */
 class Filter extends \yii\db\ActiveRecord
 {
@@ -67,12 +72,6 @@ class Filter extends \yii\db\ActiveRecord
             'dimension_id' => Yii::t('app', 'Dimension ID'),
             'count' => Yii::t('app', 'Count'),
         ];
-    }
-
-    public function beforeSave($insert)
-    {
-//        \Yii::error($insert);
-        return parent::beforeSave($insert);
     }
 
     public function beforeDelete()
@@ -160,10 +159,10 @@ class Filter extends \yii\db\ActiveRecord
         }
     }
 
-    public function getCoworker($priority = Coworker::PRIORITY_HIGH)
+    public function getCoworkers($priority = Coworker::PRIORITY_HIGH)
     {
-        $query = Coworker::find()->joinWith('properties')->where(['priority' => $priority]);
-        $query->where(['category_id' => $this->category_id]);
+        $query = Coworker::find()->joinWith('properties')->where(['priority' => $priority])->andWhere(['user_id' => 1]);
+        $query->andWhere(['category_id' => $this->category_id]);
         foreach ($this->requirements as $requirement) {
             $query->andWhere(['property.id' => $requirement->property_id]);
             switch ($requirement->type) {
@@ -184,8 +183,46 @@ class Filter extends \yii\db\ActiveRecord
         return $query;
     }
 
-    public function getCoworkersByOrder($order_id)
+    public function details($order_id, $priority = Coworker::PRIORITY_HIGH, $exclude = [])
     {
+        $model = Order::findOne($order_id);
+        $agree = $model->countCoworkersByFilter($this);
+        if (count($exclude) === 0) {
+            $exclude = $model->coworkers;
+        }
+        return [
+            "agree" => $agree,
+            "needle" => $this->count - $agree,
+            "coworkers" => $this->findCoworkers($priority),
+        ];
+    }
 
+    public function findCoworkers($priority)
+    {
+        $query = Coworker::find()
+            ->joinWith('properties')
+            ->where(['coworker.category_id' => $this->category_id]);
+        foreach ($this->requirements as $requirement) {
+            $query->andWhere(['property.id' => $requirement->property_id]);
+            switch ($requirement->type) {
+                case \Yii::t('app', 'Less'):
+                    $query->andWhere(['<=', 'coworker_property.value', $requirement->value]);
+                    break;
+                case \Yii::t('app', 'More'):
+                    $query->andWhere(['>=', 'coworker_property.value', $requirement->value]);
+                    break;
+                case \Yii::t('app', 'Equal'):
+                    $query->andWhere(['=', 'coworker_property.value', $requirement->value]);
+                    break;
+                case \Yii::t('app', 'Not Equal'):
+                    $query->andWhere(['<>', 'coworker_property.value', $requirement->value]);
+                    break;
+            }
+        }
+//        echo "Filter: Priority = " . $priority . "\n";
+        $query->andWhere(['coworker.priority' => $priority]);
+        if (isset($_SESSION["__id"])) $query->andWhere(['user_id' => $_SESSION['__id']]);
+//        echo $query->createCommand()->getRawSql()."\n\n";
+        return $query->all();
     }
 }

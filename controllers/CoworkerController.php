@@ -16,6 +16,8 @@ use yii\web\UploadedFile;
  */
 class CoworkerController extends Controller
 {
+    public $modelClass = Coworker::class;
+
     public function behaviors()
     {
         return [

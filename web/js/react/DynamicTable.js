@@ -134,7 +134,7 @@ function Table({data, header, formName}) {
             </tr>
             </thead>
             <tbody>
-            {data.map((item, index) => {
+            {data?.map((item, index) => {
                 if (item) {
                     return (
                         <tr key={`row-${index}`} data-key={index}>

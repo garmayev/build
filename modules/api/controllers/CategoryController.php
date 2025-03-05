@@ -12,6 +12,10 @@ class CategoryController extends Controller
         return ['results' => Category::find()->where(['type' => $type])->all()];
     }
 
+    public function actionList()
+    {
+        return ['ok' => true, 'data' => Category::find()->all()];
+    }
     public function actionView($id)
     {
         return Category::findOne($id);
