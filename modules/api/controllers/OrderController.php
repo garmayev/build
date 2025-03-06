@@ -52,7 +52,7 @@ class OrderController extends ActiveController
                     'rules' => [
                         [
                             'allow' => true,
-                            'actions' => ['index', 'view', 'create', 'update', 'delete', 'detail']
+                            'actions' => ['index', 'view', 'create', 'update', 'delete', 'detail', 'status']
                         ]
                     ],
                 ]
@@ -174,5 +174,11 @@ class OrderController extends ActiveController
             }
         }
         return ["ok" => false, "message" => "Method not allowed"];
+    }
+
+    public function actionStatus()
+    {
+        $order = new Order();
+        return $order->getStatusList();
     }
 }

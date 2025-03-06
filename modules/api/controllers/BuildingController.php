@@ -20,14 +20,14 @@ class BuildingController extends ActiveController
             [
                 'corsFilter' => [ 
                     'class' => \yii\filters\Cors::class,
-                    'cors' => [
+/*                    'cors' => [
                         'Origin' => ['*'],
                         'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'PREFLIGHT'],
                         'Access-Control-Request-Headers' => ['*'],
-                        'Access-Control-Allow-Credentials' => false,
+                        'Access-Control-Allow-Credentials' => true,
                         'Access-Control-Max-Age' => 86400,
                         'Access-Control-Allow-Origin' => ['*'],
-                    ],
+                    ], */
                 ],
                 'authenticator' => [
                     'class' => \yii\filters\auth\HttpBearerAuth::class,

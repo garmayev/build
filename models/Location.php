@@ -52,6 +52,16 @@ class Location extends \yii\db\ActiveRecord
         ];
     }
 
+    public function fields()
+    {
+        return [
+            'id',
+            'address',
+            'latitude',
+            'longitude',
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */

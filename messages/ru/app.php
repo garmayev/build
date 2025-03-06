@@ -75,6 +75,7 @@ return [
     'Material' => 'Материал',
     'Material ID' => '',
     'Materials' => 'Материалы',
+    'Missing Username or Password' => 'Неизвестный логин или пароль',
     'More' => 'Больше',
     'Multiplier' => 'Множитель',
     'New Order' => 'Новый заказ',

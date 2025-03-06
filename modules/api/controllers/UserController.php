@@ -55,16 +55,16 @@ class UserController extends Controller
         $data = json_decode(file_get_contents("php://input"), true);
         $model = User::findOne(['username' => $data['username']]);
         if (empty($data['username']) || empty($data['password'])) {
-            return [ "ok" => false, "message" => "Missing Username or Password" ];
+            return [ "ok" => false, "message" => \Yii::t("app", "Missing Username or Password") ];
         }
         sleep(2);
         if ( $model && $model->validatePassword($data['password']) ) {
             return [ 'ok' => true, 'user' => $model, 'token' => $model->access_token ];
         }
         if ( $model ) {
-            return ["ok" => false, 'message' => 'Unknown password'];
+            return ["ok" => false, 'message' => \Yii::t("app", 'Missing Username or Password')];
         }
-        return ["ok" => false, 'message' => 'Unknown username'];
+        return ["ok" => false, 'message' => \Yii::t("app", 'Missing Username or Password')];
     }
 
     public function actionOptions() {

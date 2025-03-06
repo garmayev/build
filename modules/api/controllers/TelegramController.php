@@ -68,7 +68,10 @@ class TelegramController extends \yii\web\Controller
             ->where(['order_id' => $order->id]);
         if (!$order->checkSuccessfully()) {
             $order->link('coworkers', $coworker);
-
+            if ($order->checkSuccessfully()) {
+                $order->status = Order::STATUS_PROCESS;
+                $order->save();
+            }
             $currentMessage->status = TelegramMessage::STATUS_AGREE;
             $currentMessage->reply_markup = null;
             $currentMessage->save();
