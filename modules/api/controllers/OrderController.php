@@ -5,17 +5,13 @@ namespace app\modules\api\controllers;
 use app\models\Coworker;
 use app\models\Hours;
 use app\models\Order;
-use app\models\search\OrderSearch;
 use app\models\telegram\TelegramMessage;
 use yii\helpers\ArrayHelper;
-use yii\rest\Controller;
-use yii\rest\ActiveController;
-use yii\web\UnauthorizedHttpException;
-use yii\web\UploadedFile;
 
-class OrderController extends ActiveController
+class OrderController extends \yii\rest\ActiveController
 {
     public $modelClass = Order::class;
+
     public $serializer = [
         'class' => 'yii\rest\Serializer',
         'collectionEnvelope' => 'data',
@@ -23,76 +19,76 @@ class OrderController extends ActiveController
 
     public function behaviors()
     {
-        return \yii\helpers\ArrayHelper::merge(
-            parent::behaviors(),
-            [
-                'corsFilter' => [
-                    'class' => \yii\filters\Cors::class,
-                    'cors' => [
-                        'Origin' => ['*'],
-                        'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'PREFLIGHT'],
-                        'Access-Control-Request-Headers' => ['*'],
-                        'Access-Control-Allow-Credentials' => false,
-                        'Access-Control-Max-Age' => 86400,
-                        'Access-Control-Allow-Origin' => ['*'],
-                    ],
+        return [
+            'corsFilter' => [
+                'class' => \yii\filters\Cors::class,
+                'cors' => [
+                    'Origin' => ['*'],
+                    'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
+                    'Access-Control-Request-Headers' => ['*'],
+                    'Access-Control-Allow-Credentials' => false,
+                    'Access-Control-Max-Age' => 86400,
+                    'Access-Control-Allow-Origin' => ['*'],
                 ],
-                'authenticator' => [
-                    'class' => \yii\filters\auth\HttpBearerAuth::class,
-                    'except' => ['detail', 'images', 'options', 'preflight', 'index', 'view']
+            ],
+            'access' => [
+                'class' => \yii\filters\AccessControl::class,
+                'rules' => [
+                    // Guests
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status'] ],
+                    // Users
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker'] ],
                 ],
-                'contentNegotiator' => [
-                    'class' => \yii\filters\ContentNegotiator::class,
-                    'formats' => [
-                        'application/json' => \yii\web\Response::FORMAT_JSON,
-                    ]
-                ],
-                'access' => [
-                    'class' => \yii\filters\AccessControl::class,
-                    'rules' => [
-                        [
-                            'allow' => true,
-                            'actions' => ['index', 'view', 'create', 'update', 'delete', 'detail', 'status']
-                        ]
-                    ],
-                ]
-            ]
-        );
+            ],
+            'authenticator' => [
+                'class' => \yii\filters\auth\HttpBearerAuth::class,
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status']
+            ],
+        ];
     }
 
     protected function verbs()
     {
         return [
-            'index' => ['GET', 'HEAD', 'OPTIONS', 'PREFLIGHT'],
-            'view' => ['GET', 'HEAD', 'OPTIONS'],
+            'detail' => ['GET', 'OPTIONS'],
+            'view' => ['GET', 'OPTIONS'],
+            'status' => ['GET', 'OPTIONS'],
             'create' => ['POST', 'OPTIONS'],
-            'update' => ['PUT', 'PATCH', 'OPTIONS'],
+            'update' => ['POST', 'PUT', 'OPTIONS'],
             'delete' => ['DELETE', 'OPTIONS'],
+            'check' => ['POST', 'OPTIONS'],
+            'login' => ['POST', 'OPTIONS'],
         ];
+    }
+
+    public function beforeAction($action)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $this->enableCsrfValidation = false;
+        return parent::beforeAction($action);
     }
 
     public function actions()
     {
         $actions = parent::actions();
-        $actions['index']['dataFilter'] = [
-            'class' => \yii\data\ActiveDataFilter::class,
-            'searchModel' => $this->modelClass,
+        $actions['index']['prepareDataProvider'] = [$this, 'prepareDataProvider'];
+        $actions['options'] = [
+            'class' => \yii\rest\OptionAction::class
         ];
-//        unset($actions['index']);
-//        unset($actions['view']);
-        unset($actions['create']);
         return $actions;
     }
 
-    public function actionView($id)
+    public function prepareDataProvider()
     {
-        if (\Yii::$app->user->isGuest) {
-            return ["ok" => false, "message" => "Unknown user"];
-        }
-        if (\Yii::$app->user->identity->id === 1) {
-            return ["ok" => true, "data" => Order::find()->all()];
-        }
-        return ["ok" => true, "data" => Order::findOne($id)];
+        return new \yii\data\ActiveDataProvider([
+            'query' => $this->modelClass::find()->where(['created_by' => \Yii::$app->user->identity->getId()]),
+        ]);
+    }
+
+    public function actionByCoworker()
+    {
+        $orderCoworker = \app\models\OrderCoworker::findAll(['coworker_id' => \Yii::$app->user->getId()]);
+        return ['data' => \yii\helpers\ArrayHelper::map($orderCoworker, 'order', 'order')];
     }
 
     public function actionSetHours()
@@ -132,7 +128,7 @@ class OrderController extends ActiveController
         if (move_uploaded_file($files['file']['tmp_name'], \Yii::getAlias("@webroot") . $target_path)) {
             return ["ok" => true, "data" => $target_path];
         } else {
-            \Yii::error("Something went wrong");
+//            \Yii::error("Something went wrong");
             return ["ok" => false];
         }
     }
@@ -153,27 +149,6 @@ class OrderController extends ActiveController
             }
         }
         return ["ok" => $saved, "message" => $saved ? "" : $model->getErrorSummary(true)];
-    }
-
-    public function actionDelete($id)
-    {
-        $model = Order::findOne($id);
-        return ["ok" => $model->delete()];
-    }
-
-    public function actionCreate()
-    {
-        $model = new Order();
-        if (\Yii::$app->request->isPost) {
-            \Yii::error( \Yii::$app->request->post() );
-            if ($model->load(["Order" => \Yii::$app->request->post()]) && $model->save()) {
-                $model->notify();
-                return ["ok" => true, "data" => $model->getDetails()];
-            } else {
-                return ["ok" => false, "message" => $model->getErrorSummary(true)];
-            }
-        }
-        return ["ok" => false, "message" => "Method not allowed"];
     }
 
     public function actionStatus()

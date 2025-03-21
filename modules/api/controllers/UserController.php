@@ -6,58 +6,78 @@ use yii\filters\AccessControl;
 use yii\rest\Controller;
 use app\models\User;
 
-class UserController extends Controller
+class UserController extends \yii\rest\Controller
 {
+    public $modelClass = User::class;
+
     public function behaviors()
     {
-        return \yii\helpers\ArrayHelper::merge(
-            parent::behaviors(),
-            [
-                'corsFilter' => [ 
-                    'class' => \yii\filters\Cors::class,
-                    'cors' => [
-                        'Origin' => ['*'],
-                        'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'PREFLIGHT'],
-                        'Access-Control-Request-Headers' => ['*'],
-                        'Access-Control-Allow-Credentials' => false,
-                        'Access-Control-Max-Age' => 86400,
-                        'Access-Control-Allow-Origin' => ['*'],
-                    ],
+        return [
+            'corsFilter' => [
+                'class' => \yii\filters\Cors::class,
+                'cors' => [
+                    'Origin' => ['*'],
+                    'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
+                    'Access-Control-Request-Headers' => ['*'],
+                    'Access-Control-Allow-Credentials' => false,
+                    'Access-Control-Max-Age' => 86400,
+                    'Access-Control-Allow-Origin' => ['*'],
                 ],
-                'access' => [
-                    'class' => \yii\filters\AccessControl::class,
-                    'rules' => [
-                        [ 'allow' => true, 'roles' => ['?'], 'actions' => ['list', 'login', 'register', 'check', 'check-username', 'check-email'] ],
-                        [ 'allow' => true, 'roles' => ['@'], 'actions' => ['options', 'preflight'] ],
-                    ],
+            ],
+            'access' => [
+                'class' => \yii\filters\AccessControl::class,
+                'rules' => [
+                    // Guests
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['login', 'register', 'check-username', 'check-email'] ],
+                    // Users
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['check', 'list', 'login'] ],
                 ],
-                'authenticator' => [
-                    'class' => \yii\filters\auth\HttpBearerAuth::class,
-//                    'class' => \yii\filters\auth\CompositeAuth::class,
-//                    'authMethods' => [
-//                        \yii\filters\auth\HttpBearerAuth::class,
-//                        \yii\filters\auth\HttpBasicAuth::class,
-//                        \yii\filters\auth\QueryParamAuth::class,
-//                    ],
-                    'except' => ['OPTIONS', 'PREFLIGHT', 'login', 'register', 'check', 'check-username', 'check-email']
-                ]
-            ]
-        );
+            ],
+            'authenticator' => [
+                'class' => \yii\filters\auth\HttpBearerAuth::class,
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login', 'register', 'check-username', 'check-email']
+            ],
+        ];
+    }
+
+    protected function verbs()
+    {
+        return [
+            'index' => ['GET', 'OPTIONS'],
+            'view' => ['GET', 'OPTIONS'],
+            'create' => ['POST', 'OPTIONS'],
+            'update' => ['POST', 'PUT', 'OPTIONS'],
+            'delete' => ['DELETE', 'OPTIONS'],
+            'check' => ['POST', 'OPTIONS'],
+            'login' => ['POST', 'OPTIONS'],
+        ];
     }
 
     public function beforeAction($action)
     {
-        \Yii::$app->language = "ru-RU";
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $this->enableCsrfValidation = false;
         return parent::beforeAction($action);
     }
 
+    public function actions()
+    {
+        $actions = parent::actions();
+        $actions['options'] = [
+            'class' => \yii\rest\OptionAction::class
+        ];
+        unset($actions['check']);
+        return $actions;
+    }
+
     public function actionLogin() {
-        $data = json_decode(file_get_contents("php://input"), true);
+        $data = $_POST;
         $model = User::findOne(['username' => $data['username']]);
+//        \Yii::error($data);
         if (empty($data['username']) || empty($data['password'])) {
             return [ "ok" => false, "message" => \Yii::t("app", "Missing Username or Password") ];
         }
-        sleep(2);
+//        sleep(2);
         if ( $model && $model->validatePassword($data['password']) ) {
             return [ 'ok' => true, 'user' => $model, 'token' => $model->access_token ];
         }
@@ -67,20 +87,8 @@ class UserController extends Controller
         return ["ok" => false, 'message' => \Yii::t("app", 'Missing Username or Password')];
     }
 
-    public function actionOptions() {
-        if (\Yii::$app->request->method !== 'OPTIONS') {
-            \Yii::$app->response->statusCode = 200;
-        }
-        \Yii::$app->response->headers->set('Allow', implode(', ', ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']));
-    }
-
     public function actionCheck() {
-        $data = json_decode(file_get_contents("php://input"), true);
-        $model = User::findOne(['access_token' => $data["access_token"]]);
-        if (isset($model)) {
-            return ['ok' => true, 'user' => $model, 'token' => $model->access_token];
-        }
-        return ["ok" => false, 'message' => 'Unknown user'];
+        return ["ok" => !\Yii::$app->user->isGuest, 'model' => \Yii::$app->user->identity];
     }
 
     public function actionList()
@@ -108,7 +116,6 @@ class UserController extends Controller
     {
         $data = json_decode(file_get_contents("php://input"), true);
         $model = User::find()->where(['username' => $data['username']])->one();
-//        sleep(3);
         if (!empty($model)) {
             return ['ok' => true, 'message' => \Yii::t("app", 'This username is already taken')];
         }

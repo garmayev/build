@@ -70,6 +70,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function findIdentityByAccessToken($token, $type = null): ?User
     {
+//        \Yii::error($token);
         return self::findOne(['access_token' => $token]);
     }
 
