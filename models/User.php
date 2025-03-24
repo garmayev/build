@@ -26,8 +26,6 @@ class User extends ActiveRecord implements IdentityInterface
     const STATUS_ACTIVE = 1;
     const STATUS_INACTIVE = 2;
 
-    public $password;
-
     public static function tableName(): string
     {
         return '{{%user}}';
@@ -40,7 +38,6 @@ class User extends ActiveRecord implements IdentityInterface
             [['username', 'email', 'auth_key', 'access_token', 'chat_id', 'device_id'], 'string'],
             [['status'], 'integer'],
             [['status'], 'default', 'value' => self::STATUS_ACTIVE],
-            [['password'], 'safe'],
         ];
     }
 

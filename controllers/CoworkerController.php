@@ -131,6 +131,29 @@ class CoworkerController extends Controller
         return $this->redirect(['index']);
     }
 
+    public function actionAccount($id)
+    {
+        $coworker = $this->findModel($id);
+        if ( \Yii::$app->request->isPost ) {
+            $form = new \app\models\forms\UserRegisterForm();
+            if ( $form->load(\Yii::$app->request->post()) && $form->update() ) {
+                \Yii::$app->session->setFlash('success', 'Account is updated');
+                $this->redirect(['index']);
+            }
+        }
+        return $this->render('account', [
+            'model' => $coworker->user
+        ]);
+    }
+
+    public function actionProfile($id)
+    {
+        $model = $this->findModel($id);
+        return $this->render('profile', [
+            'model' => $model
+        ]);
+    }
+
     /**
      * Finds the Coworker model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

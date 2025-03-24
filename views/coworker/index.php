@@ -23,6 +23,26 @@ $this->registerCss(<<<CSS
 }
 CSS
 );
+
+$actionButtons = [
+    [
+        'label' => 'View',
+        'url'   => ['view'],
+    ], [
+        'label' => 'Account',
+        'url'   => ['account'],
+    ], [
+        'label' => 'Profile',
+        'url' => ['profile'],
+    ], [
+        'label'   => 'Delete',
+        'url'     => ['delete'],
+        'linkOptions' => [
+            'data-method' => 'post',
+            'class' => 'dropdown-item'
+        ],
+    ],
+];
 ?>
 <div class="coworker-index">
 
@@ -95,10 +115,8 @@ CSS
                 }
             ],
             [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Coworker $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                }
+                'class' => \microinginer\dropDownActionColumn\DropDownActionColumn::className(),
+                'items' => $actionButtons
             ],
         ],
     ]); ?>

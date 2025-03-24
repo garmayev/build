@@ -18,6 +18,7 @@ use yii\behaviors\BlameableBehavior;
  * @property int|null $category_id
  * @property int $priority
  * @property int $user_id
+ * @property int $created_by
  *
  * @property Category $category
  * @property CoworkerProperty[] $coworkerProperties
@@ -47,7 +48,7 @@ class Coworker extends \yii\db\ActiveRecord
         return [
             [
                 'class' => BlameableBehavior::className(),
-                'createdByAttribute' => 'user_id',
+                'createdByAttribute' => 'created_by',
                 'updatedByAttribute' => false,
             ]
         ];
@@ -64,7 +65,7 @@ class Coworker extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['category_id', 'priority', 'notify_date', 'user_id'], 'integer'],
+            [['category_id', 'priority', 'notify_date', 'user_id', 'created_by'], 'integer'],
             [['firstname', 'lastname', 'phone', 'email'], 'string', 'max' => 255],
             [['firstname'], 'default', 'value' => ''],
             [['coworkerProperties', 'attachments'], 'safe'],
@@ -75,6 +76,7 @@ class Coworker extends \yii\db\ActiveRecord
             [['type'], 'default', 'value' => self::TYPE_WORKER],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id'], 'on' => self::SCENARIO_COWORKER],
             [['category_id'], 'default', 'value' => 0, 'on' => self::SCENARIO_COWORKER],
+            [['created_by'], 'default', 'value' => \Yii::$app->user->identity->id],
         ];
     }
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "42885f26751c414f58e256a4bb10989a",
+    "content-hash": "f3c4066e214876a1d32c198f6ae442c9",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -858,6 +858,59 @@
                 }
             ],
             "time": "2024-07-24T05:21:32+00:00"
+        },
+        {
+            "name": "microinginer/yii2-dropdown-action-column",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/microinginer/yii2-dropdown-action-column.git",
+                "reference": "9b96a848bea10a5599600239bdd2c235103a60f7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/microinginer/yii2-dropdown-action-column/zipball/9b96a848bea10a5599600239bdd2c235103a60f7",
+                "reference": "9b96a848bea10a5599600239bdd2c235103a60f7",
+                "shasum": ""
+            },
+            "require": {
+                "yiisoft/yii2": "*"
+            },
+            "default-branch": true,
+            "type": "yii2-extensions",
+            "autoload": {
+                "psr-4": {
+                    "microinginer\\dropDownActionColumn\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "inginer",
+                    "email": "inginer.r@gmail.com"
+                },
+                {
+                    "name": "gir3li",
+                    "email": "uzep@mail.ru"
+                }
+            ],
+            "homepage": "https://github.com/microinginer/yii2-dropdown-action-column",
+            "keywords": [
+                "actioncolumn",
+                "buttons",
+                "dropDownButtons",
+                "dropdown",
+                "gridview",
+                "yii2"
+            ],
+            "support": {
+                "issues": "https://github.com/microinginer/yii2-dropdown-action-column/issues",
+                "source": "https://github.com/microinginer/yii2-dropdown-action-column/tree/v1.0.3"
+            },
+            "time": "2018-12-10T15:45:55+00:00"
         },
         {
             "name": "npm-asset/bootstrap",
@@ -6116,9 +6169,10 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "kartik-v/yii2-widget-datetimepicker": 20,
+        "kartik-v/yii2-widget-select2": 20,
         "kartik-v/yii2-widget-depdrop": 20,
-        "kartik-v/yii2-widget-select2": 20
+        "kartik-v/yii2-widget-datetimepicker": 20,
+        "microinginer/yii2-dropdown-action-column": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
@@ -6127,9 +6181,9 @@
         "ext-curl": "*",
         "ext-json": "*"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.1.0"
 }
