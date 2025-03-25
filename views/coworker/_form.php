@@ -28,19 +28,14 @@ echo $form->field($model, "lastname")->textInput()->label(\Yii::t('app', 'Last N
 echo $form->field($model, "firstname")->textInput()->label(\Yii::t('app', 'First Name'));
 echo $form->field($model, "email")->textInput(['type' => 'email'])->label(\Yii::t('app', 'Email'));;
 echo $form->field($model, "phone")->textInput(['type' => 'phone'])->label(\Yii::t('app', 'Phone'));
-echo $form->field($model, "type")->dropDownList([
-    Coworker::TYPE_WORKER => \Yii::t('app', 'Coworker'),
-    Coworker::TYPE_CUSTOMER => \Yii::t('app', 'Customer'),
-])->label(\Yii::t('app', 'Type'));
 echo $form->field($model, "priority")->dropDownList([
     Coworker::PRIORITY_LOW => \Yii::t('app', 'Priority low'),
     Coworker::PRIORITY_NORMAL => \Yii::t('app', 'Priority normal'),
     Coworker::PRIORITY_HIGH => \Yii::t('app', 'Priority high'),
 ])->label(\Yii::t('app', 'Priority'));
-echo $form->field($model, "scenario")->hiddenInput()->label(false);
-echo $form->field($model, 'files')->fileInput([
+echo $form->field($model, "files[]")->fileInput([
     'multiple' => true,
-])->label(\Yii::t('app', 'Attachments'));
+])->label(\Yii::t("app", "Attachments"));
 echo $form->field($model, "category_id")->dropDownList(
     ArrayHelper::map(Category::find()->all(), 'id', 'title'),
     ['prompt' => \Yii::t('app', 'Select category'), 'id' => 'category_id']

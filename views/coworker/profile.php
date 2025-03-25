@@ -16,12 +16,14 @@ echo $form->field($model, 'firstname');
 
 echo $form->field($model, 'lastname');
 
+echo $form->field($model, 'email')->textInput(['type' => 'email', 'disabled' => true]);
+
 echo $form->field($model, 'phone');
 
-echo $form->field($model, 'priority');
+echo $form->field($model, 'priority')->dropDownList(\app\models\Coworker::getPriorityList());
 
-echo $form->field($model, 'category_id');
+echo $form->field($model, 'category_id')->dropDownList(\yii\helpers\ArrayHelper::map(\app\models\Category::find()->all(), 'id', 'title'));
 
-echo $form->field($model, 'created_by')->dropDownList(\yii\helpers\ArrayHelper::map(app\models\User::find()->all(), 'id', 'username'));
+echo $form->field($model, 'created_by')->textInput(['disabled' => true, 'value' => $model->user->username]);
 
 ActiveForm::end();

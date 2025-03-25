@@ -27,16 +27,16 @@ CSS
 $actionButtons = [
     [
         'label' => 'View',
-        'url'   => ['view'],
-    ], [
-        'label' => 'Account',
-        'url'   => ['account'],
+        'url' => ['view'],
     ], [
         'label' => 'Profile',
         'url' => ['profile'],
     ], [
-        'label'   => 'Delete',
-        'url'     => ['delete'],
+        'label' => 'Invite',
+        'url' => ['invite'],
+    ], [
+        'label' => 'Delete',
+        'url' => ['delete'],
         'linkOptions' => [
             'data-method' => 'post',
             'class' => 'dropdown-item'
@@ -104,14 +104,6 @@ $actionButtons = [
                         Coworker::PRIORITY_HIGH => \Yii::t('app', 'Priority high'),
                     ];
                     return $list[$model->priority];
-                }
-            ],
-            [
-                'attribute' => 'user.chat_id',
-                'label' => \Yii::t('app', 'Invite'),
-                'format' => 'raw',
-                'value' => function (Coworker $model) {
-                    return Html::a("Invite link", "https://t.me/".\Yii::$app->params["bot_name"]."?start=".$model->id, ['target' => '_blank']);
                 }
             ],
             [

@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\Coworker;
+use app\models\forms\UserRegisterForm;
 use app\models\Profile;
 use app\models\search\CoworkerSearch;
 use app\models\User;
@@ -73,13 +74,15 @@ class CoworkerController extends Controller
     {
         $post = $this->request->post();
         $model = new Coworker();
+        $userForm = new UserRegisterForm();
 
         if ($this->request->isPost) {
             $model->user_id = \Yii::$app->user->identity->id;
-            $model->scenario = $post['Coworker']['scenario'];
             $model->files = UploadedFile::getInstances($model, 'files');
             if ($model->load($post) && $model->upload() && $model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
+            } else {
+                \Yii::error($model->getErrorSummary(true));
             }
         } else {
             $model->loadDefaultValues();
@@ -152,6 +155,13 @@ class CoworkerController extends Controller
         return $this->render('profile', [
             'model' => $model
         ]);
+    }
+
+    public function actionInvite($id)
+    {
+        $model = $this->findModel($id);
+        $model->invite();
+        return $this->redirect(['index']);
     }
 
     /**

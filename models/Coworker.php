@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use app\models\forms\UserRegisterForm;
 use app\models\telegram\TelegramMessage;
 use floor12\phone\PhoneValidator;
 use Yii;
@@ -74,6 +75,7 @@ class Coworker extends \yii\db\ActiveRecord
             [['firstname', 'lastname', 'phone', 'email'], 'default', 'value' => ''],
             [['priority'], 'default', 'value' => self::PRIORITY_LOW],
             [['type'], 'default', 'value' => self::TYPE_WORKER],
+            [['files'], 'file', 'skipOnEmpty' => true, 'maxFiles' => 15],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id'], 'on' => self::SCENARIO_COWORKER],
             [['category_id'], 'default', 'value' => 0, 'on' => self::SCENARIO_COWORKER],
             [['created_by'], 'default', 'value' => \Yii::$app->user->identity->id],
@@ -118,6 +120,17 @@ class Coworker extends \yii\db\ActiveRecord
             },
             'attachments'
         ];
+    }
+
+    public function load($data, $formName = null)
+    {
+        $model = new UserRegisterForm([
+            'email' => $formName ? $data[$formName]['email'] : $data['Coworker']['email']
+        ]);
+        if ($flag = $model->update()) {
+            $this->user_id = $model->getId();
+        }
+        return parent::load($data, $formName) && $flag;
     }
 
     public function normalizePhone($value)
@@ -340,5 +353,15 @@ class Coworker extends \yii\db\ActiveRecord
             }
         }
         return $query->all();
+    }
+
+    public function invite()
+    {
+        \Yii::$app->mailer
+            ->compose('coworker\invite', ['model' => $this])
+            ->setFrom(['build@amgcompany.ru' => 'build@amgcompany.ru'])
+            ->setTo($this->email)
+            ->setSubject(\Yii::$app->name . ' robot')
+            ->send();
     }
 }

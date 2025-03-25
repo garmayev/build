@@ -20,7 +20,7 @@ $form = ActiveForm::begin();
 
 echo $form->field($registerForm, 'username');
 
-echo $form->field($registerForm, 'email');
+echo $form->field($registerForm, 'email')->textInput(['type' => 'email', 'disabled' => true]);
 
 echo $form->field($registerForm, 'current_password')->textInput(['type' => 'password', 'autocomplete' => 'new-password']);
 
