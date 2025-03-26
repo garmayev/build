@@ -21,7 +21,7 @@ $this->registerJsFile('/js/map.js', ['position' => View::POS_HEAD]);
 
         <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
-        <div class="form-group">
+        <div class="form-group show">
             <label for="building-location_id"><?= \Yii::t('app', 'Location') ?></label>
             <div class="input-group">
                 <input class="form-control" name="Building[location][address]" id="building-address"
@@ -33,13 +33,7 @@ $this->registerJsFile('/js/map.js', ['position' => View::POS_HEAD]);
             <div id="map" class="mt-3" style="height: 400px"></div>
         </div>
 
-        <?= $form->field($model, 'customers[]')->widget(\kartik\select2\Select2::class, [
-            'data' => \yii\helpers\ArrayHelper::map(\app\models\Coworker::find()->where(['type' => \app\models\Coworker::TYPE_CUSTOMER])->all(), 'id', 'name'),
-            'pluginOptions' => [
-                'allowClear' => true,
-                'multiple' => true,
-            ]
-        ]) ?>
+        <?= $form->field($model, 'radius')->textInput(['type' => 'number']) ?>
 
         <div class="form-group">
             <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>

@@ -12,6 +12,7 @@ use yii\db\ActiveRecord;
  * @property int $id
  * @property string|null $title
  * @property int|null $location_id
+ * @property int|null $radius
  *
  * @property Location $location
  * @property Order[] $orders
@@ -47,7 +48,7 @@ class Building extends ActiveRecord
     public function rules()
     {
         return [
-            [['location_id'], 'integer'],
+            [['location_id', 'radius'], 'integer'],
             [['title'], 'string', 'max' => 255],
             [['location_id'], 'exist', 'skipOnError' => true, 'targetClass' => Location::class, 'targetAttribute' => ['location_id' => 'id']],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
@@ -64,6 +65,8 @@ class Building extends ActiveRecord
             'id' => Yii::t('app', 'ID'),
             'title' => Yii::t('app', 'Title'),
             'location_id' => Yii::t('app', 'Location ID'),
+            'radius' => Yii::t('app', 'Radius'),
+            'location' => Yii::t('app', 'Location'),
         ];
     }
 
@@ -72,6 +75,7 @@ class Building extends ActiveRecord
         return [
             'id',
             'title',
+            'radius',
             'location' => function (Building $model) {
                 return $model->location;
             }
