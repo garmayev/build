@@ -77,7 +77,7 @@ class CoworkerController extends ActiveController
     public function prepareDataProvider()
     {
         return new \yii\data\ActiveDataProvider([
-            'query' => \app\models\Coworker::find()->where(['user_id' => \Yii::$app->user->getId()])
+            'query' => \app\models\Coworker::find()->where(['created_by' => \Yii::$app->user->getId()])
         ]);
     }
 

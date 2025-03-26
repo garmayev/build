@@ -87,8 +87,14 @@ class OrderController extends \yii\rest\ActiveController
 
     public function actionByCoworker()
     {
-        $orderCoworker = \app\models\OrderCoworker::findAll(['coworker_id' => \Yii::$app->user->getId()]);
-        return ['data' => \yii\helpers\ArrayHelper::map($orderCoworker, 'order', 'order')];
+//        \Yii::error( \Yii::$app->user->isGuest );
+        $coworker = \app\models\Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
+        $orderCoworkers = \app\models\OrderCoworker::findAll(['coworker_id' => $coworker->id]);
+        $result = [];
+        foreach ($orderCoworkers as $oc) {
+            $result[] = $oc->order;
+        }
+        return ['data' => $result];
     }
 
     public function actionSetHours()

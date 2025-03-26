@@ -13,7 +13,7 @@ class UserController extends \yii\rest\Controller
     public function behaviors()
     {
         return [
-            'corsFilter' => [
+/*            'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
                     'Origin' => ['*'],
@@ -28,11 +28,11 @@ class UserController extends \yii\rest\Controller
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['login', 'register', 'check-username', 'check-email'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['check', 'list', 'login'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login'] ],
                 ],
-            ],
+            ], */
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
                 'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login', 'register', 'check-username', 'check-email']
@@ -73,11 +73,9 @@ class UserController extends \yii\rest\Controller
     public function actionLogin() {
         $data = $_POST;
         $model = User::findOne(['username' => $data['username']]);
-//        \Yii::error($data);
         if (empty($data['username']) || empty($data['password'])) {
             return [ "ok" => false, "message" => \Yii::t("app", "Missing Username or Password") ];
         }
-//        sleep(2);
         if ( $model && $model->validatePassword($data['password']) ) {
             return [ 'ok' => true, 'user' => $model, 'token' => $model->access_token ];
         }
