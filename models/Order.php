@@ -147,6 +147,9 @@ class Order extends \yii\db\ActiveRecord
             'filters' => function (Order $model) {
                 return $model->filters;
             },
+            'hours' => function (Order $model) {
+                return Hours::find()->where(['order_id' => $model->id])->andWhere(['date' => date("Y-m-d", time())])->orderBy(['date' => SORT_ASC])->all();
+            }
         ];
     }
 
