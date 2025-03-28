@@ -32,7 +32,7 @@ class HoursController extends \yii\rest\Controller {
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status']
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'create']
             ],
         ];
     }
@@ -68,19 +68,21 @@ class HoursController extends \yii\rest\Controller {
         return $actions;
     }
 
-    public function actionCreate($order_id, $time)
+    public function actionCreate($time, $coworker_id, $is_payed, $count)
     {
-        $order = \app\models\Order::find()->where(['id' => $order_id])->one();
-        $coworker = \app\models\Coworker::find()->where(['user_id' => \Yii::$app->user->identity->id])->one();
+//        $order = \app\models\Order::find()->where(['id' => $order_id])->one();
+        $coworker = \app\models\Coworker::findOne($coworker_id);
         \Yii::error($time);
         \Yii::error(time());
         \Yii::error(date('Y-m-d', $time));
-        if (isset($order) && isset($coworker)) {
-            $hours = \app\models\Hours::find()->where(['order_id' => $order->id])->andWhere(['coworker_id' => $coworker->id])->andWhere(['date' => date('Y-m-d', $time)])->one();
+        if (isset($coworker)) {
+            $hours = \app\models\Hours::find()->where(['coworker_id' => $coworker->id])->andWhere(['date' => date('Y-m-d', $time)])->one();
             if (isset($hours)) {
-                return ['ok' => true];
+                $result = $hours->load(['Hours' => ['is_payed' => $is_payed, 'count' => $count]]) && $hours->save();
+                if (!$result) { \Yii::error($hours->getErrorSummary(true)); }
+                return ['ok' => $result];
             } else {
-                $hours = new \app\models\Hours(['order_id' => $order->id, 'coworker_id' => $coworker->id, 'date' => date('Y-m-d', time()), 'count' => 0]);
+                $hours = new \app\models\Hours(['coworker_id' => $coworker->id, 'date' => date('Y-m-d', $time), 'count' => $count, 'is_payed' => $is_payed]);
             }
             $is_saved = $hours->save();
             return ['ok' => $is_saved, 'message' => $hours->getErrorSummary(true)];

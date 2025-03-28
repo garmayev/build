@@ -104,8 +104,8 @@ class SiteController extends Controller
         $coworkers = \app\models\Coworker::find()->where(['created_by' => \Yii::$app->user->getId()])->orWhere(['priority' => \app\models\Coworker::PRIORITY_LOW])->all();
         foreach ($coworkers as $coworker) {
             $hours = \app\models\Hours::find()
-                ->where(['>', 'date', date("$year-$month-01")])
-                ->andWhere(['<', 'date', date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year))])
+                ->where(['>=', 'date', date("$year-$month-01")])
+                ->andWhere(['<=', 'date', date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year))])
                 ->andWhere(['coworker_id' => $coworker->id])
                 ->all();
             $result[] = [
@@ -116,7 +116,7 @@ class SiteController extends Controller
             ];
 //          \Yii::error( count($coworkers) );
         }
-        \Yii::error($result);
+//        \Yii::error($result);
         return $result;
     }
 }

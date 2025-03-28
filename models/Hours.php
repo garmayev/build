@@ -13,20 +13,20 @@ class Hours extends ActiveRecord
     public function rules()
     {
         return [
-            [['order_id', 'coworker_id'], 'required'],
-            [['order_id'], 'exist', 'skipOnError' => true, 'targetClass' => Order::className(), 'targetAttribute' => ['order_id' => 'id']],
+            [['coworker_id'], 'required'],
             [['coworker_id'], 'exist', 'skipOnError' => true, 'targetClass' => Coworker::className(), 'targetAttribute' => ['coworker_id' => 'id']],
             [['count'], 'integer'],
+            [['is_payed'], 'boolean']
         ];
     }
 
     public function attributeLabels()
     {
         return [
-            'order_id' => \Yii::t('app', 'Order ID'),
             'coworker_id' => \Yii::t('app', 'Coworker ID'),
             'count' => \Yii::t('app', 'Count'),
             'date' => \Yii::t('app', 'Date'),
+            'is_payed' => \Yii::t('app', 'Is payed')
         ];
     }
 
