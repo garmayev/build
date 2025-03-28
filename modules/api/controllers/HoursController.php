@@ -25,7 +25,7 @@ class HoursController extends \yii\rest\Controller {
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create'] ],
                     // Users
                     [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker'] ],
                 ],
