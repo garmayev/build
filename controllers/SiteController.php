@@ -109,6 +109,7 @@ class SiteController extends Controller
                 ->andWhere(['coworker_id' => $coworker->id])
                 ->all();
             $result[] = [
+                'id' => $coworker->id,
                 'name' => $coworker->firstname.' '.$coworker->lastname,
                 'data' => $hours,
                 'total' => 0
