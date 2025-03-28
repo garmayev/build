@@ -96,4 +96,26 @@ class SiteController extends Controller
     {
         return $this->render('calendar');
     }
+
+    public function actionCalendarMonth($year, $month)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $result = [];
+        $coworkers = \app\models\Coworker::find()->where(['created_by' => \Yii::$app->user->getId()])->orWhere(['priority' => \app\models\Coworker::PRIORITY_LOW])->all();
+        foreach ($coworkers as $coworker) {
+            $hours = \app\models\Hours::find()
+                ->where(['>', 'date', date("$year-$month-01")])
+                ->andWhere(['<', 'date', date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year))])
+                ->andWhere(['coworker_id' => $coworker->id])
+                ->all();
+            $result[] = [
+                'name' => $coworker->firstname.' '.$coworker->lastname,
+                'data' => $hours,
+                'total' => 0
+            ];
+//          \Yii::error( count($coworkers) );
+        }
+        \Yii::error($result);
+        return $result;
+    }
 }
