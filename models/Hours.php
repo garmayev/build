@@ -29,4 +29,8 @@ class Hours extends ActiveRecord
             'date' => \Yii::t('app', 'Date'),
         ];
     }
+
+    public function getCoworker() {
+        return $this->hasOne(Coworker::class, ['id' => 'coworker_id']);
+    }
 }

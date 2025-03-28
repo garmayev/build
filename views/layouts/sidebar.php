@@ -81,6 +81,11 @@
                         'url' => ['/order/index'],
                         'active' => \Yii::$app->controller->id === 'order',
                     ], [
+                        'label' => \Yii::t('app', 'Calendar'),
+                        'icon' => 'calendar',
+                        'url' => ['/site/calendar'],
+                        'active' => \Yii::$app->controller->id === 'site' && \Yii::$app->controller->action->id === 'calendar',
+                    ], [
                         'label' => \Yii::t('app', 'Configuration'),
                         'icon' => 'cog',
                         'items' => [
