@@ -1,0 +1,101 @@
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+    margin: 0
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, Courier New, monospace
+}
+
+td, th {
+    text-align: center
+}
+
+td {
+    cursor: default;
+    min-width: 40px;
+    padding: 5px 10px;
+    -webkit-user-select: none;
+    user-select: none
+}
+
+td.calendar:hover {
+    background-color: #ccc;
+    cursor: pointer
+}
+
+td.isset {
+    background-color: #060;
+    color: #fff
+}
+
+td.isset:hover {
+    background-color: #090
+}
+
+td.empty {
+    background-color: #a00;
+    color: #fff
+}
+
+td.empty:hover {
+    background-color: red
+}
+
+.button {
+    align-items: center;
+    display: inline-flex;
+    height: 34px;
+    justify-content: center
+}
+
+.modal.show {
+    background-color: #0006;
+    display: block
+}
+
+.modal .modal-content {
+    z-index: 999
+}
+
+.modal .modal-content .modal-footer, .modal .modal-content .modal-header {
+    display: flex;
+    justify-content: space-between
+}
+
+.form-group {
+    margin-bottom: 10px;
+    width: 100%
+}
+
+.form-group .form-input {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
+    width: 100%
+}
+
+.form-group .form-input:focus {
+    outline: none
+}
+
+.un_payed {
+    background-color: #a00
+}
+
+.payed, .un_payed {
+    color: #fff;
+    padding: 5px 10px
+}
+
+.payed {
+    background-color: #060
+}
+
+.weekend {
+    color: #ccc
+}
+
+/*# sourceMappingURL=main.45e5c7a4.css.map*/

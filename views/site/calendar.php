@@ -5,7 +5,7 @@
  */
 
 $this->title = \Yii::t('app', 'Calendar');
-$this->registerJsFile("/buildCalendar/js/main.ce14c287.js", ['depends' => [\yii\web\JqueryAsset::class]]);
-$this->registerJsFile("/buildCalendar/js/453.57e5436f.chunk.js", ['depends' => [\yii\web\JqueryAsset::class]]);
-$this->registerCssFile("/buildCalendar/css/main.2c330e1e.css");
+$this->registerJsFile("/js/main.79bdfff3.js", ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile("/js/453.57e5436f.chunk.js", ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerCssFile("/css/main.45e5c7a4.css");
 echo \yii\helpers\Html::tag("div", "", ["class" => "coworker-form"]);

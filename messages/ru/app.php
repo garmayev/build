@@ -30,6 +30,7 @@ return [
     'Building' => 'Объект',
     'Building ID' => '',
     'Buildings' => 'Объекты',
+    'Calendar' => 'Календарь',
     'Categories' => 'Категории',
     'Category' => 'Категория',
     'Category ID' => '',
