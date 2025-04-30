@@ -37,7 +37,7 @@ class OrderController extends \yii\rest\ActiveController
                     // Guests
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker', 'free', 'apply', 'reject'] ],
                 ],
             ],
             'authenticator' => [
@@ -81,7 +81,7 @@ class OrderController extends \yii\rest\ActiveController
     public function prepareDataProvider()
     {
         return new \yii\data\ActiveDataProvider([
-            'query' => $this->modelClass::find()->where(['created_by' => \Yii::$app->user->identity->getId()]),
+            'query' => $this->modelClass::find()->where(['created_by' => \Yii::$app->user->identity->getId()])->orderBy(['id' => SORT_ASC]),
         ]);
     }
 
@@ -102,7 +102,7 @@ class OrderController extends \yii\rest\ActiveController
         $data = json_decode(file_get_contents('php://input'), true);
         $result = [];
         foreach ($data as $key => $value) {
-            $model = Hours::find()->where(["coworker_id" => $value["coworker_id"]])->andWhere(["order_id" => $value["order_id"]])->andWhere(["date" => $value["date"]])->one();
+            $model = Hours::find()->where(["coworker_id" => $value["coworker_id"]])->andWhere(["date" => $value["date"]])->one();
             if (empty($model)) {
                 $hours = new Hours($value);
                 $result[] = ["ok" => $hours->save()];
@@ -162,4 +162,46 @@ class OrderController extends \yii\rest\ActiveController
         $order = new Order();
         return $order->getStatusList();
     }
+
+    public function actionFree()
+    {
+        $orders = Order::find()->where(['status' => Order::STATUS_NEW])->all();
+        return ['data' => $orders];
+    }
+
+    public function actionApply($id)
+    {
+        $coworker = \app\models\Coworker::find()
+            ->where(['user_id' => \Yii::$app->user->getId()])
+            ->one();
+        $model = \app\models\Order::findOne($id);
+
+        if (!$model->checkSuccessfully()) {
+            $model->link('coworkers', $coworker);
+            $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $model->id])->all();
+            foreach ($messages as $message) {
+                $header = $message->status ? 
+                    \Yii::t('app', 'You have agreed to complete the order') . " #{$model->id}" :
+                    \Yii::t('app', 'New order') . " #{$model->id}";
+                $message->editText(
+                    null,
+                    $model->generateTelegramText($header)
+                );
+            }
+            return ['ok' => true];
+        }
+        return ['ok' => false, 'message' => \Yii::t('app', 'Order is successfully')];
+    }
+
+    public function actionReject($id)
+    {
+        $order = \app\models\Order::findOne($id);
+        $coworker = \app\models\Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
+        if (isset($order)) {
+            $order->unlink('coworkers', $coworker, true);
+            return ['ok' => true];
+        }
+        return ['ok' => false, 'message' => \Yii::t('app', 'Missing order')];
+    }
+
 }

@@ -6,6 +6,7 @@ use \yii\base\Module;
 class MessengerModule extends Module 
 {
     public $controllerNamespace = "app\modules\messenger\controllers";
+    public $defaultController = "SettingController";
     public $telegram_bot_id = "";
     public $use_database = "";
 

@@ -26,11 +26,11 @@ CSS
 
 $actionButtons = [
     [
-        'label' => 'View',
-        'url' => ['view'],
-    ], [
         'label' => 'Profile',
         'url' => ['profile'],
+    ], [
+        'label' => 'View',
+        'url' => ['view'],
     ], [
         'label' => 'Invite',
         'url' => ['invite'],

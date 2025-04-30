@@ -19,32 +19,34 @@ class TelegramController extends \yii\web\Controller
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $this->enableCsrfValidation = false;
         $this->query = json_decode(file_get_contents("php://input"), true);
-
-//        \Yii::error($this->query);
-
-        $message = isset($this->query['message']) ? $this->query['message'] : $this->query['callback_query'];
+        $args = [];
+        \Yii::error($this->query);
+        $message = [];
+        if (isset($this->query['message'])) {
+            $message = $this->query['message'];
+        } else if (isset($this->query['callback_query'])) {
+            $message = $this->query['callback_query'];
+        }
         if (isset($this->query['message']) && isset($this->query['message']['entities'])) {
             foreach ($this->query['message']['entities'] as $entity) {
                 if ($entity['type'] === 'bot_command') {
-//                    \Yii::error( substr($this->query['message']['text'], 0, $entity['length']) );
                 }
             }
             $args = explode(" ", substr($this->query['message']['text'], 1, strlen($this->query['message']['text']) - 1));
         }
         if (isset($this->query['callback_query'])) {
             parse_str($this->query['callback_query']['data'], $this->params);
-        } else {
+        } else if (count($args)) {
             $this->params["action"] = array_shift($args);
             $this->params["data"] = $args;
         }
 
-//        \Yii::error($this->params);
         return parent::beforeAction($action);
     }
 
     public function actionCallback()
     {
-        if (isset($this->params)) {
+        if (isset($this->params) && method_exists($this, $this->params['action'])) {
             $this->{$this->params['action']}();
         }
         return [];
@@ -129,5 +131,9 @@ class TelegramController extends \yii\web\Controller
     private function invite()
     {
 
+    }
+
+    private function new() {
+        
     }
 }

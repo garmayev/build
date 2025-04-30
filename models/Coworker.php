@@ -118,7 +118,8 @@ class Coworker extends \yii\db\ActiveRecord
                 }
                 return $result;
             },
-            'attachments'
+            'attachments',
+            'hours'
         ];
     }
 
@@ -150,6 +151,7 @@ class Coworker extends \yii\db\ActiveRecord
             'phone' => Yii::t('app', 'Phone'),
             'email' => Yii::t('app', 'Email'),
             'category_id' => Yii::t('app', 'Category'),
+            'hours' => Yii::t('app', 'Hours'),
         ];
     }
 
@@ -219,6 +221,11 @@ class Coworker extends \yii\db\ActiveRecord
     public function getOrders()
     {
         return $this->hasMany(Order::class, ['id' => 'order_id'])->viaTable('order_coworker', ['coworker_id' => 'id']);
+    }
+
+    public function getHours()
+    {
+        return $this->hasMany(Hours::class, ['coworker_id' => 'id']);
     }
 
     /**

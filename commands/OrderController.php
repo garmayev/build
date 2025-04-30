@@ -49,8 +49,16 @@ class OrderController extends Controller
         session_start();
         $_SESSION['__id'] = 1;
         $model = Order::findOne($order_id);
-        if (isset($model->coworkers)) {
-            echo "$model->id\n";
+//        if (isset($model->coworkers)) {
+//            echo "$model->id\n";
+//        }
+        $coworkerList = [];
+        foreach ($model->filters as $filter) {
+            $coworkerList = array_merge( \app\models\Coworker::searchByFilter($filter, 0), $coworkerList );
+
+            foreach ($coworkerList as $coworker) {
+                echo $coworker->firstname." ".$coworker->lastname;
+            }
         }
         echo "$order_id\n";
 //        echo "Priority: {$this->findCoworkerByPriority($order_id, $priority)}\n";

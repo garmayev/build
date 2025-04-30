@@ -49,7 +49,10 @@ class User extends ActiveRecord implements IdentityInterface
             'email',
             'access_token',
             'status',
-            'auth_key'
+            'auth_key',
+            'coworker' => function (User $model) {
+                return $model->coworker;
+            },
 //            'name',
         ];
     }

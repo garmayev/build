@@ -59,7 +59,7 @@ class UserRegisterForm extends Model
     private function sendMail()
     {
         \Yii::$app->mailer
-            ->compose('coworker\register', ['user' => $this])
+            ->compose('coworker/register', ['user' => $this])
             ->setFrom(['build@amgcompany.ru' => 'build@amgcompany.ru'])
             ->setTo($this->_user->email)
             ->setSubject(\Yii::$app->name . ' robot')

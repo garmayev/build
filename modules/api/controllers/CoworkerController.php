@@ -110,15 +110,35 @@ class CoworkerController extends ActiveController
         return ["ok" => true, "data" => $models->all()];
     }
 
+<<<<<<< HEAD
     public function actionSuitableOrders()
     {
         $coworker = Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
+=======
+    public function actionSetToken()
+    {
+        $data = \Yii::$app->request->post();
+        $model = Coworker::find()->where(['user_id' => $data['coworker_id']])->one();
+        if ($model) {
+            $model->device_id = $data['token'];
+            return ['ok' => $model->save(), 'message' => $model->getErrors()];
+        }
+        return ['ok' => false, 'message' => \Yii::t('app', 'Unknown coworker')];
+//        \Yii::error($data);
+    }
+
+    public function actionSuitableOrders()
+    {
+        $coworker = Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
+
+>>>>>>> 321c2b3 (Fix)
         if (!$coworker) {
             return ["ok" => false, "message" => "Coworker not found"];
         }
 
         // Get all orders that match the coworker's category
         $orders = \app\models\Order::find()
+<<<<<<< HEAD
 //            ->where(['category_id' => $coworker->category_id])
 //           ->andWhere(['not in', 'id', \app\models\OrderCoworker::find()->select('order_id')->where(['coworker_id' => $coworker->id])])
             ->all();
@@ -170,6 +190,21 @@ class CoworkerController extends ActiveController
             }
 
             if ($isSuitable) {
+=======
+            ->where(['status' => \app\models\Order::STATUS_NEW])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+        $suitableOrders = [];
+        $coworkerList = [];
+
+        foreach ($orders as $order) {
+            $isSuitable = true;
+            foreach ($order->filters as $filter) {
+                $coworkerList = array_merge($coworkerList, \app\models\Coworker::searchByFilter($filter, $order->priority_level));
+            }
+//            \Yii::error($coworkerList);
+            if (count($coworkerList) && !$order->checkSuccessfully()) {
+>>>>>>> 321c2b3 (Fix)
                 $suitableOrders[] = $order;
             }
         }

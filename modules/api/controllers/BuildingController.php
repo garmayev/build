@@ -72,7 +72,7 @@ class BuildingController extends \yii\rest\ActiveController
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login']
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'FETCH', 'login']
             ],
         ];
     }

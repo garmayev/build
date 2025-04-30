@@ -13,7 +13,7 @@ class UserController extends \yii\rest\Controller
     public function behaviors()
     {
         return [
-/*            'corsFilter' => [
+            'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
                     'Origin' => ['*'],
@@ -28,11 +28,11 @@ class UserController extends \yii\rest\Controller
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email', 'check'] ],
                     // Users
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login'] ],
                 ],
-            ], */
+            ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
                 'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login', 'register', 'check-username', 'check-email']
@@ -66,7 +66,6 @@ class UserController extends \yii\rest\Controller
         $actions['options'] = [
             'class' => \yii\rest\OptionAction::class
         ];
-        unset($actions['check']);
         return $actions;
     }
 

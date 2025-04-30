@@ -834,7 +834,11 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
+<<<<<<< HEAD
                 "source": "https://github.com/guzzle/psr7/tree/2.7.1"
+=======
+                "source": "https://github.com/guzzle/psr7/tree/2.7.0"
+>>>>>>> 321c2b3 (Fix)
             },
             "funding": [
                 {
