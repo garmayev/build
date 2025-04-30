@@ -16,18 +16,18 @@ class OrderController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::class,
-                'only' => ['index', 'view', 'delete', 'coworker', 'material'],
+                'only' => ['index', 'view', 'delete', 'coworker', 'material', 'get-list'],
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index', 'view', 'delete', 'coworker', 'material'],
+                        'actions' => ['index', 'view', 'delete', 'coworker', 'material', 'get-list'],
                         'roles' => ['@'],
                     ],
-                    [
+/*                    [
                         'allow' => true,
                         'actions' => ['get-list'],
                         'roles' => ['?']
-                    ]
+                    ] */
                 ],
             ],
         ];
@@ -91,6 +91,6 @@ class OrderController extends Controller
     public function actionGetList()
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        return Order::find()->where(['created_by' => \Yii::$app->user->getId()])->all();
+        return Order::find()->where(['created_by' => \Yii::$app->user->getId()])->andWhere(['<>', 'status', Order::STATUS_COMPLETE])->all();
     }
 }
