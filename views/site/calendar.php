@@ -14,7 +14,7 @@ thead td {
     font-weight: 700 !important;
 }
 td {
-    vertical-align: middle;
+    vertical-align: middle !important;
 }
 .modal {
     width: 100vw !important;

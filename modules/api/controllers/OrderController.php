@@ -34,15 +34,13 @@ class OrderController extends \yii\rest\ActiveController
             'access' => [
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
-                    // Guests
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status'] ],
-                    // Users
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker', 'free', 'apply', 'reject'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'set-hours'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker', 'free', 'apply', 'reject', 'set-hours'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status']
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'set-hours']
             ],
         ];
     }
@@ -101,15 +99,15 @@ class OrderController extends \yii\rest\ActiveController
     {
         $data = json_decode(file_get_contents('php://input'), true);
         $result = [];
-        foreach ($data as $key => $value) {
-            $model = Hours::find()->where(["coworker_id" => $value["coworker_id"]])->andWhere(["date" => $value["date"]])->one();
+//        foreach ($data as $key => $value) {
+            $model = Hours::find()->where(["coworker_id" => $data["coworker_id"]])->andWhere(["date" => $data["date"]])->one();
             if (empty($model)) {
-                $hours = new Hours($value);
+                $hours = new Hours($data);
                 $result[] = ["ok" => $hours->save()];
             } else {
-                $result[] = ["ok" => true];
+                $result[] = ["ok" => $model->load(["Hours" => $data]) && $model->save()];
             }
-        }
+//        }
         return $result;
     }
 
