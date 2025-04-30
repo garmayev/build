@@ -6,14 +6,14 @@
 
 $this->title = \Yii::t('app', 'Calendar');
 $this->registerJsFile("/js/453.57e5436f.chunk.js", ['depends' => [\yii\web\JqueryAsset::class]]);
-$this->registerJsFile("/js/main.be307ab4.js", ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile("/js/main.2ab14bae.js", ['depends' => [\yii\web\JqueryAsset::class]]);
 $this->registerCssFile("/css/main.2fce8a79.css");
 $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
 $this->registerCss(<<<CSS
 thead td {
     font-weight: 700 !important;
 }
-td[rowspan="2"] {
+td {
     vertical-align: middle;
 }
 .modal {
