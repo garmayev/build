@@ -11,6 +11,8 @@ use app\models\Order;
 use app\models\Property;
 use app\models\Telegram;
 use app\models\User;
+use ExpoSDK\Expo;
+use ExpoSDK\ExpoMessage;
 use Faker\Factory;
 use yii\console\Controller;
 use yii\helpers\Json;
@@ -106,5 +108,16 @@ class DataController extends Controller
     public function actionSetWebhook()
     {
         echo Json::encode(Telegram::setWebhook());
+    }
+
+    public function actionMessage()
+    {
+        $coworker = Coworker::findOne(13);
+        $message = new ExpoMessage([
+            'title' => "Title",
+            'body' => "Body",
+        ]);
+        $expo = new Expo();
+        $expo->send($message)->to($coworker->device_id)->push();
     }
 }

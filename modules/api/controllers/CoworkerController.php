@@ -17,7 +17,7 @@ class CoworkerController extends ActiveController
     public function behaviors()
     {
         return [
-            'corsFilter' => [
+/*            'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
                     'Origin' => ['*'],
@@ -34,9 +34,9 @@ class CoworkerController extends ActiveController
                     // Guests
                     [ 'allow' => true, 'roles' => ['?'], 'actions' => [] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders'] ],
                 ],
-            ],
+            ], */
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
                 'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD']
@@ -108,5 +108,72 @@ class CoworkerController extends ActiveController
             ->andWhere(['or', ['like', 'firstname', $text], ['like', 'lastname', $text], ['like', 'email', $text], ['like', 'phone', $text]]);
 
         return ["ok" => true, "data" => $models->all()];
+    }
+
+    public function actionSuitableOrders()
+    {
+        $coworker = Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
+        if (!$coworker) {
+            return ["ok" => false, "message" => "Coworker not found"];
+        }
+
+        // Get all orders that match the coworker's category
+        $orders = \app\models\Order::find()
+//            ->where(['category_id' => $coworker->category_id])
+//           ->andWhere(['not in', 'id', \app\models\OrderCoworker::find()->select('order_id')->where(['coworker_id' => $coworker->id])])
+            ->all();
+
+        $suitableOrders = [];
+        foreach ($orders as $order) {
+            $isSuitable = true;
+            
+            // Check if order has requirements
+            if ($order->filter && $order->filter->requirements) {
+                foreach ($order->filter->requirements as $requirement) {
+                    $coworkerProperty = \app\models\CoworkerProperty::findOne([
+                        'coworker_id' => $coworker->id,
+                        'property_id' => $requirement->property_id
+                    ]);
+
+                    if (!$coworkerProperty) {
+                        $isSuitable = false;
+                        break;
+                    }
+
+                    switch ($requirement->type) {
+                        case \Yii::t('app', 'Less'):
+                            if ($coworkerProperty->value > $requirement->value) {
+                                $isSuitable = false;
+                            }
+                            break;
+                        case \Yii::t('app', 'More'):
+                            if ($coworkerProperty->value < $requirement->value) {
+                                $isSuitable = false;
+                            }
+                            break;
+                        case \Yii::t('app', 'Equal'):
+                            if ($coworkerProperty->value != $requirement->value) {
+                                $isSuitable = false;
+                            }
+                            break;
+                        case \Yii::t('app', 'Not Equal'):
+                            if ($coworkerProperty->value == $requirement->value) {
+                                $isSuitable = false;
+                            }
+                            break;
+                    }
+
+                    if (!$isSuitable) {
+                        break;
+                    }
+                }
+            }
+
+            if ($isSuitable) {
+                $suitableOrders[] = $order;
+            }
+        }
+
+        return ["ok" => true, "data" => $suitableOrders];
     }
 }
