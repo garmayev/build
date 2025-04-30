@@ -23,6 +23,11 @@ class OrderController extends Controller
                         'actions' => ['index', 'view', 'delete', 'coworker', 'material'],
                         'roles' => ['@'],
                     ],
+                    [
+                        'allow' => true,
+                        'actions' => ['get-list'],
+                        'roles' => ['?']
+                    ]
                 ],
             ],
         ];
@@ -81,5 +86,11 @@ class OrderController extends Controller
         return $this->render('material', [
             'model' => $model
         ]);
+    }
+
+    public function actionGetList()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return Order::find()->where(['created_by' => \Yii::$app->user->getId()])->all();
     }
 }

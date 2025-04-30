@@ -72,9 +72,9 @@ class HoursController extends \yii\rest\Controller {
     {
 //        $order = \app\models\Order::find()->where(['id' => $order_id])->one();
         $coworker = \app\models\Coworker::findOne($coworker_id);
-        \Yii::error($time);
-        \Yii::error(time());
-        \Yii::error(date('Y-m-d', $time));
+//        \Yii::error($time);
+//        \Yii::error(time());
+//        \Yii::error(date('Y-m-d', $time));
         if (isset($coworker)) {
             $hours = \app\models\Hours::find()->where(['coworker_id' => $coworker->id])->andWhere(['date' => date('Y-m-d', $time)])->one();
             if (isset($hours)) {
