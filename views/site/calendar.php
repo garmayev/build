@@ -6,8 +6,9 @@
 
 $this->title = \Yii::t('app', 'Calendar');
 $this->registerJsFile("/js/453.57e5436f.chunk.js", ['depends' => [\yii\web\JqueryAsset::class]]);
-$this->registerJsFile("/js/main.f45e0054.js", ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile("/js/main.21609dde.js", ['depends' => [\yii\web\JqueryAsset::class]]);
 $this->registerCssFile("/css/main.2fce8a79.css");
+$this->registerJsVar('token', \Yii::$app->user->identity->access_token);
 $this->registerCss(<<<CSS
 thead td {
     font-weight: 700 !important;
