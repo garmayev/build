@@ -193,7 +193,7 @@ class Filter extends \yii\db\ActiveRecord
         return [
             "agree" => $agree,
             "needle" => $this->count - $agree,
-            "coworkers" => $this->findCoworkers($priority),
+            "coworkers" => $this->findCoworkers($priority > -1 ? $priority : 0),
         ];
     }
 
@@ -221,8 +221,8 @@ class Filter extends \yii\db\ActiveRecord
         }
 //        echo "Filter: Priority = " . $priority . "\n";
         $query->andWhere(['coworker.priority' => $priority]);
-        if (isset($_SESSION["__id"])) $query->andWhere(['user_id' => $_SESSION['__id']]);
-//        echo $query->createCommand()->getRawSql()."\n\n";
+//        if (isset($_SESSION["__id"])) $query->andWhere(['user_id' => $_SESSION['__id']]);
+        echo $query->createCommand()->getRawSql()."\n\n";
         return $query->all();
     }
 }

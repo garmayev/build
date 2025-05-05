@@ -110,9 +110,10 @@ class DataController extends Controller
         echo Json::encode(Telegram::setWebhook());
     }
 
-    public function actionMessage()
+    public function actionMessage($user_id)
     {
-        $coworker = Coworker::findOne(13);
+        $user = User::findOne($user_id);
+        $coworker = Coworker::findOne(["user_id" => $user_id]);
         $message = new ExpoMessage([
             'title' => "Title",
             'body' => "Body",

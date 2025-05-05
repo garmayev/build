@@ -28,14 +28,14 @@ class UserController extends \yii\rest\Controller
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email', 'check'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email', 'check', 'set-token'] ],
                     // Users
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login', 'register', 'check-username', 'check-email']
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login', 'register', 'check-username', 'check-email', 'set-token'],
             ],
         ];
     }
@@ -50,6 +50,7 @@ class UserController extends \yii\rest\Controller
             'delete' => ['DELETE', 'OPTIONS'],
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
+            'set-token' => ['POST', 'OPTIONS'],
         ];
     }
 
@@ -127,5 +128,20 @@ class UserController extends \yii\rest\Controller
             return ["ok" => true, "message" => \Yii::t("app", "This email is already taken")];
         }
         return ['ok' => false];
+    }
+
+    public function actionSetToken($user_id)
+    {
+//        \Yii::error($user_id);
+//        $user = User::findOne($user_id);
+        $model = \app\models\Coworker::findOne(['user_id' => $user_id]);
+        $data = \Yii::$app->request->post();
+        if ($data["token"]) {
+            $model->device_id = $data["token"];
+            \Yii::error( $data );
+            $saved = $model->save();
+            return ["ok" => $saved, "message" => !$saved ? $model->errors : ""];
+        }
+        return ["ok" => false, "message" => \Yii::t("app", "Missing token")];
     }
 }

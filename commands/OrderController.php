@@ -25,7 +25,8 @@ class OrderController extends Controller
         if ($order_id) {
             $model = Order::findOne($order_id);
             $_SESSION['__id'] = $model->created_by;
-            if ($model->notify_stage > 0) {
+//            echo $model->notify_stage . "\n";
+            if ($model->notify_stage >= 0) {
                 if ($this->checkTime($model->notify_date)) {
                     $model->notify($model->notify_stage - 1);
                 }
@@ -33,10 +34,14 @@ class OrderController extends Controller
         } else {
             $models = Order::find()->where(['status' => Order::STATUS_NEW])->all();
             foreach ($models as $model) {
+                echo "Order #{$model->id}\n";
                 $priority = $this->getPriority($model, isset($model->notify_stage) ? $model->notify_stage - 1 : Coworker::PRIORITY_HIGH);
                 $_SESSION['__id'] = $model->created_by;
                 if ( $model->notify_stage > 0 ) {
+                    echo "\tStage: {$model->notify_stage}\n";
+                    echo "\tDate: {$model->notify_date}\n";
                     if ($this->checkTime($model->notify_date)) {
+                        echo "\tPriority: $priority\n";
                         $model->notify($priority);
                     }
                 }

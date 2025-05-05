@@ -91,8 +91,8 @@ $script = <<<JS
 
     root.render(
         <DynamicTable 
-            data={filters} 
-            dataUrl={'/api/order/detail?id={$model->id}'}
+            data={filters ?? []} 
+            dataUrl={'/order/detail?id={$model->id}'}
             categoryUrl={'/api/category/index?type=1'}
             propertyUrl={'/api/property/by-category'}
             tableHeader={[{

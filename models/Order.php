@@ -11,6 +11,8 @@ use yii\db\ActiveQuery;
 use yii\helpers\ArrayHelper;
 use yii\web\Linkable;
 use yii\web\UploadedFile;
+use ExpoSDK\Expo;
+use ExpoSDK\ExpoMessage;
 
 /**
  * This is the model class for table "order".
@@ -391,24 +393,36 @@ class Order extends \yii\db\ActiveRecord
                 $priority = Coworker::PRIORITY_HIGH;
             }
             $details = $filter->details($this->id, $priority);
-//            echo "Needle: {$details['needle']}\n";
-//            echo "Agree: {$details['agree']}\n";
+            echo "Needle: {$details['needle']}\n";
+            echo "Agree: {$details['agree']}\n";
+            echo count($details['coworkers']) . "\n";
             if ($priority >= Coworker::PRIORITY_LOW) {
                 foreach ($details['coworkers'] as $coworker) {
-//                    echo "\tCoworker: $coworker->firstname $coworker->lastname\n";
-                    $coworker->sendMessage(
-                        $this->generateTelegramText(\Yii::t('app', 'New order').' #'.$this->id),
-                        json_encode([
-                            'inline_keyboard' => [
-                                [
-                                    ["text" => \Yii::t("app", "Agree"), "callback_data" => "order_id={$this->id}&action=ok"]
-                                ], [
-                                    ["text" => \Yii::t("app", "Disagree"), "callback_data" => "order_id={$this->id}&action=cancel"]
+                    echo "\tCoworker: $coworker->firstname $coworker->lastname\n";
+                    if ($coworker->device_id) {
+                        $message = new ExpoMessage([
+                            "title" => \Yii::t("app", "New order")." #{$this->id}",
+                            "body" => $this->generateTelegramText(\Yii::t("app", "New order") . " #{$this->id}"),
+                            "categoryId" => "new-order",
+                            "data" => ["order_id" => $this->id]
+                        ]);
+                        $expo = new Expo();
+                        $expo->send($message)->to($coworker->device_id)->push();
+                    } else if ($coworker->chat_id) {
+                        $coworker->sendMessage(
+                            $this->generateTelegramText(\Yii::t('app', 'New order').' #'.$this->id),
+                            json_encode([
+                                'inline_keyboard' => [
+                                    [
+                                        ["text" => \Yii::t("app", "Agree"), "callback_data" => "order_id={$this->id}&action=ok"]
+                                    ], [
+                                        ["text" => \Yii::t("app", "Disagree"), "callback_data" => "order_id={$this->id}&action=cancel"]
+                                    ]
                                 ]
-                            ]
-                        ]),
-                        $this->id
-                    );
+                            ]),
+                            $this->id
+                        );
+                    }
                 }
                 $this->notify_date = time();
                 $this->notify_stage = $priority;
@@ -485,6 +499,7 @@ class Order extends \yii\db\ActiveRecord
             "date" => $this->date,
             "comment" => $this->comment,
             "coworkers" => $this->coworkers,
+            "filtered" => $this->issetCoworkers($this->priority > -1 ? $this->priority : 0),
             "filters" => $this->filters,
             "attachments" => $this->attachments,
         ];

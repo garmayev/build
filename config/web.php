@@ -28,8 +28,16 @@ $config = [
         ],
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
-            'viewPath' => '@app/mail',
-            'useFileTransport' => true,
+            'viewPath' => '@common/mail',
+            'useFileTransport' => false,
+            'transport' => [
+                'scheme' => 'smtps',
+                'host' => 'smtp.mail.ru',
+                'username' => 'amg.company@inbox.ru',
+                'password' => 'dAV5dj7Y28JrBThXmNWk',
+                'ssl' => true,
+                'port' => 465,
+            ],
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,

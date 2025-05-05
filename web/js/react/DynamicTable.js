@@ -122,7 +122,7 @@ function Requirement({propertyUrl, categoryId, setRequirements, requirements, da
  * @constructor
  */
 function Table({data, header, formName}) {
-    console.log(data);
+//    console.log(data);
     const [list, setList] = React.useState(data);
 
     return (
@@ -134,7 +134,7 @@ function Table({data, header, formName}) {
             </tr>
             </thead>
             <tbody>
-            {data?.map((item, index) => {
+            {data.length ? data.map((item, index) => {
                 if (item) {
                     return (
                         <tr key={`row-${index}`} data-key={index}>
@@ -184,7 +184,7 @@ function Table({data, header, formName}) {
                         </tr>
                     );
                 }
-            })}
+            }) : <></>}
             </tbody>
         </table>
     )
@@ -268,7 +268,12 @@ function Modal({categoryUrl, propertyUrl, onClick}) {
                         <div className={'modal-footer'}>
                             <button type={'button'} className={'btn btn-success'} data-dismiss={'modal'}
                                     onClick={() => {
-                                        onClick?.call(this, {
+console.log({
+                                            category: category,
+                                            count: count,
+                                            requirements: requirements
+                                        });
+                                        onClick({
                                             category: category,
                                             count: count,
                                             requirements: requirements
@@ -298,11 +303,15 @@ function Modal({categoryUrl, propertyUrl, onClick}) {
 function DynamicTable({tableHeader, dataUrl, propertyUrl, categoryUrl, formName, children}) {
     const [dataList, _setDataList] = React.useState([]);
     const setDataList = (value) => {
+        console.log(value);
+        console.log(dataList);
         _setDataList([...dataList, value]);
     }
 
     React.useEffect(() => {
-        fetch(dataUrl)
+        fetch(dataUrl, {
+            mode: "no-cors",
+        })
             .then(response => response.json())
             .then(result => {
                 _setDataList(result);

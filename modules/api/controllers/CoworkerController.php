@@ -110,87 +110,15 @@ class CoworkerController extends ActiveController
         return ["ok" => true, "data" => $models->all()];
     }
 
-<<<<<<< HEAD
-    public function actionSuitableOrders()
-    {
-        $coworker = Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
-=======
-    public function actionSetToken()
-    {
-        $data = \Yii::$app->request->post();
-        $model = Coworker::find()->where(['user_id' => $data['coworker_id']])->one();
-        if ($model) {
-            $model->device_id = $data['token'];
-            return ['ok' => $model->save(), 'message' => $model->getErrors()];
-        }
-        return ['ok' => false, 'message' => \Yii::t('app', 'Unknown coworker')];
-//        \Yii::error($data);
-    }
-
     public function actionSuitableOrders()
     {
         $coworker = Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
 
->>>>>>> 321c2b3 (Fix)
         if (!$coworker) {
-            return ["ok" => false, "message" => "Coworker not found"];
+            return ["ok" => false, "message" => \Yii::t("app", "Coworker not found")];
         }
 
-        // Get all orders that match the coworker's category
         $orders = \app\models\Order::find()
-<<<<<<< HEAD
-//            ->where(['category_id' => $coworker->category_id])
-//           ->andWhere(['not in', 'id', \app\models\OrderCoworker::find()->select('order_id')->where(['coworker_id' => $coworker->id])])
-            ->all();
-
-        $suitableOrders = [];
-        foreach ($orders as $order) {
-            $isSuitable = true;
-            
-            // Check if order has requirements
-            if ($order->filter && $order->filter->requirements) {
-                foreach ($order->filter->requirements as $requirement) {
-                    $coworkerProperty = \app\models\CoworkerProperty::findOne([
-                        'coworker_id' => $coworker->id,
-                        'property_id' => $requirement->property_id
-                    ]);
-
-                    if (!$coworkerProperty) {
-                        $isSuitable = false;
-                        break;
-                    }
-
-                    switch ($requirement->type) {
-                        case \Yii::t('app', 'Less'):
-                            if ($coworkerProperty->value > $requirement->value) {
-                                $isSuitable = false;
-                            }
-                            break;
-                        case \Yii::t('app', 'More'):
-                            if ($coworkerProperty->value < $requirement->value) {
-                                $isSuitable = false;
-                            }
-                            break;
-                        case \Yii::t('app', 'Equal'):
-                            if ($coworkerProperty->value != $requirement->value) {
-                                $isSuitable = false;
-                            }
-                            break;
-                        case \Yii::t('app', 'Not Equal'):
-                            if ($coworkerProperty->value == $requirement->value) {
-                                $isSuitable = false;
-                            }
-                            break;
-                    }
-
-                    if (!$isSuitable) {
-                        break;
-                    }
-                }
-            }
-
-            if ($isSuitable) {
-=======
             ->where(['status' => \app\models\Order::STATUS_NEW])
             ->orderBy(['id' => SORT_DESC])
             ->all();
@@ -198,15 +126,23 @@ class CoworkerController extends ActiveController
         $coworkerList = [];
 
         foreach ($orders as $order) {
+            \Yii::error( "Order ID: " . $order->id );
             $isSuitable = true;
             foreach ($order->filters as $filter) {
-                $coworkerList = array_merge($coworkerList, \app\models\Coworker::searchByFilter($filter, $order->priority_level));
+                $list = \app\models\Coworker::searchByFilter($filter, $order->priority_level);
+//                \Yii::error(count($list));
+                foreach ($list as $item) {
+                    \Yii::error( "{$item->firstname} {$item->lastname}" );
+                    if ($coworker->id === $item->id) {
+                        $suitableOrders[] = $order;
+                    }
+                }
+//                \Yii::error( "Coworkers count: " . count(\app\models\Coworker::searchByFilter($filter, $order->priority_level)) );
+//                $coworkerList = array_merge($coworkerList, \app\models\Coworker::searchByFilter($filter, $order->priority_level));
             }
-//            \Yii::error($coworkerList);
-            if (count($coworkerList) && !$order->checkSuccessfully()) {
->>>>>>> 321c2b3 (Fix)
-                $suitableOrders[] = $order;
-            }
+//            if (count($coworkerList) && !$order->checkSuccessfully()) {
+//                $suitableOrders[] = $order;
+//            }
         }
 
         return ["ok" => true, "data" => $suitableOrders];

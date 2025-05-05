@@ -78,7 +78,7 @@ class Coworker extends \yii\db\ActiveRecord
             [['files'], 'file', 'skipOnEmpty' => true, 'maxFiles' => 15],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id'], 'on' => self::SCENARIO_COWORKER],
             [['category_id'], 'default', 'value' => 0, 'on' => self::SCENARIO_COWORKER],
-            [['created_by'], 'default', 'value' => \Yii::$app->user->identity->id],
+//            [['created_by'], 'default', 'value' => \Yii::$app->user->identity->id],
         ];
     }
 
@@ -320,6 +320,7 @@ class Coworker extends \yii\db\ActiveRecord
 
     public function sendMessage($message, $keyboard, $order_id = null)
     {
+//        if ($this->user->device_id)
         if ($this->chat_id) {
             $telegramMessage = new TelegramMessage([
                 'chat_id' => $this->chat_id,

@@ -40,7 +40,7 @@ class OrderController extends \yii\rest\ActiveController
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'set-hours']
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'set-hours', 'detail']
             ],
         ];
     }

@@ -93,4 +93,18 @@ class OrderController extends Controller
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return Order::find()->where(['created_by' => \Yii::$app->user->getId()])->andWhere(['<>', 'status', Order::STATUS_COMPLETE])->all();
     }
+
+    public function actionDetail($id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if ($id) {
+            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            $model = Order::findOne($id);
+            if (\Yii::$app->user->isGuest) {
+                return ["ok" => false, "message" => "Unknown user"];
+            }
+            return ["ok" => true, "data" => $model->getDetails()];
+        }
+        return [];
+    }
 }
