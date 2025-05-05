@@ -4,6 +4,8 @@ namespace app\models;
 
 use app\models\forms\UserRegisterForm;
 use app\models\telegram\TelegramMessage;
+use ExpoSDK\Expo;
+use ExpoSDK\ExpoMessage;
 use floor12\phone\PhoneValidator;
 use Yii;
 use yii\behaviors\BlameableBehavior;
@@ -334,32 +336,9 @@ class Coworker extends \yii\db\ActiveRecord
         }
     }
 
-    public static function searchByFilter($filter, $priority = Coworker::PRIORITY_HIGH, $user_id = null)
+    public static function searchByFilter($filter, $priority = Coworker::PRIORITY_HIGH)
     {
-        $query = Coworker::find()
-            ->joinWith('properties')
-            ->where(['coworker.category_id' => $filter->category_id])
-            ->andWhere(['priority' => $priority]);
-        if ($priority !== Coworker::PRIORITY_LOW) {
-            $query->andWhere(['user_id' => $user_id]);
-        }
-        foreach ($filter->requirements as $requirement) {
-            $query->andWhere(['property.id' => $requirement->property_id]);
-            switch ($requirement->type) {
-                case \Yii::t('app', 'Less'):
-                    $query->andWhere(['<=', 'coworker_property.value', $requirement->value]);
-                    break;
-                case \Yii::t('app', 'More'):
-                    $query->andWhere(['>=', 'coworker_property.value', $requirement->value]);
-                    break;
-                case \Yii::t('app', 'Equal'):
-                    $query->andWhere(['=', 'coworker_property.value', $requirement->value]);
-                    break;
-                case \Yii::t('app', 'Not Equal'):
-                    $query->andWhere(['<>', 'coworker_property.value', $requirement->value]);
-                    break;
-            }
-        }
+        $query = $filter->getCoworkers($priority);
         return $query->all();
     }
 
@@ -371,5 +350,22 @@ class Coworker extends \yii\db\ActiveRecord
             ->setTo($this->email)
             ->setSubject(\Yii::$app->name . ' robot')
             ->send();
+    }
+
+    public function notify(Order $model)
+    {
+        if ($this->device_id) {
+            $message = new ExpoMessage([
+                "title" => \Yii::t("app", "New order") . " #{$model->id}",
+                "body" => \Yii::t("app", "New order") . " #{$model->id}\n".
+                    \Yii::t("app", "Building") . ": {$model->building->title}\n".
+                    \Yii::t("app", "Address") . ": {$model->building->location->address}",
+                    \Yii::t("app", "Date") . ": " . \Yii::$app->formatter->asDate($model->date) . "\n",
+                "categoryId" => "new-order",
+                "data" => ["order_id" => $this->id]
+            ]);
+            $expo = new Expo();
+            $expo->send($message)->to($this->device_id)->push();
+        }
     }
 }

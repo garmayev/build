@@ -2,6 +2,7 @@
 
 namespace app\modules\api\controllers;
 
+use aki\telegram\base\Command;
 use app\models\Coworker;
 use app\models\telegram\TelegramMessage;
 use app\models\User;
@@ -18,37 +19,24 @@ class TelegramController extends \yii\web\Controller
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $this->enableCsrfValidation = false;
-        $this->query = json_decode(file_get_contents("php://input"), true);
-        $args = [];
-        \Yii::error($this->query);
-        $message = [];
-        if (isset($this->query['message'])) {
-            $message = $this->query['message'];
-        } else if (isset($this->query['callback_query'])) {
-            $message = $this->query['callback_query'];
-        }
-        if (isset($this->query['message']) && isset($this->query['message']['entities'])) {
-            foreach ($this->query['message']['entities'] as $entity) {
-                if ($entity['type'] === 'bot_command') {
-                }
-            }
-            $args = explode(" ", substr($this->query['message']['text'], 1, strlen($this->query['message']['text']) - 1));
-        }
-        if (isset($this->query['callback_query'])) {
-            parse_str($this->query['callback_query']['data'], $this->params);
-        } else if (count($args)) {
-            $this->params["action"] = array_shift($args);
-            $this->params["data"] = $args;
-        }
-
         return parent::beforeAction($action);
     }
 
     public function actionCallback()
     {
-        if (isset($this->params) && method_exists($this, $this->params['action'])) {
-            $this->{$this->params['action']}();
-        }
+        $telegram = \Yii::$app->telegram;
+        \aki\telegram\base\Command::run("/start", function ($telegram, $args) {
+            \Yii::error($args);
+        });
+        \aki\telegram\base\Command::run("/agree", function ($telegram, $args) {
+            \Yii::error($args);
+        });
+        \aki\telegram\base\Command::run("/dis-agree", function ($telegram, $args) {
+            \Yii::error($args);
+        });
+        Command::run("/projects", function ($telegram, $args) {
+            \Yii::error($args);
+        });
         return [];
     }
 
@@ -78,7 +66,7 @@ class TelegramController extends \yii\web\Controller
             $currentMessage->reply_markup = null;
             $currentMessage->save();
             foreach ($messages->all() as $message) {
-                $header = $message->status ? 
+                $header = $message->status ?
                     \Yii::t('app', 'You have agreed to complete the order') . " #{$order->id}" :
                     \Yii::t('app', 'New order') . " #{$order->id}";
                 $message->editText(
@@ -106,25 +94,26 @@ class TelegramController extends \yii\web\Controller
     {
         $coworker = \app\models\Coworker::findOne($this->params["data"]);
         if ($coworker) {
-            $coworker->chat_id = "" . $this->query['message']['from']['id'];
-            if ($coworker->save()) {
-                $messages = [
-                    [
-                        'chat_id' => $coworker->chat_id,
-                        'text' => \Yii::t('app', 'Welcome to our bot'),
-                        'reply_markup' => null
-                    ], [
-                        'chat_id' => $coworker->chat_id,
-                        'text' => \Yii::t('app', 'Here you will get orders to your services'),
-                    ]
-                ];
-                foreach ($messages as $messageConfig) {
-                    $telegramMessage = new TelegramMessage($messageConfig);
-                    $telegramMessage->send();
-                }
-            } else {
-                \Yii::error($coworker->getErrorSummary(true));
-            }
+            \Yii::error($this->params);
+//            $coworker->chat_id = "" . $this->query['message']['from']['id'];
+//            if ($coworker->save()) {
+//                $messages = [
+//                    [
+//                        'chat_id' => $coworker->chat_id,
+//                        'text' => \Yii::t('app', 'Welcome to our bot'),
+//                        'reply_markup' => null
+//                    ], [
+//                        'chat_id' => $coworker->chat_id,
+//                        'text' => \Yii::t('app', 'Here you will get orders to your services'),
+//                    ]
+//                ];
+//                foreach ($messages as $messageConfig) {
+//                    $telegramMessage = new TelegramMessage($messageConfig);
+//                    $telegramMessage->send();
+//                }
+//            } else {
+//                \Yii::error($coworker->getErrorSummary(true));
+//            }
         }
     }
 
@@ -133,7 +122,8 @@ class TelegramController extends \yii\web\Controller
 
     }
 
-    private function new() {
-        
+    private function new()
+    {
+
     }
 }

@@ -77,7 +77,7 @@ class Telegram extends Model
             return null;
         }
 
-        curl_close($curl)
+        curl_close($curl);
         return $result;
     }
 }

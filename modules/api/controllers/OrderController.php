@@ -35,7 +35,7 @@ class OrderController extends \yii\rest\ActiveController
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'set-hours'] ],
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker', 'free', 'apply', 'reject', 'set-hours'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker', 'free', 'apply', 'reject', 'set-hours', 'set-status'] ],
                 ],
             ],
             'authenticator' => [
@@ -202,4 +202,10 @@ class OrderController extends \yii\rest\ActiveController
         return ['ok' => false, 'message' => \Yii::t('app', 'Missing order')];
     }
 
+    public function actionSetStatus($id, $status)
+    {
+        $model = Order::findOne($id);
+        $model->status = $status;
+        $model->save();
+    }
 }

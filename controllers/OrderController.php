@@ -69,7 +69,7 @@ class OrderController extends Controller
         if (\Yii::$app->request->isPost) {
             $model->files = UploadedFile::getInstances($model, 'files');
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
-                $model->notify();
+//                $model->notify();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             }

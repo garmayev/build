@@ -28,8 +28,8 @@ $config = [
         ],
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
-            'viewPath' => '@common/mail',
-            'useFileTransport' => false,
+            'viewPath' => '@app/mail',
+            'useFileTransport' => true,
             'transport' => [
                 'scheme' => 'smtps',
                 'host' => 'smtp.mail.ru',
@@ -69,7 +69,8 @@ $config = [
             ],
         ],
         'telegram' => [
-            'class' => \app\modules\messenger\components\Telegram::class,
+            'class' => \aki\telegram\Telegram::class,
+            'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
         ],
     ],
     'modules' => [

@@ -123,26 +123,16 @@ class CoworkerController extends ActiveController
             ->orderBy(['id' => SORT_DESC])
             ->all();
         $suitableOrders = [];
-        $coworkerList = [];
 
         foreach ($orders as $order) {
-            \Yii::error( "Order ID: " . $order->id );
-            $isSuitable = true;
             foreach ($order->filters as $filter) {
                 $list = \app\models\Coworker::searchByFilter($filter, $order->priority_level);
-//                \Yii::error(count($list));
                 foreach ($list as $item) {
-                    \Yii::error( "{$item->firstname} {$item->lastname}" );
                     if ($coworker->id === $item->id) {
                         $suitableOrders[] = $order;
                     }
                 }
-//                \Yii::error( "Coworkers count: " . count(\app\models\Coworker::searchByFilter($filter, $order->priority_level)) );
-//                $coworkerList = array_merge($coworkerList, \app\models\Coworker::searchByFilter($filter, $order->priority_level));
             }
-//            if (count($coworkerList) && !$order->checkSuccessfully()) {
-//                $suitableOrders[] = $order;
-//            }
         }
 
         return ["ok" => true, "data" => $suitableOrders];

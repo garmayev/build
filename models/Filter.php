@@ -161,7 +161,7 @@ class Filter extends \yii\db\ActiveRecord
 
     public function getCoworkers($priority = Coworker::PRIORITY_HIGH)
     {
-        $query = Coworker::find()->joinWith('properties')->where(['priority' => $priority])->andWhere(['user_id' => 1]);
+        $query = Coworker::find()->joinWith('properties')->where(['>=', 'priority', $priority]);
         $query->andWhere(['category_id' => $this->category_id]);
         foreach ($this->requirements as $requirement) {
             $query->andWhere(['property.id' => $requirement->property_id]);

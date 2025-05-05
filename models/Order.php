@@ -56,6 +56,15 @@ class Order extends \yii\db\ActiveRecord
     const TYPE_MATERIAL = 2;
     const TYPE_TECHNIQUE = 3;
 
+    const EVENT_STATUS_UPDATE = 'statusUpdate';
+
+    public function init()
+    {
+        parent::init();
+        $this->on(self::EVENT_AFTER_INSERT, [$this, 'afterInsert']);
+        $this->on(self::EVENT_STATUS_UPDATE, [$this, 'statusUpdate']);
+    }
+
     public function behaviors()
     {
         return [
@@ -77,6 +86,19 @@ class Order extends \yii\db\ActiveRecord
     public static function tableName(): string
     {
         return 'order';
+    }
+
+    public static function afterInsert($event)
+    {
+        $model = $event->sender;
+        foreach ($model->getSuiltableCoworkers as $coworker) {
+            $coworker->notify();
+        }
+    }
+
+    public static function statusUpdate($event)
+    {
+        $model = $event->sender;
     }
 
     public function beforeDelete()
@@ -107,6 +129,7 @@ class Order extends \yii\db\ActiveRecord
         return [
             [['status', 'building_id', 'date', 'type', 'notify_date', 'notify_stage', 'created_by', 'created_at'], 'integer'],
             [['building_id'], 'exist', 'skipOnError' => true, 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
+            [['priority_level'], 'default', 'value' => Coworker::PRIORITY_HIGH],
             [['comment'], 'string'],
             [['filters', 'datetime', 'attachments'], 'safe'],
         ];
@@ -214,17 +237,6 @@ class Order extends \yii\db\ActiveRecord
         return $this->hasMany(Coworker::class, ['id' => 'coworker_id'])->viaTable('order_coworker', ['order_id' => 'id']);
     }
 
-    /**
-     * Gets query for [[Filters]].
-     *
-     * @return ActiveQuery
-     * @throws InvalidConfigException
-     */
-    /*    public function getFilters(): ActiveQuery
-        {
-            return $this->hasMany(Filter::class, ['id' => 'filter_id'])->viaTable('order_filter', ['order_id' => 'id']);
-        } */
-
     public function getStatusTitle()
     {
         $list = [
@@ -262,7 +274,6 @@ class Order extends \yii\db\ActiveRecord
     public function setFilters($data)
     {
         $this->save(false);
-//        \Yii::error($data);
         foreach ($this->filters as $filter) {
             $filter->unlink('filters', $filter, true);
         }
@@ -311,79 +322,9 @@ class Order extends \yii\db\ActiveRecord
         return $this->hasMany(Filter::class, ['id' => 'filter_id'])->viaTable('order_filter', ['order_id' => 'id']);
     }
 
-    /**
-     * Gets query for [[OrderMaterials]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-//    public function getOrderMaterials()
-//    {
-//        return $this->hasMany(OrderMaterial::class, ['order_id' => 'id']);
-//    }
-
-    /**
-     * Gets query for [[OrderTechniques]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-//    public function getOrderTechniques()
-//    {
-//        return $this->hasMany(OrderTechnique::class, ['order_id' => 'id']);
-//    }
-
-    /**
-     * Gets query for [[Techniques]].
-     *
-     * @return \yii\db\ActiveQuery
-     * @throws InvalidConfigException
-     */
-//    public function getTechniques()
-//    {
-//        return $this->hasMany(Technique::class, ['id' => 'technique_id'])->viaTable('order_technique', ['order_id' => 'id']);
-//    }
-
-    public function filter($priority)
-    {
-        switch ($this->type) {
-            case Order::TYPE_COWORKER:
-                $query = $this->filterCoworker($priority)->createCommand()->queryAll();
-                break;
-            case Order::TYPE_MATERIAL:
-                $query = Material::find();
-                break;
-            default:
-                $query = Technique::find();
-                break;
-        }
-        return $query;
-    }
-
     public function getTelegramMessages()
     {
         return $this->hasMany(TelegramMessage::class, ['order_id' => 'id']);
-    }
-
-    public function filterCoworker($priority)
-    {
-            $query = Coworker::find()->joinWith('properties')->joinWith('orders')->where(['coworker.category_id' => $filter->category_id]);
-            foreach ($filter->requirements as $requirement) {
-                $query->andWhere(['property.id' => $requirement->property_id]);
-                switch ($requirement->type) {
-                    case \Yii::t('app', 'Less'):
-                        $query->andWhere(['<=', 'coworker_property.value', $requirement->value]);
-                        break;
-                    case \Yii::t('app', 'More'):
-                        $query->andWhere(['>=', 'coworker_property.value', $requirement->value]);
-                        break;
-                    case \Yii::t('app', 'Equal'):
-                        $query->andWhere(['=', 'coworker_property.value', $requirement->value]);
-                        break;
-                    case \Yii::t('app', 'Not Equal'):
-                        $query->andWhere(['<>', 'coworker_property.value', $requirement->value]);
-                        break;
-                }
-            }
-        return $query->andWhere(['coworker.priority' => $priority]);
     }
 
     public function notify($priority = null)
@@ -401,7 +342,7 @@ class Order extends \yii\db\ActiveRecord
                     echo "\tCoworker: $coworker->firstname $coworker->lastname\n";
                     if ($coworker->device_id) {
                         $message = new ExpoMessage([
-                            "title" => \Yii::t("app", "New order")." #{$this->id}",
+                            "title" => \Yii::t("app", "New order") . " #{$this->id}",
                             "body" => $this->generateTelegramText(\Yii::t("app", "New order") . " #{$this->id}"),
                             "categoryId" => "new-order",
                             "data" => ["order_id" => $this->id]
@@ -410,7 +351,7 @@ class Order extends \yii\db\ActiveRecord
                         $expo->send($message)->to($coworker->device_id)->push();
                     } else if ($coworker->chat_id) {
                         $coworker->sendMessage(
-                            $this->generateTelegramText(\Yii::t('app', 'New order').' #'.$this->id),
+                            $this->generateTelegramText(\Yii::t('app', 'New order') . ' #' . $this->id),
                             json_encode([
                                 'inline_keyboard' => [
                                     [
@@ -446,7 +387,11 @@ class Order extends \yii\db\ActiveRecord
                 $count = OrderCoworker::find()->where(['order_id' => $this->id])->all();
                 break;
         }
-        return $f->count === count($count);
+        if ( $f->count === count($count) ) {
+            $this->trigger(self::EVENT_STATUS_UPDATE);
+            return true;
+        }
+        return false;
     }
 
     public function countCoworkersByFilter($filter)
@@ -503,5 +448,14 @@ class Order extends \yii\db\ActiveRecord
             "filters" => $this->filters,
             "attachments" => $this->attachments,
         ];
+    }
+
+    public function getSuitableCoworkers()
+    {
+        $coworkers = [];
+        foreach ($this->filters as $filter) {
+            $coworkers = array_merge($coworkers, $filter->findCoworkers($this->priority_level));
+        }
+        return $coworkers;
     }
 }

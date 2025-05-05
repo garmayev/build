@@ -32,7 +32,8 @@
     "kartik-v/yii2-widget-datetimepicker": "dev-master",
     "floor12/yii2-phone": "^2.2",
     "microinginer/yii2-dropdown-action-column": "dev-master",
-    "ctwillie/expo-server-sdk-php": "^2.1"
+    "ctwillie/expo-server-sdk-php": "^2.1",
+    "aki/yii2-bot-telegram": "*"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",
