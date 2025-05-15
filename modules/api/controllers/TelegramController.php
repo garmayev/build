@@ -25,16 +25,47 @@ class TelegramController extends \yii\web\Controller
     public function actionCallback()
     {
         $telegram = \Yii::$app->telegram;
+        if ($telegram->input->callback_query) {
+            \Yii::error( $telegram->input->callback_query->data );
+        }
         \aki\telegram\base\Command::run("/start", function ($telegram, $args) {
             \Yii::error($args);
         });
         \aki\telegram\base\Command::run("/agree", function ($telegram, $args) {
+            parse_str($args[0], $data);
+            $order = Order::findOne($data["order_id"]);
+//            \Yii::error($telegram->input->callback_query->message);
+            $coworker = Coworker::findOne(['chat_id' => $telegram->input->callback_query->from["id"]]);
+            if ($order) {
+                $order->assignCoworker($coworker);
+            }
+        });
+        \aki\telegram\base\Command::run("/refuse", function ($telegram, $args) {
+            \Yii::error("Refuse");
             \Yii::error($args);
         });
-        \aki\telegram\base\Command::run("/dis-agree", function ($telegram, $args) {
-            \Yii::error($args);
-        });
-        Command::run("/projects", function ($telegram, $args) {
+        \aki\telegram\base\Command::run("/orders", function ($telegram, $args) {
+            $coworker = Coworker::findOne(['chat_id' => $telegram->input->message ? $telegram->input->message->from->id : $telegram->input->callback_query->from["id"]]);
+            
+            $orders = \app\models\Order::find()
+                ->where(['status' => \app\models\Order::STATUS_NEW])
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
+            $suitableOrders = [];
+            $text = "";
+            foreach ($orders as $order) {
+                foreach ($order->filters as $filter) {
+                    $list = \app\models\Coworker::searchByFilter($filter, $order->priority_level);
+                    foreach ($list as $item) {
+                        if ($coworker->id === $item->id && count($order->coworkers) !== $filter->count) {
+                            $suitableOrders[] = $order;
+                            $text .= "<a href='https://build.amgcompany.ru/order/view?id={$order->id}'>Order #{$order->id}</a>\n";
+                        }
+                    }
+                }
+            }
+
+            $telegram->sendMessage(["chat_id" => $coworker->chat_id, "text" => "Suitable orders: \n".$text, "parse_mode" => "html"]);
             \Yii::error($args);
         });
         return [];

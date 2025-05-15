@@ -42,6 +42,29 @@ class TelegramMessage extends ActiveRecord
         return $this->hasOne(Order::class, ['id' => 'order_id']);
     }
 
+    public function editMessageText($text)
+    {
+        \Yii::$app->telegram->editMessageText(["chat_id" => $this->chat_id, "text" => $text, "message_id" => $this->message_id]);
+    }
+
+    public function deleteMessage()
+    {
+        \Yii::$app->telegram->deleteMessage(["message_id" => $this->id, "chat_id" => $this->chat_id]);
+        $this->delete();
+    }
+
+    public static function sendMessage($params)
+    {
+        $response = \Yii::$app->telegram->sendMessage($params);
+        if ($response["ok"]) {
+            $message = new TelegramMessage();
+            $message->id = $response["result"]["message_id"];
+            $message->message_id = $response["result"]["message_id"];
+            $message->chat_id = $params["chat_id"];
+            $message->save();
+        }
+    }
+
     public function send($text = null, $test = false)
     {
         $curl = curl_init();

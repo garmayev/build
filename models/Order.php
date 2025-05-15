@@ -58,13 +58,6 @@ class Order extends \yii\db\ActiveRecord
 
     const EVENT_STATUS_UPDATE = 'statusUpdate';
 
-    public function init()
-    {
-        parent::init();
-        $this->on(self::EVENT_AFTER_INSERT, [$this, 'afterInsert']);
-        $this->on(self::EVENT_STATUS_UPDATE, [$this, 'statusUpdate']);
-    }
-
     public function behaviors()
     {
         return [
@@ -86,19 +79,6 @@ class Order extends \yii\db\ActiveRecord
     public static function tableName(): string
     {
         return 'order';
-    }
-
-    public static function afterInsert($event)
-    {
-        $model = $event->sender;
-        foreach ($model->getSuiltableCoworkers as $coworker) {
-            $coworker->notify();
-        }
-    }
-
-    public static function statusUpdate($event)
-    {
-        $model = $event->sender;
     }
 
     public function beforeDelete()
@@ -127,7 +107,7 @@ class Order extends \yii\db\ActiveRecord
     public function rules(): array
     {
         return [
-            [['status', 'building_id', 'date', 'type', 'notify_date', 'notify_stage', 'created_by', 'created_at'], 'integer'],
+            [['status', 'building_id', 'date', 'type', 'notify_date', 'notify_stage', 'created_by', 'created_at', 'priority_level'], 'integer'],
             [['building_id'], 'exist', 'skipOnError' => true, 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
             [['priority_level'], 'default', 'value' => Coworker::PRIORITY_HIGH],
             [['comment'], 'string'],
@@ -175,7 +155,10 @@ class Order extends \yii\db\ActiveRecord
             'coworkers' => function (Order $model) {
                 return $model->coworkers;
             },
-            'hours'
+            'hours',
+            'needle' => function (Order $model) {
+
+            }
         ];
     }
 
@@ -334,9 +317,9 @@ class Order extends \yii\db\ActiveRecord
                 $priority = Coworker::PRIORITY_HIGH;
             }
             $details = $filter->details($this->id, $priority);
-            echo "Needle: {$details['needle']}\n";
-            echo "Agree: {$details['agree']}\n";
-            echo count($details['coworkers']) . "\n";
+//            echo "Needle: {$details['needle']}\n";
+//            echo "Agree: {$details['agree']}\n";
+//            echo count($details['coworkers']) . "\n";
             if ($priority >= Coworker::PRIORITY_LOW) {
                 foreach ($details['coworkers'] as $coworker) {
                     echo "\tCoworker: $coworker->firstname $coworker->lastname\n";
@@ -355,9 +338,9 @@ class Order extends \yii\db\ActiveRecord
                             json_encode([
                                 'inline_keyboard' => [
                                     [
-                                        ["text" => \Yii::t("app", "Agree"), "callback_data" => "order_id={$this->id}&action=ok"]
+                                        ["text" => \Yii::t("app", "Agree"), "callback_data" => "/agree order_id={$this->id}&action=ok"]
                                     ], [
-                                        ["text" => \Yii::t("app", "Disagree"), "callback_data" => "order_id={$this->id}&action=cancel"]
+                                        ["text" => \Yii::t("app", "Disagree"), "callback_data" => "/refuse order_id={$this->id}&action=cancel"]
                                     ]
                                 ]
                             ]),
@@ -457,5 +440,27 @@ class Order extends \yii\db\ActiveRecord
             $coworkers = array_merge($coworkers, $filter->findCoworkers($this->priority_level));
         }
         return $coworkers;
+    }
+
+    public function assignCoworker(Coworker $coworker)
+    {
+//        \Yii::error( $this->checkSuccessfully() );
+        if (!$this->checkSuccessfully()) {
+            $this->link('coworkers', $coworker);
+        }
+        if ($this->checkSuccessfully()) {
+// @TODO: This invalid query!!! Must select order => $order_id && coworker_id => [$order->coworkers && not $order->created_by]
+            $messages = TelegramMessage::findAll(['and', ['order_id' => $this->id], ['<>', 'coworker_id' => array_merge(\yii\helpers\ArrayHelper::map($this->coworkers, 'id', 'id'), [$coworker->id => $coworker->id])]]);
+            foreach ($messages as $message) {
+                \Yii::error($message->message_id);
+                $message->deleteMessage();
+            }
+        } else {
+            $messages = TelegramMessage::findAll(['order_id' => $this->id]);
+            foreach ($messages as $message) {
+                $message->editMessageText($this->generateTelegramText(\Yii::t('app', 'You have agreed to complete this order'). "#{$this->id}"));
+            }
+        }
+//        $this->notify();
     }
 }

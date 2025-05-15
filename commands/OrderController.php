@@ -62,7 +62,7 @@ class OrderController extends Controller
             $coworkerList = array_merge( \app\models\Coworker::searchByFilter($filter, 0), $coworkerList );
 
             foreach ($coworkerList as $coworker) {
-                echo $coworker->firstname." ".$coworker->lastname;
+                echo $coworker->firstname." ".$coworker->lastname."\n";
             }
         }
         echo "$order_id\n";

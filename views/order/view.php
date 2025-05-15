@@ -17,6 +17,8 @@ $this->title = \Yii::t('app', 'View Order: {name}', ['name' => "#{$model->id}"])
 $this->params['breadcrumbs'][] = ['label' => \Yii::t('app', 'Orders'), 'url' => ['/order/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
+echo Html::a("Invite", ["order/resend-invite", "id" => $model->id], ["class" => "btn btn-success mb-3"]);
+
 echo DetailView::widget([
     'model' => $model,
     'attributes' => [

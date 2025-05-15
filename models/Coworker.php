@@ -320,13 +320,21 @@ class Coworker extends \yii\db\ActiveRecord
         }
     }
 
-    public function sendMessage($message, $keyboard, $order_id = null)
+    public function sendMessage($text, $keyboard, $order_id = null)
     {
 //        if ($this->user->device_id)
+        if ($order_id) {
+            $messages = TelegramMessage::find()->where(["order_id" => $order_id])->andWhere(["chat_id" => $this->chat_id])->all();
+            foreach ($messages as $message) {
+                if ($message) {
+                    $message->remove();
+                }
+            }
+        }
         if ($this->chat_id) {
             $telegramMessage = new TelegramMessage([
                 'chat_id' => $this->chat_id,
-                'text' => $message,
+                'text' => $text,
                 'reply_markup' => $keyboard,
                 'order_id' => $order_id,
                 'status' => TelegramMessage::STATUS_NEW,
@@ -354,6 +362,7 @@ class Coworker extends \yii\db\ActiveRecord
 
     public function notify(Order $model)
     {
+        \Yii::error( $model->id );
         if ($this->device_id) {
             $message = new ExpoMessage([
                 "title" => \Yii::t("app", "New order") . " #{$model->id}",

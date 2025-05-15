@@ -44,19 +44,12 @@ echo GridView::widget([
         ],
         'date:date',
         [
-            'attribute' => 'type',
+            'label' => \Yii::t("app", 'full'),
             'format' => 'raw',
             'value' => function (Order $model) {
-                switch ($model->type) {
-                    case Order::TYPE_COWORKER:
-                        return \Yii::t('app', 'Coworker');
-                    case Order::TYPE_MATERIAL:
-                        return \Yii::t('app', 'Material');
-                    case Order::TYPE_TECHNIQUE:
-                        return \Yii::t('app', 'Technique');
-                    default:
-                        return \yii\helpers\Html::tag('span', \Yii::t('yii', 'not-set'), ['class' => 'not-set']);
-                }
+                $totalCount = 0;
+                foreach ( $model->filters as $filter) { $totalCount += $filter->count; }
+                return count($model->coworkers)."/".$totalCount;
             }
         ], [
             'class' => \yii\grid\ActionColumn::class,

@@ -69,6 +69,7 @@ class OrderController extends \yii\rest\ActiveController
     public function actions()
     {
         $actions = parent::actions();
+//        unset($actions['index']);
         $actions['index']['prepareDataProvider'] = [$this, 'prepareDataProvider'];
         $actions['options'] = [
             'class' => \yii\rest\OptionAction::class
@@ -78,14 +79,14 @@ class OrderController extends \yii\rest\ActiveController
 
     public function prepareDataProvider()
     {
+//        sleep(3);
         return new \yii\data\ActiveDataProvider([
-            'query' => $this->modelClass::find()->where(['created_by' => \Yii::$app->user->identity->getId()])->orderBy(['id' => SORT_ASC]),
+            'query' => \app\models\Order::find()->where(['created_by' => \Yii::$app->user->identity->getId()])->orderBy(['id' => SORT_DESC]),
         ]);
     }
 
     public function actionByCoworker()
     {
-//        \Yii::error( \Yii::$app->user->isGuest );
         $coworker = \app\models\Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
         $orderCoworkers = \app\models\OrderCoworker::findAll(['coworker_id' => $coworker->id]);
         $result = [];
@@ -99,15 +100,13 @@ class OrderController extends \yii\rest\ActiveController
     {
         $data = json_decode(file_get_contents('php://input'), true);
         $result = [];
-//        foreach ($data as $key => $value) {
-            $model = Hours::find()->where(["coworker_id" => $data["coworker_id"]])->andWhere(["date" => $data["date"]])->one();
-            if (empty($model)) {
-                $hours = new Hours($data);
-                $result[] = ["ok" => $hours->save()];
-            } else {
-                $result[] = ["ok" => $model->load(["Hours" => $data]) && $model->save()];
-            }
-//        }
+        $model = Hours::find()->where(["coworker_id" => $data["coworker_id"]])->andWhere(["date" => $data["date"]])->one();
+        if (empty($model)) {
+            $hours = new Hours($data);
+            $result[] = ["ok" => $hours->save()];
+        } else {
+            $result[] = ["ok" => $model->load(["Hours" => $data]) && $model->save()];
+        }
         return $result;
     }
 
@@ -132,7 +131,6 @@ class OrderController extends \yii\rest\ActiveController
         if (move_uploaded_file($files['file']['tmp_name'], \Yii::getAlias("@webroot") . $target_path)) {
             return ["ok" => true, "data" => $target_path];
         } else {
-//            \Yii::error("Something went wrong");
             return ["ok" => false];
         }
     }

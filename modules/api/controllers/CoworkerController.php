@@ -137,4 +137,10 @@ class CoworkerController extends ActiveController
 
         return ["ok" => true, "data" => $suitableOrders];
     }
+
+    public function actionInviteRequest($order_id)
+    {
+        $order = \app\models\Order::findOne($order_id);
+        $order->notify();
+    }
 }
