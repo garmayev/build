@@ -26,6 +26,8 @@ use ExpoSDK\ExpoMessage;
  * @property int $notify_stage
  * @property int $notify_date
  * @property int $created_by
+ * @property int $priority_level
+ * @property int $created_at
  *
  * @property string $statusTitle
  * @property array $statusList
@@ -41,23 +43,44 @@ use ExpoSDK\ExpoMessage;
  * @property OrderTechnique[] $orderTechniques
  * @property Technique[] $techniques
  * @property Attachment[] $attachments
+ *
+ * @property int $requiredCoworkers
+ * @property int $issetCoworkers
+ * @property Coworker[] $suitableCoworkers
  */
 class Order extends \yii\db\ActiveRecord
 {
+    /**
+     * @var string Temporary storage for datetime input
+     */
     public $datetime;
+
+    /**
+     * @var array Array of uploaded files
+     */
     public $files = [];
 
+    /**
+     * Order status constants
+     */
     const STATUS_NEW = 0;
     const STATUS_PROCESS = 1;
     const STATUS_BUILD = 2;
     const STATUS_COMPLETE = 3;
 
+    /**
+     * Order type constants
+     */
     const TYPE_COWORKER = 1;
     const TYPE_MATERIAL = 2;
     const TYPE_TECHNIQUE = 3;
 
-    const EVENT_STATUS_UPDATE = 'statusUpdate';
-
+    /**
+     * Defines the behaviors for the model
+     * Adds automatic timestamp and blame handling
+     *
+     * @return array Array of behaviors
+     */
     public function behaviors()
     {
         return [
@@ -65,7 +88,8 @@ class Order extends \yii\db\ActiveRecord
                 'class' => TimestampBehavior::class,
                 'createdAtAttribute' => 'created_at',
                 'updatedAtAttribute' => false,
-            ], [
+            ],
+            [
                 'class' => BlameableBehavior::class,
                 'createdByAttribute' => 'created_by',
                 'updatedByAttribute' => false,
@@ -74,35 +98,60 @@ class Order extends \yii\db\ActiveRecord
     }
 
     /**
-     * {@inheritdoc}
+     * Returns the table name for this model
+     *
+     * @return string The table name
      */
     public static function tableName(): string
     {
         return 'order';
     }
 
+    /**
+     * Handles operations before deleting the model
+     * Deletes all related filters and telegram messages within a transaction
+     *
+     * @return bool Whether the deletion should continue
+     * @throws \Exception if deletion fails
+     */
     public function beforeDelete()
     {
-        foreach ($this->filters as $filter) {
-            $filter->delete();
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($this->filters as $filter) {
+                $filter->delete();
+            }
+            foreach ($this->telegramMessages as $message) {
+                $message->remove();
+            }
+            $transaction->commit();
+            return parent::beforeDelete();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::error('Error deleting order: ' . $e->getMessage());
+            throw $e;
         }
-        foreach ($this->telegramMessages as $message) {
-            $message->remove();
-        }
-        return parent::beforeDelete();
     }
 
+    /**
+     * Handles operations before validating the model
+     * Sets date from datetime and processes file attachments
+     *
+     * @return bool Whether validation should continue
+     */
     public function beforeValidate()
     {
-        $this->date = $this->date ?? \Yii::$app->formatter->asTimestamp($this->datetime);
-        if (count($this->files)) {
+        $this->date = $this->date ?? Yii::$app->formatter->asTimestamp($this->datetime);
+        if (!empty($this->files)) {
             $this->attachments = $this->files;
         }
         return parent::beforeValidate();
     }
 
     /**
-     * {@inheritdoc}
+     * Defines validation rules for model attributes
+     *
+     * @return array Array of validation rules
      */
     public function rules(): array
     {
@@ -112,11 +161,14 @@ class Order extends \yii\db\ActiveRecord
             [['priority_level'], 'default', 'value' => Coworker::PRIORITY_HIGH],
             [['comment'], 'string'],
             [['filters', 'datetime', 'attachments'], 'safe'],
+            [['created_at'], 'default', 'value' => time()],
         ];
     }
 
     /**
-     * {@inheritdoc}
+     * Defines attribute labels for the model
+     *
+     * @return array Array of attribute labels
      */
     public function attributeLabels(): array
     {
@@ -131,6 +183,11 @@ class Order extends \yii\db\ActiveRecord
         ];
     }
 
+    /**
+     * Defines which fields should be exposed in API responses
+     *
+     * @return array Array of fields and their formatters
+     */
     public function fields()
     {
         return [
@@ -147,7 +204,10 @@ class Order extends \yii\db\ActiveRecord
                 return $model->building;
             },
             'attachments' => function (Order $model) {
-                return Attachment::find()->where(['target_class' => Order::class])->andWhere(['target_id' => $model->id])->all();
+                return Attachment::find()
+                    ->where(['target_class' => Order::class])
+                    ->andWhere(['target_id' => $model->id])
+                    ->all();
             },
             'filters' => function (Order $model) {
                 return $model->filters;
@@ -156,134 +216,183 @@ class Order extends \yii\db\ActiveRecord
                 return $model->coworkers;
             },
             'hours',
-            'needle' => function (Order $model) {
-
-            }
         ];
     }
 
     /**
-     * Gets query for [[Building]].
+     * Gets the related Building model
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery Query for the related Building
      */
-    public function getBuilding(): \yii\db\ActiveQuery
+    public function getBuilding(): ActiveQuery
     {
         return $this->hasOne(Building::class, ['id' => 'building_id']);
     }
 
+    /**
+     * Gets related Attachment models
+     *
+     * @return ActiveQuery Query for related Attachments
+     */
     public function getAttachments()
     {
-        return $this->hasMany(Attachment::class, ['target_id' => 'id']);
+        return $this->hasMany(Attachment::class, ['target_id' => 'id'])
+            ->andWhere(['target_class' => Order::class]);
     }
 
+    /**
+     * Sets attachments for the order within a transaction
+     * Handles both file uploads and URL attachments
+     *
+     * @param array $data Array of attachment data
+     * @throws \Exception if setting attachments fails
+     */
     public function setAttachments($data)
     {
-        $this->save(false);
-        if (count($this->files)) {
-            foreach ($this->files as $item) {
-                $attach = new Attachment();
-                $attach->file = $item;
-                $attach->target_class = Order::className();
-                if ($attach->upload() && $attach->save()) {
-                    $this->link('attachments', $attach, ['target_class' => Order::className()]);
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $this->save(false);
+            if (!empty($this->files)) {
+                foreach ($this->files as $item) {
+                    $attach = new Attachment();
+                    $attach->file = $item;
+                    $attach->target_class = Order::class;
+                    if ($attach->upload() && $attach->save()) {
+                        $this->link('attachments', $attach, ['target_class' => Order::class]);
+                    }
+                }
+            } else if ($data) {
+                foreach ($this->attachments as $attachment) {
+                    $this->unlink('attachments', $attachment, true);
+                }
+                foreach ($data as $item) {
+                    $attach = new Attachment();
+                    $attach->url = $item;
+                    $attach->target_class = Order::class;
+                    if ($attach->save()) {
+                        $this->link('attachments', $attach, ['target_class' => Order::class]);
+                    }
                 }
             }
-        } else if ($data) {
-            foreach ($this->attachments as $attachment) {
-                $this->unlink('attachments', $attachment, true);
-            }
-            foreach ($data as $item) {
-                $attach = new Attachment();
-                $attach->url = $item;
-                $attach->target_class = Order::className();
-                if ($attach->save()) {
-                    $this->link('attachments', $attach, ['target_class' => Order::className()]);
-                }
-            }
+            
+            $transaction->commit();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::error('Error setting attachments: ' . $e->getMessage());
+            throw $e;
         }
     }
 
+    /**
+     * Gets related Hours models
+     *
+     * @return ActiveQuery Query for related Hours
+     */
     public function getHours()
     {
         return $this->hasMany(Hours::class, ['order_id' => 'id']);
     }
 
     /**
-     * Gets query for [[Coworkers]].
+     * Gets related Coworker models through order_coworker table
      *
-     * @return ActiveQuery
-     * @throws InvalidConfigException
+     * @return ActiveQuery Query for related Coworkers
+     * @throws InvalidConfigException if the configuration is invalid
      */
-    public function getCoworkers(): \yii\db\ActiveQuery
+    public function getCoworkers(): ActiveQuery
     {
-        return $this->hasMany(Coworker::class, ['id' => 'coworker_id'])->viaTable('order_coworker', ['order_id' => 'id']);
+        return $this->hasMany(Coworker::class, ['id' => 'coworker_id'])
+            ->viaTable('order_coworker', ['order_id' => 'id']);
     }
 
+    /**
+     * Gets the status title for current status
+     *
+     * @return string Localized status title
+     */
     public function getStatusTitle()
     {
-        $list = [
-            Order::STATUS_NEW => \Yii::t('app', 'New Order'),
-            Order::STATUS_PROCESS => \Yii::t('app', 'Order in process'),
-            Order::STATUS_BUILD => \Yii::t('app', 'Order building'),
-            Order::STATUS_COMPLETE => \Yii::t('app', 'Order completed'),
-        ];
-        return $list[$this->status];
+        return $this->getStatusList()[$this->status] ?? Yii::t('app', 'Unknown Status');
     }
 
+    /**
+     * Gets list of all possible statuses
+     *
+     * @return array Array of status titles indexed by status codes
+     */
     public function getStatusList(): array
     {
         return [
-            Order::STATUS_NEW => \Yii::t('app', 'New Order'),
-            Order::STATUS_PROCESS => \Yii::t('app', 'Order in process'),
-            Order::STATUS_BUILD => \Yii::t('app', 'Order building'),
-            Order::STATUS_COMPLETE => \Yii::t('app', 'Order completed'),
+            self::STATUS_NEW => Yii::t('app', 'New Order'),
+            self::STATUS_PROCESS => Yii::t('app', 'Order in process'),
+            self::STATUS_BUILD => Yii::t('app', 'Order building'),
+            self::STATUS_COMPLETE => Yii::t('app', 'Order completed'),
         ];
     }
 
+    /**
+     * Gets the type name for current or specified type
+     *
+     * @param int|null $type Optional type code
+     * @return string Localized type name
+     */
     public function getTypeName($type = null)
     {
         $list = [
-            Order::TYPE_COWORKER => \Yii::t('app', 'Coworker'),
-            Order::TYPE_MATERIAL => \Yii::t('app', 'Material'),
-            Order::TYPE_TECHNIQUE => \Yii::t('app', 'Technique')
+            self::TYPE_COWORKER => Yii::t('app', 'Coworker'),
+            self::TYPE_MATERIAL => Yii::t('app', 'Material'),
+            self::TYPE_TECHNIQUE => Yii::t('app', 'Technique'),
         ];
-        if (isset($type)) {
-            return $list[$type];
-        }
-        return $list[$this->type];
+        return $list[$type ?? $this->type] ?? Yii::t('app', 'Unknown Type');
     }
 
+    /**
+     * Sets filters for the order within a transaction
+     *
+     * @param array $data Array of filter IDs
+     * @throws \Exception if setting filters fails
+     */
     public function setFilters($data)
     {
-        $this->save(false);
-        foreach ($this->filters as $filter) {
-            $filter->unlink('filters', $filter, true);
-        }
-        foreach ($data as $item) {
-            $filter = new Filter();
-            if ($filter->load(['Filter' => $item]) && $filter->save()) {
-                $this->link('filters', $filter);
-            } else {
-                \Yii::error('Filter not saved');
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $this->save(false);
+            foreach ($this->filters as $filter) {
+                $this->unlink('filters', $filter, true);
             }
+            if ($data) {
+                foreach ($data as $item) {
+                        $filter = new Filter();
+                        if ($filter->load(['Filter' => $item]) && $filter->save()) {
+                            $this->link('filters', $filter);
+                        } else {
+                            \Yii::error('Error saving filter: ' . json_encode($filter->getErrorSummary(true)));
+                        }
+                }
+            }
+            $transaction->commit();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+//            Yii::error('Error setting filters: ' . $e->getMessage());
+            throw $e;
         }
     }
 
     /**
-     * Gets query for [[Materials]].
+     * Gets related Material models through order_material table
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery Query for related Materials
      */
     public function getMaterials()
     {
-        return $this->hasMany(Material::class, ['id' => 'material_id'])->viaTable('order_material', ['order_id' => 'id']);
+        return $this->hasMany(Material::class, ['id' => 'material_id'])
+            ->viaTable('order_material', ['order_id' => 'id']);
     }
 
     /**
-     * Gets query for [[OrderCoworkers]].
+     * Gets related OrderCoworker models
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery Query for related OrderCoworkers
      */
     public function getOrderCoworkers()
     {
@@ -291,176 +400,179 @@ class Order extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[OrderFilters]].
+     * Gets related OrderFilter models
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery Query for related OrderFilters
      */
     public function getOrderFilters()
     {
         return $this->hasMany(OrderFilter::class, ['order_id' => 'id']);
     }
 
-    public function getFilters()
+    /**
+     * Gets related Notification models
+     *
+     * @return ActiveQuery Query for related Notifications
+     */
+    public function getNotifications()
     {
-        return $this->hasMany(Filter::class, ['id' => 'filter_id'])->viaTable('order_filter', ['order_id' => 'id']);
+        return $this->hasMany(Notification::class, ['order_id' => 'id']);
     }
 
+    /**
+     * Gets related Filter models through order_filter table
+     *
+     * @return ActiveQuery Query for related Filters
+     */
+    public function getFilters()
+    {
+        return $this->hasMany(Filter::class, ['id' => 'filter_id'])
+            ->viaTable('order_filter', ['order_id' => 'id']);
+    }
+
+    /**
+     * Gets related TelegramMessage models
+     *
+     * @return ActiveQuery Query for related TelegramMessages
+     */
     public function getTelegramMessages()
     {
         return $this->hasMany(TelegramMessage::class, ['order_id' => 'id']);
     }
 
-    public function notify($priority = null)
+    /**
+     * Calculates total required coworkers based on filters
+     *
+     * @return int Total number of required coworkers
+     */
+    public function getRequiredCoworkers()
     {
+        $total = 0;
         foreach ($this->filters as $filter) {
-            if (is_null($priority)) {
-                $priority = Coworker::PRIORITY_HIGH;
-            }
-            $details = $filter->details($this->id, $priority);
-//            echo "Needle: {$details['needle']}\n";
-//            echo "Agree: {$details['agree']}\n";
-//            echo count($details['coworkers']) . "\n";
-            if ($priority >= Coworker::PRIORITY_LOW) {
-                foreach ($details['coworkers'] as $coworker) {
-                    echo "\tCoworker: $coworker->firstname $coworker->lastname\n";
-                    if ($coworker->device_id) {
-                        $message = new ExpoMessage([
-                            "title" => \Yii::t("app", "New order") . " #{$this->id}",
-                            "body" => $this->generateTelegramText(\Yii::t("app", "New order") . " #{$this->id}"),
-                            "categoryId" => "new-order",
-                            "data" => ["order_id" => $this->id]
-                        ]);
-                        $expo = new Expo();
-                        $expo->send($message)->to($coworker->device_id)->push();
-                    } else if ($coworker->chat_id) {
-                        $coworker->sendMessage(
-                            $this->generateTelegramText(\Yii::t('app', 'New order') . ' #' . $this->id),
-                            json_encode([
-                                'inline_keyboard' => [
-                                    [
-                                        ["text" => \Yii::t("app", "Agree"), "callback_data" => "/agree order_id={$this->id}&action=ok"]
-                                    ], [
-                                        ["text" => \Yii::t("app", "Disagree"), "callback_data" => "/refuse order_id={$this->id}&action=cancel"]
-                                    ]
-                                ]
-                            ]),
-                            $this->id
-                        );
+            $total += $filter->count;
+        }
+        return $total;
+    }
+
+    /**
+     * Gets count of currently assigned coworkers
+     *
+     * @return int Number of assigned coworkers
+     */
+    public function getIssetCoworkers()
+    {
+        return count($this->coworkers);
+    }
+
+    /**
+     * Checks if order has all required coworkers assigned
+     *
+     * @return bool True if all required coworkers are assigned
+     */
+    public function isFull(): bool
+    {
+        return $this->issetCoworkers >= $this->requiredCoworkers;
+    }
+
+    /**
+     * Gets array of suitable coworkers based on filters and priority level
+     *
+     * @return array Array of suitable Coworker models
+     */
+    public function getSuitableCoworkers(): array
+    {
+        $suitable = [];
+        foreach ($this->filters as $filter) {
+            array_merge($suitable, $filter->findCoworkers($this->priority_level));
+        }
+        return $suitable;
+    }
+
+    /**
+     * Assigns a coworker to the order
+     *
+     * @param Coworker $coworker The coworker to assign
+     */
+    public function assignCoworker($coworker)
+    {
+        $this->link('coworkers', $coworker);
+    }
+
+    /**
+     * Sends and updates Telegram notifications for the order
+     * This method handles both initial sending and updating of notifications
+     * 
+     * @return array Results of notification operations
+     */
+    public function sendAndUpdateTelegramNotifications()
+    {
+        $notificationService = new NotificationService();
+        $results = ['sent' => [], 'updated' => [], 'errors' => []];
+
+        try {
+            // Prepare the message
+            $message = $this->formatNotificationMessage();
+            
+            // Prepare keyboard markup
+            $keyboard = [
+                [
+                    ['text' => Yii::t('app', 'Accept'), 'callback_data' => 'accept_' . $this->id],
+                    ['text' => Yii::t('app', 'Decline'), 'callback_data' => 'decline_' . $this->id]
+                ]
+            ];
+
+            // For new orders, send initial notifications
+            if ($this->status === self::STATUS_NEW) {
+                $results['sent'] = $notificationService->sendOrderNotifications($this, $message, $keyboard);
+            } 
+            // For existing orders, update notifications
+            else {
+                foreach ($this->telegramMessages as $telegramMessage) {
+                    if ($notificationService->updateTelegramMessage($telegramMessage, $message, $keyboard)) {
+                        $results['updated'][] = $telegramMessage->id;
+                    } else {
+                        $results['errors'][] = $telegramMessage->id;
                     }
                 }
-                $this->notify_date = time();
-                $this->notify_stage = $priority;
-                $this->save();
             }
+
+            return $results;
+        } catch (\Exception $e) {
+            Yii::error('Error in sendAndUpdateTelegramNotifications: ' . $e->getMessage());
+            $results['errors'][] = $e->getMessage();
+            return $results;
         }
     }
 
     /**
-     * @throws InvalidConfigException
+     * Formats the notification message for the order
+     * 
+     * @return string Formatted message
      */
-    public function checkSuccessfully()
+    protected function formatNotificationMessage()
     {
-        switch ($this->type) {
-            case Order::TYPE_COWORKER:
-                $count = 0;
-                foreach ($this->filters as $filter) {
-                    $count += $filter->count;
-                }
-                $f = $this->getFilters()->joinWith('orderFilters')->andWhere(['order_filter.order_id' => $this->id])->one();
-                $count = OrderCoworker::find()->where(['order_id' => $this->id])->all();
-                break;
+        $message = Yii::t('app', 'Order #{id}', ['id' => $this->id]) . "\n\n";
+        
+        if ($this->building) {
+            $message .= Yii::t('app', 'Building: {building}', ['building' => $this->building->title]) . "\n";
         }
-        if ( $f->count === count($count) ) {
-            $this->trigger(self::EVENT_STATUS_UPDATE);
-            return true;
+        
+        $message .= Yii::t('app', 'Status: {status}', ['status' => $this->statusTitle]) . "\n";
+        $message .= Yii::t('app', 'Type: {type}', ['type' => $this->typeName]) . "\n";
+        $message .= Yii::t('app', 'Date: {date}', ['date' => Yii::$app->formatter->asDate($this->date)]) . "\n";
+        
+        if ($this->comment) {
+            $message .= "\n" . Yii::t('app', 'Comment: {comment}', ['comment' => $this->comment]) . "\n";
         }
-        return false;
-    }
 
-    public function countCoworkersByFilter($filter)
-    {
-        $coworkers = $filter->getCoworkers()->andWhere(['IN', 'coworker.id', ArrayHelper::map($this->coworkers, 'id', 'id')]);
-        return $coworkers->count();
-    }
-
-    public function generateTelegramText($header)
-    {
-        $building = $this->building;
-        $location = $building->location;
-        $result = "<b>$header</b>\n\n";
-        $result .= \Yii::t('app', 'Building') . ": {$building->title}\n";
-        $result .= \Yii::t('app', 'Address') . ": {$location->link}\n";
-        $result .= \Yii::t('app', 'Date') . ": " . \Yii::$app->formatter->asDate($this->date) . "\n";
-        $result .= \Yii::t('app', 'Requirement') . ":\n";
-        foreach ($this->filters as $filter) {
-            $category = $filter->category;
-            $count = $this->countCoworkersByFilter($filter);
-            $result .= "\t\t\t\t{$category->title}: {$count}/{$filter->count}\n";
-            foreach ($filter->requirements as $requirement) {
-                $result .= "\t\t\t\t\t\t\t\t{$requirement->property->title} {$requirement->type} {$requirement->value} {$requirement->dimension->title}\n";
+        // Add filter requirements
+        if ($this->filters) {
+            $message .= "\n" . Yii::t('app', 'Requirements:') . "\n";
+            foreach ($this->filters as $filter) {
+                $message .= "- " . $filter->category->title . ": " . $filter->count . "\n";
             }
         }
-        $result .= \Yii::t('app', 'Comment') . ": " . $this->comment . "\n";
-        $result .= \Yii::t('app', 'Attachments') . ":\n";
-        foreach ($this->attachments as $attach) {
-            $result .= \yii\helpers\Url::to($attach->url, true) . "\n";
-        }
-        return $result;
-    }
 
-    public function issetCoworkers($priority)
-    {
-        $coworker = [];
-        foreach ($this->filters as $filter) {
-            $coworker = array_merge($coworker, $filter->findCoworkers($priority));
-        }
-        return $coworker;
-    }
-
-    public function getDetails()
-    {
-        return [
-            "id" => $this->id,
-            "building" => $this->building,
-            "status" => $this->statusTitle,
-            "type" => $this->typeName,
-            "date" => $this->date,
-            "comment" => $this->comment,
-            "coworkers" => $this->coworkers,
-            "filtered" => $this->issetCoworkers($this->priority > -1 ? $this->priority : 0),
-            "filters" => $this->filters,
-            "attachments" => $this->attachments,
-        ];
-    }
-
-    public function getSuitableCoworkers()
-    {
-        $coworkers = [];
-        foreach ($this->filters as $filter) {
-            $coworkers = array_merge($coworkers, $filter->findCoworkers($this->priority_level));
-        }
-        return $coworkers;
-    }
-
-    public function assignCoworker(Coworker $coworker)
-    {
-//        \Yii::error( $this->checkSuccessfully() );
-        if (!$this->checkSuccessfully()) {
-            $this->link('coworkers', $coworker);
-        }
-        if ($this->checkSuccessfully()) {
-// @TODO: This invalid query!!! Must select order => $order_id && coworker_id => [$order->coworkers && not $order->created_by]
-            $messages = TelegramMessage::findAll(['and', ['order_id' => $this->id], ['<>', 'coworker_id' => array_merge(\yii\helpers\ArrayHelper::map($this->coworkers, 'id', 'id'), [$coworker->id => $coworker->id])]]);
-            foreach ($messages as $message) {
-                \Yii::error($message->message_id);
-                $message->deleteMessage();
-            }
-        } else {
-            $messages = TelegramMessage::findAll(['order_id' => $this->id]);
-            foreach ($messages as $message) {
-                $message->editMessageText($this->generateTelegramText(\Yii::t('app', 'You have agreed to complete this order'). "#{$this->id}"));
-            }
-        }
-//        $this->notify();
+        return $message;
     }
 }

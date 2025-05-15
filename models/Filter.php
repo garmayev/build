@@ -6,6 +6,8 @@ namespace app\models;
 
 use Yii;
 use yii\base\InvalidConfigException;
+use yii\behaviors\TimestampBehavior;
+use yii\caching\TagDependency;
 use yii\db\ActiveQuery;
 use yii\helpers\ArrayHelper;
 
@@ -29,7 +31,14 @@ use yii\helpers\ArrayHelper;
 class Filter extends \yii\db\ActiveRecord
 {
     /**
-     * {@inheritdoc}
+     * Cache duration in seconds
+     */
+    const CACHE_DURATION = 3600; // 1 hour
+
+    /**
+     * Returns the table name for this model
+     *
+     * @return string The table name
      */
     public static function tableName()
     {
@@ -37,7 +46,9 @@ class Filter extends \yii\db\ActiveRecord
     }
 
     /**
-     * {@inheritdoc}
+     * Defines validation rules for model attributes
+     *
+     * @return array Array of validation rules
      */
     public function rules()
     {
@@ -48,6 +59,11 @@ class Filter extends \yii\db\ActiveRecord
         ];
     }
 
+    /**
+     * Defines which fields should be exposed in API responses
+     *
+     * @return array Array of fields and their formatters
+     */
     public function fields()
     {
         return [
@@ -61,7 +77,9 @@ class Filter extends \yii\db\ActiveRecord
     }
 
     /**
-     * {@inheritdoc}
+     * Defines attribute labels for the model
+     *
+     * @return array Array of attribute labels
      */
     public function attributeLabels()
     {
@@ -74,33 +92,55 @@ class Filter extends \yii\db\ActiveRecord
         ];
     }
 
+    /**
+     * Handles operations before deleting the model
+     * Deletes all related requirements within a transaction
+     *
+     * @return bool Whether the deletion should continue
+     * @throws \Exception if deletion fails
+     */
     public function beforeDelete()
     {
-        foreach ($this->requirements as $requirement) {
-            $requirement->delete();
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($this->requirements as $requirement) {
+                $requirement->delete();
+            }
+            $transaction->commit();
+            return parent::beforeDelete();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::error('Error deleting filter requirements: ' . $e->getMessage());
+            throw $e;
         }
-        return parent::beforeDelete();
     }
 
     /**
-     * Gets query for [[Category]].
+     * Gets the related Category model
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery Query for the related Category
      */
     public function getCategory()
     {
         return $this->hasOne(Category::class, ['id' => 'category_id']);
     }
 
+    /**
+     * Sets the category_id from provided data
+     *
+     * @param array $data Array containing category data with 'id' key
+     */
     public function setCategory($data)
     {
-        $this->category_id = $data['id'];
+        if (isset($data['id'])) {
+            $this->category_id = $data['id'];
+        }
     }
 
     /**
-     * Gets query for [[Dimension]].
+     * Gets the related Dimension model
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery Query for the related Dimension
      */
     public function getDimension()
     {
@@ -108,9 +148,9 @@ class Filter extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[OrderFilters]].
+     * Gets related OrderFilter models
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery Query for related OrderFilters
      */
     public function getOrderFilters()
     {
@@ -118,78 +158,107 @@ class Filter extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[Orders]].
+     * Gets related Order models through order_filter table
      *
-     * @return \yii\db\ActiveQuery
-     * @throws InvalidConfigException
+     * @return ActiveQuery Query for related Orders
+     * @throws InvalidConfigException if the configuration is invalid
      */
-    public function getOrders(): \yii\db\ActiveQuery
+    public function getOrders(): ActiveQuery
     {
-        return $this->hasMany(Order::class, ['id' => 'order_id'])->viaTable('order_filter', ['filter_id' => 'id']);
+        return $this->hasMany(Order::class, ['id' => 'order_id'])
+            ->viaTable('order_filter', ['filter_id' => 'id']);
     }
 
     /**
-     * Gets query for [[Property]].
+     * Gets the related Property model
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery Query for the related Property
      */
     public function getProperty()
     {
         return $this->hasOne(Property::class, ['id' => 'property_id']);
     }
 
+    /**
+     * Gets related Requirement models
+     *
+     * @return ActiveQuery Query for related Requirements
+     */
     public function getRequirements()
     {
         return $this->hasMany(Requirement::class, ['filter_id' => 'id']);
     }
 
+    /**
+     * Sets requirements for the filter within a transaction
+     * Deletes existing requirements and creates new ones
+     *
+     * @param array $data Array of requirement data
+     * @throws \Exception if setting requirements fails
+     */
     public function setRequirements($data)
     {
-        $this->save(false);
-        foreach ($this->requirements as $requirement) {
-            $this->unlink('requirements', $requirement, true);
-        }
-        foreach ($data as $item) {
-            $req = new Requirement();
-            if ($req->load(['Requirement' => $item]) && $req->save()) {
-                $this->link('requirements', $req);
-            } else {
-                \Yii::error('Requirement is not saved');
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $this->save(false);
+            foreach ($this->requirements as $requirement) {
+                $this->unlink('requirements', $requirement, true);
             }
+            if ($data) {
+                foreach ($data as $item) {
+                    \Yii::error($item);
+                    $req = new Requirement();
+                    if ($req->load(['Requirement' => $item]) && $req->save()) {
+                        $this->link('requirements', $req);
+                    } else {
+                        Yii::error('Failed to save requirement: ' . json_encode($req->getErrorSummary(true)));
+                    }
+                }
+            }
+            $transaction->commit();
+            TagDependency::invalidate(Yii::$app->cache, ['filter-' . $this->id]);
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::error('Error setting requirements: ' . $e->getMessage());
+            throw $e;
         }
     }
 
+    /**
+     * Gets coworkers matching the filter criteria with specified priority
+     *
+     * @param int $priority Priority level for filtering coworkers
+     * @return ActiveQuery Query for matching coworkers
+     */
     public function getCoworkers($priority = Coworker::PRIORITY_HIGH)
     {
-        $query = Coworker::find()->joinWith('properties')->where(['>=', 'priority', $priority]);
-        $query->andWhere(['category_id' => $this->category_id]);
-        foreach ($this->requirements as $requirement) {
-            $query->andWhere(['property.id' => $requirement->property_id]);
-            switch ($requirement->type) {
-                case \Yii::t('app', 'Less'):
-                    $query->andWhere(['<=', 'coworker_property.value', $requirement->value]);
-                    break;
-                case \Yii::t('app', 'More'):
-                    $query->andWhere(['>=', 'coworker_property.value', $requirement->value]);
-                    break;
-                case \Yii::t('app', 'Equal'):
-                    $query->andWhere(['=', 'coworker_property.value', $requirement->value]);
-                    break;
-                case \Yii::t('app', 'Not Equal'):
-                    $query->andWhere(['<>', 'coworker_property.value', $requirement->value]);
-                    break;
-            }
-        }
-        return $query;
+        $query = Coworker::find()
+            ->joinWith('properties')
+            ->where(['>=', 'priority', $priority])
+            ->andWhere(['category_id' => $this->category_id]);
+        return $this->extracted($query);
     }
 
+    /**
+     * Gets detailed information about filter application to an order
+     *
+     * @param int $order_id ID of the order
+     * @param int $priority Priority level for filtering
+     * @param array $exclude Array of coworkers to exclude
+     * @return array|null Details about filter application
+     */
     public function details($order_id, $priority = Coworker::PRIORITY_HIGH, $exclude = [])
     {
         $model = Order::findOne($order_id);
+        if (!$model) {
+            return null;
+        }
+
         $agree = $model->countCoworkersByFilter($this);
-        if (count($exclude) === 0) {
+        if (empty($exclude)) {
             $exclude = $model->coworkers;
         }
+
         return [
             "agree" => $agree,
             "needle" => $this->count - $agree,
@@ -197,32 +266,53 @@ class Filter extends \yii\db\ActiveRecord
         ];
     }
 
+    /**
+     * Finds coworkers matching the filter criteria with specific priority
+     *
+     * @param int $priority Priority level for filtering
+     * @return array Array of matching Coworker models
+     */
     public function findCoworkers($priority)
     {
+        $cacheKey = 'filter-find-coworkers-' . $this->id . '-' . $priority;
         $query = Coworker::find()
             ->joinWith('properties')
-            ->where(['coworker.category_id' => $this->category_id]);
+            ->where([
+                'coworker.category_id' => $this->category_id,
+                'coworker.priority' => $priority
+            ]);
+
+        return $this->extracted($query)->all();
+    }
+
+    /**
+     * Applies requirement conditions to the query
+     * Helper method for filtering coworkers based on requirements
+     *
+     * @param ActiveQuery $query Base query to apply conditions to
+     * @return ActiveQuery Modified query with applied conditions
+     */
+    protected function extracted(ActiveQuery $query): ActiveQuery
+    {
         foreach ($this->requirements as $requirement) {
             $query->andWhere(['property.id' => $requirement->property_id]);
+            
+            $value = $requirement->value;
             switch ($requirement->type) {
-                case \Yii::t('app', 'Less'):
-                    $query->andWhere(['<=', 'coworker_property.value', $requirement->value]);
+                case Yii::t('app', 'Less'):
+                    $query->andWhere(['<=', 'coworker_property.value', $value]);
                     break;
-                case \Yii::t('app', 'More'):
-                    $query->andWhere(['>=', 'coworker_property.value', $requirement->value]);
+                case Yii::t('app', 'More'):
+                    $query->andWhere(['>=', 'coworker_property.value', $value]);
                     break;
-                case \Yii::t('app', 'Equal'):
-                    $query->andWhere(['=', 'coworker_property.value', $requirement->value]);
+                case Yii::t('app', 'Equal'):
+                    $query->andWhere(['=', 'coworker_property.value', $value]);
                     break;
-                case \Yii::t('app', 'Not Equal'):
-                    $query->andWhere(['<>', 'coworker_property.value', $requirement->value]);
+                case Yii::t('app', 'Not Equal'):
+                    $query->andWhere(['<>', 'coworker_property.value', $value]);
                     break;
             }
         }
-//        echo "Filter: Priority = " . $priority . "\n";
-        $query->andWhere(['coworker.priority' => $priority]);
-//        if (isset($_SESSION["__id"])) $query->andWhere(['user_id' => $_SESSION['__id']]);
-        echo $query->createCommand()->getRawSql()."\n\n";
-        return $query->all();
+        return $query;
     }
 }

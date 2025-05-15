@@ -42,7 +42,7 @@ class OrderController extends Controller
                     echo "\tDate: {$model->notify_date}\n";
                     if ($this->checkTime($model->notify_date)) {
                         echo "\tPriority: $priority\n";
-                        $model->notify($priority);
+                        $model->notify($model);
                     }
                 }
             }
@@ -67,6 +67,19 @@ class OrderController extends Controller
         }
         echo "$order_id\n";
 //        echo "Priority: {$this->findCoworkerByPriority($order_id, $priority)}\n";
+    }
+
+    public function actionAssign($order_id, $coworker_id)
+    {
+        $model = Order::findOne($order_id);
+        if ($model) {
+            echo "Order {$order_id} is founded\n";
+        }
+        $coworker = Coworker::findOne($coworker_id);
+        if ($coworker) {
+            echo "Coworker #{$coworker_id} is founded\n";
+        }
+        $model->assignCoworker($coworker);
     }
 
     private function checkTime($timestamp)

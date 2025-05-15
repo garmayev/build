@@ -72,6 +72,10 @@ $config = [
             'class' => \aki\telegram\Telegram::class,
             'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
         ],
+        'notificationService' => [
+            'class' => \app\models\NotificationService::class,
+            'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
+        ],
     ],
     'modules' => [
         'api' => [
