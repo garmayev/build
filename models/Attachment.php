@@ -3,6 +3,7 @@
 namespace app\models;
 
 use yii\db\ActiveRecord;
+use yii\helpers\Url;
 
 /**
  * @property string $url
@@ -33,5 +34,14 @@ class Attachment extends ActiveRecord
         $filename = "{$name}.{$this->file->extension}";
         $this->url = "/upload/$filename";
         return $this->file->saveAs(\Yii::getAlias('@webroot')."/upload/$filename");
+    }
+
+    /**
+     * @param $baseUrl boolean
+     * @return string
+     */
+    public function getLink($baseUrl = false): string
+    {
+        return $baseUrl ? Url::base(true).$this->url : $this->url;
     }
 }

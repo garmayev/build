@@ -26,6 +26,8 @@ use yii\db\ActiveQuery;
  * @property int $user_id
  * @property int $created_by
  * @property int $created_at
+ * @property string $chat_id
+ * @property string $device_id
  *
  * @property Category $category
  * @property CoworkerProperty[] $coworkerProperties
@@ -81,7 +83,7 @@ class Coworker extends \yii\db\ActiveRecord
     {
         return [
             [['category_id', 'priority', 'notify_date', 'user_id', 'created_by', 'created_at'], 'integer'],
-            [['firstname', 'lastname', 'phone', 'email'], 'string', 'max' => 255],
+            [['firstname', 'lastname', 'phone', 'email', 'chat_id', 'device_id'], 'string', 'max' => 255],
             [['firstname'], 'default', 'value' => ''],
             [['coworkerProperties', 'attachments'], 'safe'],
             [['phone', 'email'], 'unique'],

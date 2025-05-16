@@ -2,6 +2,7 @@
 
 namespace app\models\telegram;
 
+use app\models\Coworker;
 use app\models\Order;
 use yii\db\ActiveRecord;
 
@@ -15,12 +16,14 @@ use yii\db\ActiveRecord;
  * @property integer $order_id
  * @property integer $status
  * @property integer $message_id
+ *
+ * @property Coworker $sender
  */
 class TelegramMessage extends ActiveRecord
 {
     const STATUS_NEW = 0;
     const STATUS_AGREE = 1;
-    const STATUS_CANCEL = 2;
+    const STATUS_DECLINE = 2;
 
     public static function tableName(): string
     {
@@ -42,9 +45,19 @@ class TelegramMessage extends ActiveRecord
         return $this->hasOne(Order::class, ['id' => 'order_id']);
     }
 
-    public function editMessageText($text)
+    public function getSender()
     {
-        \Yii::$app->telegram->editMessageText(["chat_id" => $this->chat_id, "text" => $text, "message_id" => $this->message_id]);
+        return $this->hasOne(Coworker::class , ['chat_id' => 'chat_id']);
+    }
+
+    public function editMessageText($text, $keyboard = [])
+    {
+        \Yii::$app->telegram->editMessageText([
+            "chat_id" => $this->chat_id,
+            "text" => $text,
+            "reply_markup" => count($keyboard) && $this->reply_markup == json_encode($keyboard) ? $keyboard : null,
+            "message_id" => $this->message_id,
+        ]);
     }
 
     public function deleteMessage()

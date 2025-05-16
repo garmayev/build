@@ -32,7 +32,16 @@ $config = [
         'log' => [
             'targets' => [
                 [
+                    'class' => 'yii\log\DbTarget',
+                    'levels' => ['error', 'warning', 'info', 'trace', 'profile'],
+                    'categories' => ['yii\*'],
+                    'except' => [
+                        'yii\web\HttpException:404',
+                    ],
+                ],
+                [
                     'class' => 'yii\log\FileTarget',
+                    'enabled' => true,
                     'levels' => ['error', 'warning'],
                 ],
             ],

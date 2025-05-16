@@ -116,7 +116,7 @@ class NotificationService extends Component
             }
             $message->updated_at = time();
             
-            return $message->editText();
+            return $message->editMessageText($newText);
         } catch (\Exception $e) {
             Yii::error("Error updating Telegram message: " . $e->getMessage());
             return false;

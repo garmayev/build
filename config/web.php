@@ -43,6 +43,14 @@ $config = [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
                 [
+                    'class' => 'yii\log\DbTarget',
+                    'enabled' => true,
+                    'except' => [
+                        'yii\web\HttpException:404',
+                    ],
+                    'levels' => ['error', 'warning'],
+                ],
+                [
                     'class' => 'yii\log\FileTarget',
                     'enabled' => true,
                     'enableRotation' => true,

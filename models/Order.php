@@ -2,6 +2,8 @@
 
 namespace app\models;
 
+use app\components\behaviors\LogBehavior;
+use app\components\Helper;
 use app\models\telegram\TelegramMessage;
 use Yii;
 use yii\base\InvalidConfigException;
@@ -9,10 +11,6 @@ use yii\behaviors\TimestampBehavior;
 use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveQuery;
 use yii\helpers\ArrayHelper;
-use yii\web\Linkable;
-use yii\web\UploadedFile;
-use ExpoSDK\Expo;
-use ExpoSDK\ExpoMessage;
 
 /**
  * This is the model class for table "order".
@@ -43,6 +41,7 @@ use ExpoSDK\ExpoMessage;
  * @property OrderTechnique[] $orderTechniques
  * @property Technique[] $techniques
  * @property Attachment[] $attachments
+ * @property TelegramMessage[] $telegramMessages
  *
  * @property int $requiredCoworkers
  * @property int $issetCoworkers
@@ -93,7 +92,10 @@ class Order extends \yii\db\ActiveRecord
                 'class' => BlameableBehavior::class,
                 'createdByAttribute' => 'created_by',
                 'updatedByAttribute' => false,
-            ]
+            ],
+//            [
+//                'class' => LogBehavior::class,
+//            ]
         ];
     }
 
@@ -274,7 +276,7 @@ class Order extends \yii\db\ActiveRecord
                     }
                 }
             }
-            
+
             $transaction->commit();
         } catch (\Exception $e) {
             $transaction->rollBack();
@@ -362,12 +364,12 @@ class Order extends \yii\db\ActiveRecord
             }
             if ($data) {
                 foreach ($data as $item) {
-                        $filter = new Filter();
-                        if ($filter->load(['Filter' => $item]) && $filter->save()) {
-                            $this->link('filters', $filter);
-                        } else {
-                            \Yii::error('Error saving filter: ' . json_encode($filter->getErrorSummary(true)));
-                        }
+                    $filter = new Filter();
+                    if ($filter->load(['Filter' => $item]) && $filter->save()) {
+                        $this->link('filters', $filter);
+                    } else {
+                        \Yii::error('Error saving filter: ' . json_encode($filter->getErrorSummary(true)));
+                    }
                 }
             }
             $transaction->commit();
@@ -495,24 +497,28 @@ class Order extends \yii\db\ActiveRecord
      */
     public function assignCoworker($coworker)
     {
-        $this->link('coworkers', $coworker);
+        $coworkersIds = ArrayHelper::getColumn($this->coworkers, 'id');
+        if (!in_array($coworker->id, $coworkersIds)) {
+            $this->link('coworkers', $coworker);
+            return true;
+        }
+        return false;
     }
 
     /**
      * Sends and updates Telegram notifications for the order
      * This method handles both initial sending and updating of notifications
-     * 
+     *
      * @return array Results of notification operations
      */
     public function sendAndUpdateTelegramNotifications()
     {
         $notificationService = new NotificationService();
-        $results = ['sent' => [], 'updated' => [], 'errors' => []];
 
         try {
             // Prepare the message
-            $message = $this->formatNotificationMessage();
-            
+            $message = Helper::generateTelegramMessage($this->id);
+
             // Prepare keyboard markup
             $keyboard = [
                 [
@@ -521,22 +527,14 @@ class Order extends \yii\db\ActiveRecord
                 ]
             ];
 
-            // For new orders, send initial notifications
-            if ($this->status === self::STATUS_NEW) {
-                $results['sent'] = $notificationService->sendOrderNotifications($this, $message, $keyboard);
-            } 
-            // For existing orders, update notifications
-            else {
-                foreach ($this->telegramMessages as $telegramMessage) {
-                    if ($notificationService->updateTelegramMessage($telegramMessage, $message, $keyboard)) {
-                        $results['updated'][] = $telegramMessage->id;
-                    } else {
-                        $results['errors'][] = $telegramMessage->id;
+            foreach ($this->suitableCoworkers as $coworker) {
+                $telegramMessages = $this->telegramMessages;
+                if (count($telegramMessages)) {
+                    foreach ($telegramMessages as $telegramMessage) {
+                        $telegramMessage->editMessageText($message, $keyboard);
                     }
                 }
             }
-
-            return $results;
         } catch (\Exception $e) {
             Yii::error('Error in sendAndUpdateTelegramNotifications: ' . $e->getMessage());
             $results['errors'][] = $e->getMessage();
@@ -546,21 +544,21 @@ class Order extends \yii\db\ActiveRecord
 
     /**
      * Formats the notification message for the order
-     * 
+     *
      * @return string Formatted message
      */
     protected function formatNotificationMessage()
     {
         $message = Yii::t('app', 'Order #{id}', ['id' => $this->id]) . "\n\n";
-        
+
         if ($this->building) {
             $message .= Yii::t('app', 'Building: {building}', ['building' => $this->building->title]) . "\n";
         }
-        
+
         $message .= Yii::t('app', 'Status: {status}', ['status' => $this->statusTitle]) . "\n";
         $message .= Yii::t('app', 'Type: {type}', ['type' => $this->typeName]) . "\n";
         $message .= Yii::t('app', 'Date: {date}', ['date' => Yii::$app->formatter->asDate($this->date)]) . "\n";
-        
+
         if ($this->comment) {
             $message .= "\n" . Yii::t('app', 'Comment: {comment}', ['comment' => $this->comment]) . "\n";
         }

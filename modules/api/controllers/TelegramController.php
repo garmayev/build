@@ -3,6 +3,7 @@
 namespace app\modules\api\controllers;
 
 use aki\telegram\base\Command;
+use app\components\Helper;
 use app\models\Coworker;
 use app\models\telegram\TelegramMessage;
 use app\models\User;
@@ -25,19 +26,20 @@ class TelegramController extends \yii\web\Controller
     public function actionCallback()
     {
         $telegram = \Yii::$app->telegram;
-        
+
         // Handle /start command
         Command::run("/start", function ($telegram, $args) {
+            \Yii::error($args);
             $chatId = $telegram->input->message ? $telegram->input->message->from->id : null;
             if (!$chatId) {
                 return;
             }
-            
+
             // Find coworker without chat_id or with this chat_id
             $coworker = Coworker::find()
                 ->where(['or', ['chat_id' => null], ['chat_id' => $chatId]])
                 ->one();
-                
+
             if ($coworker) {
                 $coworker->chat_id = $chatId;
                 if ($coworker->save()) {
@@ -57,60 +59,61 @@ class TelegramController extends \yii\web\Controller
 
             parse_str($args[0] ?? '', $data);
             $orderId = $data["order_id"] ?? null;
+
             if (!$orderId) {
-                return;
+                \Yii::error([
+                    "ok" => false,
+                    "message" => "Missing args['order_id']"
+                ]);
             }
 
             $order = Order::findOne($orderId);
             $coworker = Coworker::findOne(['chat_id' => $telegram->input->callback_query->from["id"]]);
-            
+
             if (!$order || !$coworker) {
-                return;
+                \Yii::error([
+                    "ok" => false,
+                    "message" => "Missing {$coworker->name} or order #{$order->id}"
+                ]);
             }
 
             // Add coworker to order
-            if (!$order->checkSuccessfully()) {
-                $order->link('coworkers', $coworker);
-                
+            if (!$order->isFull()) {
+                if (!$order->assignCoworker($coworker)) {
+                    \Yii::error(["ok" => false, "message" => "Coworker {$coworker->name} is agreed to order #{$order->id}"]);
+                }
+
+                $messages = TelegramMessage::find()->where(['order_id' => $order->id])->andWhere(['status' => TelegramMessage::STATUS_NEW])->all();
+
                 // If order is now complete, update status
-                if ($order->checkSuccessfully()) {
+                if ($order->isFull()) {
                     $order->status = Order::STATUS_PROCESS;
                     $order->save();
-                }
-
-                // Update all messages for this order
-                $messages = TelegramMessage::find()->where(['order_id' => $order->id])->all();
-                foreach ($messages as $message) {
-                    $header = $message->status ? 
-                        \Yii::t('app', 'You have agreed to complete the order') . " #{$order->id}" :
-                        \Yii::t('app', 'New Order') . " #{$order->id}";
-                    
-                    // Добавляем информацию о количестве сотрудников
-                    $totalRequired = $order->requiredCoworkers;
-                    $currentCount = $order->issetCoworkers;
-                    $header .= "\n" . sprintf("Требуется сотрудников: %d из %d", $currentCount, $totalRequired);
-                    
-                    // Для сотрудника, который согласился, убираем кнопки
-                    $replyMarkup = null;
-                    if ($message->chat_id === $coworker->chat_id) {
-                        $replyMarkup = null; // Убираем кнопки
-                    } else {
-                        $replyMarkup = $message->reply_markup; // Оставляем существующие кнопки
-                    }
-                        
-                    $message->editText(
-                        $replyMarkup,
-                        $order->generateTelegramText($header)
-                    );
-                }
-
-                // If order is complete, remove messages for non-participating coworkers
-                if ($order->checkSuccessfully()) {
-                    $participatingChatIds = ArrayHelper::map($order->coworkers, 'chat_id', 'chat_id');
-                    foreach ($messages as $message) {
-                        if (!in_array($message->chat_id, $participatingChatIds)) {
+                    if (YII_ENV === 'prod') {
+                        foreach ($messages as $message) {
                             $message->remove();
                         }
+                    } else {
+                        return $messages;
+                    }
+                } else {
+                    foreach ($messages as $message) {
+                        $header = $message->status ?
+                            \Yii::t('app', 'You have agreed to complete the order') . " #{$order->id}" :
+                            \Yii::t('app', 'New Order') . " #{$order->id}";
+
+                        // Для сотрудника, который согласился, убираем кнопки
+                        $replyMarkup = null;
+                        if ($message->chat_id === $coworker->chat_id) {
+                            $replyMarkup = null; // Убираем кнопки
+                        } else {
+                            $replyMarkup = $message->reply_markup; // Оставляем существующие кнопки
+                        }
+
+                        $message->editMessageText(
+                            $header . Helper::generateTelegramMessage($order->id),
+                            $replyMarkup
+                        );
                     }
                 }
             }
@@ -118,6 +121,7 @@ class TelegramController extends \yii\web\Controller
 
         // Handle /decline command
         Command::run("/decline", function ($telegram, $args) {
+            $order = Order::findOne($args['order_id'] ?? null);
             if (!$telegram->input->callback_query) {
                 return;
             }
@@ -127,7 +131,8 @@ class TelegramController extends \yii\web\Controller
 
             $message = TelegramMessage::findOne([
                 'message_id' => $messageId,
-                'chat_id' => $chatId
+                'chat_id' => $chatId,
+                'order_id' => $order->id
             ]);
 
             if ($message) {

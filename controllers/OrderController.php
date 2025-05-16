@@ -71,7 +71,7 @@ class OrderController extends Controller
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
 //                \Yii::error( $model->getSuitableCoworkers() );
                 $result = $model->sendAndUpdateTelegramNotifications();
-//                \Yii::error($result);
+                \Yii::error($result);
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             }
