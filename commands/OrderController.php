@@ -14,9 +14,11 @@ class OrderController extends Controller
     public function actionStack($order_id)
     {
         $order = Order::findOne($order_id);
-        foreach ($order->filters as $filter) {
-            echo "{$order->countCoworkersByFilter($filter)}";
+        foreach ($order->suitableCoworkers as $coworker) {
+            echo "{$coworker->firstname} {$coworker->lastname}\n";
         }
+        $result = $order->sendAndUpdateTelegramNotifications();
+        print_r($result);
     }
 
     public function actionNotify($order_id = null, $priority = Coworker::PRIORITY_HIGH)

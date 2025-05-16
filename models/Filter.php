@@ -206,7 +206,7 @@ class Filter extends \yii\db\ActiveRecord
             }
             if ($data) {
                 foreach ($data as $item) {
-                    \Yii::error($item);
+//                    \Yii::error($item);
                     $req = new Requirement();
                     if ($req->load(['Requirement' => $item]) && $req->save()) {
                         $this->link('requirements', $req);
@@ -234,8 +234,7 @@ class Filter extends \yii\db\ActiveRecord
     {
         $query = Coworker::find()
             ->joinWith('properties')
-            ->where(['>=', 'priority', $priority])
-            ->andWhere(['category_id' => $this->category_id]);
+            ->where(['coworker.priority' => $priority, 'coworker.category_id' => $this->category_id]);
         return $this->extracted($query);
     }
 
@@ -281,8 +280,8 @@ class Filter extends \yii\db\ActiveRecord
                 'coworker.category_id' => $this->category_id,
                 'coworker.priority' => $priority
             ]);
-
-        return $this->extracted($query)->all();
+        $resultQuery = $this->extracted($query);
+        return $resultQuery->all();
     }
 
     /**
@@ -295,7 +294,7 @@ class Filter extends \yii\db\ActiveRecord
     protected function extracted(ActiveQuery $query): ActiveQuery
     {
         foreach ($this->requirements as $requirement) {
-            $query->andWhere(['property.id' => $requirement->property_id]);
+            $query->andWhere(['coworker_property.property_id' => $requirement->property_id]);
             
             $value = $requirement->value;
             switch ($requirement->type) {

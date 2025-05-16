@@ -44,6 +44,7 @@ class Coworker extends \yii\db\ActiveRecord
     const PRIORITY_LOW = 0;
     const PRIORITY_NORMAL = 1;
     const PRIORITY_HIGH = 2;
+
     const TYPE_CUSTOMER = 0;
     const TYPE_WORKER = 1;
 
@@ -362,9 +363,9 @@ class Coworker extends \yii\db\ActiveRecord
     public static function searchByFilter($filter, $priority = self::PRIORITY_HIGH)
     {
         return static::find()
-            ->joinWith('filters')
+            ->joinWith('filter')
             ->where(['filter.id' => $filter])
-            ->andWhere(['>=', 'coworker.priority', $priority])
+            ->andWhere(['coworker.priority' => $priority])
             ->all();
     }
 

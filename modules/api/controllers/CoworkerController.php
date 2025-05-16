@@ -125,13 +125,16 @@ class CoworkerController extends ActiveController
         $suitableOrders = [];
 
         foreach ($orders as $order) {
-            foreach ($order->filters as $filter) {
-                $list = \app\models\Coworker::searchByFilter($filter, $order->priority_level);
-                foreach ($list as $item) {
-                    if ($coworker->id === $item->id) {
-                        $suitableOrders[] = $order;
-                    }
+            foreach ( $order->getSuitableCoworkers($order->priority_level) as $item ) {
+                if ($coworker->id === $item->id) {
+                    $suitableOrders[] = $order;
                 }
+//                $list = \app\models\Coworker::searchByFilter($filter, $order->priority_level);
+//                foreach ($list as $item) {
+//                    if ($coworker->id === $item->id) {
+//                        $suitableOrders[] = $order;
+//                    }
+//                }
             }
         }
 

@@ -483,7 +483,7 @@ class Order extends \yii\db\ActiveRecord
     {
         $suitable = [];
         foreach ($this->filters as $filter) {
-            array_merge($suitable, $filter->findCoworkers($this->priority_level));
+            $suitable = array_merge($suitable, $filter->findCoworkers($this->priority_level));
         }
         return $suitable;
     }
@@ -516,8 +516,8 @@ class Order extends \yii\db\ActiveRecord
             // Prepare keyboard markup
             $keyboard = [
                 [
-                    ['text' => Yii::t('app', 'Accept'), 'callback_data' => 'accept_' . $this->id],
-                    ['text' => Yii::t('app', 'Decline'), 'callback_data' => 'decline_' . $this->id]
+                    ['text' => Yii::t('app', 'Accept'), 'callback_data' => "/accept order_id={$this->id}"],
+                    ['text' => Yii::t('app', 'Decline'), 'callback_data' => "/decline order_id={$this->id}"]
                 ]
             ];
 

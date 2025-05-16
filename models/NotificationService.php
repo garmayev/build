@@ -49,7 +49,7 @@ class NotificationService extends Component
         $results = [];
         
         // Send to each coworker
-        foreach ($order->coworkers as $coworker) {
+        foreach ($order->getSuitableCoworkers() as $coworker) {
             // Send Telegram message if chat_id exists
             if ($coworker->chat_id) {
                 $results['telegram'][] = $this->sendTelegramMessage($coworker->chat_id, $message, $keyboard, $order->id);
