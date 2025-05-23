@@ -107,6 +107,15 @@ $actionButtons = [
                 }
             ],
             [
+                'label' => \Yii::t('app', 'Contact'),
+                'format' => 'raw',
+                'value' => function (Coworker $model) {
+                    $result = $model->chat_id ? "<i class='fab fa-telegram'></i>" : "";
+                    $result .= $model->device_id ? "<i class='fas fa-mobile'></i>" : "";
+                    return Html::tag('div', $result, ['style' => 'display: flex; justify-content: space-around; align-item: center; width: 60px;']) ?? Html::tag('i', \Yii::t('yii', 'not-set'), ['class' => 'not-set']);
+                }
+            ],
+            [
                 'class' => \microinginer\dropDownActionColumn\DropDownActionColumn::className(),
                 'items' => $actionButtons
             ],

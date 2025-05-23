@@ -69,9 +69,7 @@ class OrderController extends Controller
         if (\Yii::$app->request->isPost) {
             $model->files = UploadedFile::getInstances($model, 'files');
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
-//                \Yii::error( $model->getSuitableCoworkers() );
                 $result = $model->sendAndUpdateTelegramNotifications();
-                \Yii::error($result);
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             }
@@ -113,7 +111,8 @@ class OrderController extends Controller
     public function actionResendInvite($id)
     {
         $model = Order::findOne($id);
-        $model->notify();
+        $result = $model->sendAndUpdateTelegramNotifications();
+        \Yii::error( $result );
         return $this->redirect(['view', 'id' => $id]);
     }
 }

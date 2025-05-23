@@ -374,7 +374,7 @@ class Coworker extends \yii\db\ActiveRecord
     public function invite()
     {
         \Yii::$app->mailer
-            ->compose('coworker\invite', ['model' => $this])
+            ->compose('coworker/invite', ['model' => $this])
             ->setFrom(['build@amgcompany.ru' => 'build@amgcompany.ru'])
             ->setTo($this->email)
             ->setSubject(\Yii::$app->name . ' robot')

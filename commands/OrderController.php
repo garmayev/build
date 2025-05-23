@@ -17,8 +17,8 @@ class OrderController extends Controller
         foreach ($order->suitableCoworkers as $coworker) {
             echo "{$coworker->firstname} {$coworker->lastname}\n";
         }
-        $result = $order->sendAndUpdateTelegramNotifications();
-        print_r($result);
+//        $result = $order->sendAndUpdateTelegramNotifications();
+//        print_r($result);
     }
 
     public function actionNotify($order_id = null, $priority = Coworker::PRIORITY_HIGH)

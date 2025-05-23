@@ -33,8 +33,8 @@ class TelegramMessage extends ActiveRecord
     public function rules()
     {
         return [
-            [['chat_id', 'device_id', 'text', 'reply_markup'], 'string'],
-            [['created_at', 'updated_at', 'status', 'message_id'], 'integer'],
+            [['device_id', 'text', 'reply_markup'], 'string'],
+            [['created_at', 'updated_at', 'status', 'message_id', 'chat_id'], 'integer'],
             [['order_id'], 'exist', 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']],
             [['status'], 'default', 'value' => self::STATUS_NEW],
         ];
@@ -52,12 +52,18 @@ class TelegramMessage extends ActiveRecord
 
     public function editMessageText($text, $keyboard = [])
     {
-        \Yii::$app->telegram->editMessageText([
+        $response = \Yii::$app->telegram->editMessageText([
             "chat_id" => $this->chat_id,
             "text" => $text,
-            "reply_markup" => count($keyboard) && $this->reply_markup == json_encode($keyboard) ? $keyboard : null,
+            "reply_markup" => !empty($keyboard) ? json_encode($keyboard) : null,
+            "parse_mode" => "html",
             "message_id" => $this->message_id,
         ]);
+        if ($response->ok) {
+            $this->text = $text;
+            $this->reply_markup = json_encode($keyboard);
+            $this->save();
+        }
     }
 
     public function deleteMessage()
@@ -69,7 +75,7 @@ class TelegramMessage extends ActiveRecord
     public static function sendMessage($params)
     {
         $response = \Yii::$app->telegram->sendMessage($params);
-        if ($response["ok"]) {
+        if ($response) {
             $message = new TelegramMessage();
             $message->id = $response["result"]["message_id"];
             $message->message_id = $response["result"]["message_id"];
@@ -103,7 +109,9 @@ class TelegramMessage extends ActiveRecord
         if ($raw["ok"]) {
             $this->id = $raw["result"]["message_id"];
             $this->message_id = $raw["result"]["message_id"];
-            $this->save();
+            if ( !$this->save() ) {
+                \Yii::error($this->errors);
+            }
             curl_close($curl);
             return $result;
         } else {

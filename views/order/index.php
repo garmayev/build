@@ -52,6 +52,11 @@ echo GridView::widget([
                 return count($model->coworkers)."/".$totalCount;
             }
         ], [
+            'attribute' => 'owner',
+            'value' => function (Order $model) {
+                return $model->owner->name;
+            }
+        ], [
             'class' => \yii\grid\ActionColumn::class,
             'buttons' => [
                 'view' => function ($url, $model, $key) {

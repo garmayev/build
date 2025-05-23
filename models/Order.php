@@ -42,6 +42,7 @@ use yii\helpers\ArrayHelper;
  * @property Technique[] $techniques
  * @property Attachment[] $attachments
  * @property TelegramMessage[] $telegramMessages
+ * @property User $owner
  *
  * @property int $requiredCoworkers
  * @property int $issetCoworkers
@@ -490,6 +491,11 @@ class Order extends \yii\db\ActiveRecord
         return $suitable;
     }
 
+    public function getOwner()
+    {
+        return $this->hasOne(User::class, ['id' => 'created_by']);
+    }
+
     /**
      * Assigns a coworker to the order
      *
@@ -529,12 +535,18 @@ class Order extends \yii\db\ActiveRecord
 
             foreach ($this->suitableCoworkers as $coworker) {
                 $telegramMessages = $this->telegramMessages;
+                \Yii::error(count($telegramMessages));
                 if (count($telegramMessages)) {
                     foreach ($telegramMessages as $telegramMessage) {
                         $telegramMessage->editMessageText($message, $keyboard);
                     }
+                } else {
+                    if ($coworker->chat_id) {
+                        $notificationService->sendTelegramMessage($coworker->chat_id, "<b>".\Yii::t("app", "Order #{id}", ["id" => $this->id])."</b>\n".$message, $keyboard, $this->id);
+                    }
                 }
             }
+            
         } catch (\Exception $e) {
             Yii::error('Error in sendAndUpdateTelegramNotifications: ' . $e->getMessage());
             $results['errors'][] = $e->getMessage();

@@ -29,11 +29,15 @@ $config = [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
+        'telegram' => [
+            'class' => \aki\telegram\Telegram::class,
+            'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
+        ],
         'log' => [
             'targets' => [
                 [
                     'class' => 'yii\log\DbTarget',
-                    'levels' => ['error', 'warning', 'info', 'trace', 'profile'],
+                    'levels' => ['error', 'warning'],
                     'categories' => ['yii\*'],
                     'except' => [
                         'yii\web\HttpException:404',

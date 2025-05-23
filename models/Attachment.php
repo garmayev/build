@@ -42,6 +42,6 @@ class Attachment extends ActiveRecord
      */
     public function getLink($baseUrl = false): string
     {
-        return $baseUrl ? Url::base(true).$this->url : $this->url;
+        return $baseUrl ? \yii\helpers\Html::a($this->url, \yii\helpers\Url::to([$this->url], true)) : $this->url;
     }
 }

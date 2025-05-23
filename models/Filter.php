@@ -278,9 +278,11 @@ class Filter extends \yii\db\ActiveRecord
             ->joinWith('properties')
             ->where([
                 'coworker.category_id' => $this->category_id,
-                'coworker.priority' => $priority
+                'coworker.priority' => $priority,
+                'coworker.created_by' => isset(\Yii::$app->user) ? \Yii::$app->user->id : 1,
             ]);
         $resultQuery = $this->extracted($query);
+        \Yii::error($resultQuery->createCommand()->rawSql);
         return $resultQuery->all();
     }
 

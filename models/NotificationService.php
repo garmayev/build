@@ -92,7 +92,7 @@ class NotificationService extends Component
 
             if ($telegramMessage->send()) {
                 return $telegramMessage;
-            }
+            } else {}
         } catch (\Exception $e) {
             Yii::error("Error sending Telegram message: " . $e->getMessage());
         }
@@ -115,7 +115,6 @@ class NotificationService extends Component
                 $message->reply_markup = Json::encode(['inline_keyboard' => $keyboard]);
             }
             $message->updated_at = time();
-            
             return $message->editMessageText($newText);
         } catch (\Exception $e) {
             Yii::error("Error updating Telegram message: " . $e->getMessage());
