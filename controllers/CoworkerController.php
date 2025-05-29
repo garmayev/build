@@ -8,6 +8,8 @@ use app\models\Profile;
 use app\models\search\CoworkerSearch;
 use app\models\User;
 use Yii;
+use yii\data\ActiveDataProvider;
+use yii\data\ArrayDataProvider;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -54,12 +56,11 @@ class CoworkerController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new CoworkerSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
+        $ids = \Yii::$app->authManager->getUserIdsByRole('employee');
         return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
+            'dataProvider' => new ActiveDataProvider([
+                'query' => User::find()->where(['id' => $ids]),
+            ]),
         ]);
     }
 
@@ -71,6 +72,7 @@ class CoworkerController extends Controller
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
         return $this->render('view', [
             'model' => $model,
         ]);
@@ -135,7 +137,6 @@ class CoworkerController extends Controller
                 $model->files = UploadedFile::getInstances($model, 'files');
                 if ($model->load($this->request->post()) && $model->validate()) {
                     if ($model->upload() && $model->save()) {
-                        TagDependency::invalidate(Yii::$app->cache, ['coworker-' . $id, 'coworker-list']);
                         $transaction->commit();
                         return $this->redirect(['view', 'id' => $model->id]);
                     }

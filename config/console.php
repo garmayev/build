@@ -7,11 +7,11 @@ $config = [
     'id' => 'basic-console',
     'basePath' => dirname(__DIR__),
     'language' => 'ru',
-    'bootstrap' => ['log'],
+    'bootstrap' => ['log', 'app\modules\user\Bootstrap'],
     'controllerNamespace' => 'app\commands',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
-        '@npm'   => '@vendor/npm-asset',
+        '@npm' => '@vendor/npm-asset',
         '@tests' => '@app/tests',
     ],
     'components' => [
@@ -20,7 +20,7 @@ $config = [
                 'app*' => [
                     'class' => 'yii\i18n\PhpMessageSource',
                     'fileMap' => [
-                        'app'       => 'app.php',
+                        'app' => 'app.php',
                         'app/error' => 'error.php',
                     ],
                 ],
@@ -56,9 +56,27 @@ $config = [
             'hostInfo' => 'https://build.amgcompany.ru',
             'scriptUrl' => 'https://build.amgcompany.ru',
         ],
+        'authManager' => [
+            'class' => 'yii\rbac\DbManager',
+        ],
         'db' => $db,
     ],
+    'controllerMap' => [
+        'migrate' => [
+            'class' => 'yii\console\controllers\MigrateController',
+            'migrationPath' => [
+                '@app/modules/user/migrations',
+                '@yii/rbac/migrations',
+                '@app/migrations/',
+            ],
+        ]
+    ],
     'params' => $params,
+    'modules' => [
+        'user' => [
+            'class' => 'app\modules\user\Module',
+        ]
+    ]
 ];
 
 if (YII_ENV_DEV) {

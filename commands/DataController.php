@@ -60,8 +60,17 @@ class DataController extends Controller
             'properties' => [
                 1, 2
             ]
-        ],
+        ], [
+            'id' => 2,
+            'title' => 'Разнорабочий',
+            'type' => 1,
+            'parent_id' => null,
+            'properties' => [
+                1, 2
+            ]
+        ]
     ];
+
     public function actionDemo()
     {
         if ($this->createUser()) {
@@ -87,6 +96,7 @@ class DataController extends Controller
 
     protected function createUser(): bool
     {
+        return true;
         $user = new User([
             'username' => 'garmayev',
             'email' => 'garmayev@yandex.ru',
@@ -102,7 +112,7 @@ class DataController extends Controller
     {
         $order = Order::findOne($order_id);
 
-        echo Json::encode($order->notify())."\n";
+        echo Json::encode($order->notify()) . "\n";
     }
 
     public function actionSetWebhook()

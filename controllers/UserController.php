@@ -18,4 +18,9 @@ class UserController extends Controller
             return ActiveForm::validate($model);
         }
     }
+
+    public function actionIndex()
+    {
+
+    }
 }

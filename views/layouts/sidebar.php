@@ -99,6 +99,11 @@
                                 'icon' => '',
                                 'url' => ['/dimension/index'],
                                 'active' => \Yii::$app->controller->id === 'dimension',
+                            ], [
+                                'label' => \Yii::t('user', 'Users'),
+                                'icon' => 'person',
+                                'url' => ['/user/admin/index'],
+                                'active' => \Yii::$app->controller->id === 'admin',
                             ]
                         ],
                     ]

@@ -2,7 +2,6 @@
 
 namespace app\models;
 
-use app\components\behaviors\LogBehavior;
 use app\components\Helper;
 use app\models\telegram\TelegramMessage;
 use Yii;
@@ -22,8 +21,6 @@ use yii\helpers\ArrayHelper;
  * @property int|null $type
  * @property string $comment
  * @property int $notify_stage
- * @property int $notify_date
- * @property int $created_by
  * @property int $priority_level
  * @property int $created_at
  *
@@ -159,7 +156,7 @@ class Order extends \yii\db\ActiveRecord
     public function rules(): array
     {
         return [
-            [['status', 'building_id', 'date', 'type', 'notify_date', 'notify_stage', 'created_by', 'created_at', 'priority_level'], 'integer'],
+            [['status', 'building_id', 'date', 'type', 'created_by', 'created_at', 'priority_level'], 'integer'],
             [['building_id'], 'exist', 'skipOnError' => true, 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
             [['priority_level'], 'default', 'value' => Coworker::PRIORITY_HIGH],
             [['comment'], 'string'],

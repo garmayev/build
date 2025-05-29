@@ -14,11 +14,12 @@ class m241128_083447_create_telegram_message_table extends Migration
     {
         $this->createTable('{{%telegram_message}}', [
             'id' => $this->primaryKey(),
-            'chat_id' => $this->string(),
+            'chat_id' => $this->string()->notNull(),
             'device_id' => $this->string(),
             'order_id' => $this->integer(),
             'created_at' => $this->integer(),
             'updated_at' => $this->integer(),
+            'message_id' => $this->integer()->notNull(),
             'text' => $this->text(),
             'reply_markup' => $this->text(),
             'status' => $this->integer(),

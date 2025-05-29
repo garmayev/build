@@ -63,11 +63,6 @@ class Coworker extends \yii\db\ActiveRecord
                 'createdByAttribute' => 'created_by',
                 'updatedByAttribute' => false,
             ],
-            [
-                'class' => TimestampBehavior::class,
-                'createdAtAttribute' => 'created_at',
-                'updatedAtAttribute' => false,
-            ],
         ];
     }
 
@@ -82,7 +77,7 @@ class Coworker extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['category_id', 'priority', 'notify_date', 'user_id', 'created_by', 'created_at'], 'integer'],
+            [['category_id', 'priority', 'notify_date', 'user_id', 'created_by'], 'integer'],
             [['firstname', 'lastname', 'phone', 'email', 'chat_id', 'device_id'], 'string', 'max' => 255],
             [['firstname'], 'default', 'value' => ''],
             [['coworkerProperties', 'attachments'], 'safe'],
@@ -137,15 +132,16 @@ class Coworker extends \yii\db\ActiveRecord
     {
         $formName = $formName ?? self::formName();
         $flag = true;
-
-        if (isset($data[$formName]['email'])) {
-            $email = $data[$formName]['email'];
-            if ($email) {
-                $model = new UserRegisterForm([
-                    'email' => $email
-                ]);
-                if ($flag = $model->update()) {
-                    $this->user_id = $model->getId();
+        if (empty($this->user_id)) {
+            if (isset($data[$formName]['email'])) {
+                $email = $data[$formName]['email'];
+                if ($email) {
+                    $model = new UserRegisterForm([
+                        'email' => $email
+                    ]);
+                    if ($flag = $model->update()) {
+                        $this->user_id = $model->getId();
+                    }
                 }
             }
         }

@@ -12,15 +12,11 @@ use yii\web\IdentityInterface;
  * @property string $password
  * @property string $password_hash
  * @property string $auth_key
- * @property string $access_token
  * @property string $chat_id
- * @property string $device_id
- * @property integer $status
- * @property string $name
  *
  * @property Profile $profile
  */
-class User extends ActiveRecord implements IdentityInterface
+class User extends \app\modules\user\models\User implements IdentityInterface
 {
     const STATUS_DISABLED = 0;
     const STATUS_ACTIVE = 1;

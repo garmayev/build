@@ -6,7 +6,7 @@ $db = require __DIR__ . '/db.php';
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log'],
+    'bootstrap' => ['log', 'app\modules\user\Bootstrap'],
     'language' => 'ru-RU',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
@@ -20,7 +20,7 @@ $config = [
             'class' => 'yii\caching\FileCache',
         ],
         'user' => [
-            'identityClass' => 'app\models\User',
+            'identityClass' => 'app\modules\user\models\User',
             'enableAutoLogin' => true,
         ],
         'errorHandler' => [
@@ -43,14 +43,6 @@ $config = [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
                 [
-                    'class' => 'yii\log\DbTarget',
-                    'enabled' => true,
-                    'except' => [
-                        'yii\web\HttpException:404',
-                    ],
-                    'levels' => ['error', 'warning'],
-                ],
-                [
                     'class' => 'yii\log\FileTarget',
                     'enabled' => true,
                     'enableRotation' => true,
@@ -64,6 +56,9 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [],
+        ],
+        'authManager' => [
+            'class' => 'yii\rbac\DbManager',
         ],
         'i18n' => [
             'translations' => [
@@ -94,24 +89,18 @@ $config = [
             'telegram_bot_id' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
             'use_database' => true,
         ],
+        'user' => [
+            'class' => 'app\modules\user\Module',
+            'admins' => ['garmayev'],
+        ]
     ],
     'params' => $params,
 ];
 
 if (YII_ENV_DEV) {
-    // configuration adjustments for 'dev' environment
-    $config['bootstrap'][] = 'debug';
-    $config['modules']['debug'] = [
-        'class' => 'yii\debug\Module',
-        // uncomment the following to add your IP if you are not connecting from localhost.
-        'allowedIPs' => ['*'],
-    ];
-
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
-        // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
     ];
 }
 
