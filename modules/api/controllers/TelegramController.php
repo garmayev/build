@@ -103,11 +103,14 @@ class TelegramController extends \yii\web\Controller
                     $order->save();
                     if (YII_ENV === 'prod') {
                         foreach ($messages->all() as $message) {
-                            if ( in_array($message->chat_id, \yii\helpers\ArrayHelper::map($order->coworkers, 'chat_id', 'chat_id')) ) {
+                            if ( in_array($message->chat_id, array_merge(\yii\helpers\ArrayHelper::map($order->coworkers, 'chat_id', 'chat_id'), [$order->owner->chat_id => $order->owner->chat_id])) ) {
                                 $message->editMessageText(Helper::generateTelegramHiddenMessage($order->id), null);
                             } else {
                                 $message->remove();
                             }
+                        }
+                        if ( $order->owner->chat_id ) {
+                            $message->editMessageText(Helper::generateTelegramHiddenMessage($order->id), null);
                         }
                     } else {
                         return $messages;

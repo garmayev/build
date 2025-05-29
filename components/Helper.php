@@ -43,10 +43,16 @@ class Helper extends Component
         $order = Order::findOne($order_id);
 
         $building = $order->building;
-        $message = \Yii::t("app", "Order #{id}", ['id' => $order->id]) . "\n";
-//        $message .= \Yii::t("app", "Building: {building}", ['building' => $building->title]) . "\n";
-//        $message .= \Yii::t("app", "Address: {address}", ['address' => $building->location->link]) . "\n";
-        $message .= \Yii::t("app", "Date: {date}", ['date' => \Yii::$app->formatter->asDate($order->created_at)]) . "\n";
+        $message = "<b>".\Yii::t("app", "Order #{id}", ['id' => $order->id]) . "</b>\n";
+        $message .= \Yii::t("app", "<b>Building</b>: <i>{building}</i>", ['building' => $building->title]) . "\n";
+        $message .= \Yii::t("app", "<b>Address</b>: <i>{address}</i>", ['address' => $building->location->link]) . "\n";
+        $message .= \Yii::t("app", "<b>Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->created_at)]) . "\n";
+        if ($order->comment) {
+            $message .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
+        }
+        $currentCount = $order->issetCoworkers;
+        $totalRequired = $order->requiredCoworkers;
+        $message .= "\n" . \Yii::t("app", "<b>Requirements</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
         return $message;
     }
 }

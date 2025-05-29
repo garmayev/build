@@ -282,7 +282,6 @@ class Filter extends \yii\db\ActiveRecord
                 'coworker.created_by' => isset(\Yii::$app->user) ? \Yii::$app->user->id : 1,
             ]);
         $resultQuery = $this->extracted($query);
-        \Yii::error($resultQuery->createCommand()->rawSql);
         return $resultQuery->all();
     }
 
