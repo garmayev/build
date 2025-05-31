@@ -26,16 +26,19 @@ CSS
 
 $actionButtons = [
     [
-        'label' => 'Profile',
-        'url' => ['profile'],
-    ], [
-        'label' => 'View',
+        'label' => \Yii::t('app', 'View'),
         'url' => ['view'],
     ], [
-        'label' => 'Invite',
+        'label' => \Yii::t('app', 'Profile'),
+        'url' => ['profile'],
+    ], [
+        'label' => \Yii::t('app', 'Invite Mail'),
         'url' => ['invite'],
     ], [
-        'label' => 'Delete',
+        'label' => \Yii::t('app', 'Telegram Link'),
+        'url' => ['telegram-link']
+    ], [
+        'label' => \Yii::t('app', 'Delete'),
         'url' => ['delete'],
         'linkOptions' => [
             'data-method' => 'post',

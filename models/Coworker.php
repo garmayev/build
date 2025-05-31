@@ -25,7 +25,6 @@ use yii\db\ActiveQuery;
  * @property int $priority
  * @property int $user_id
  * @property int $created_by
- * @property int $created_at
  * @property string $chat_id
  * @property string $device_id
  *
@@ -63,11 +62,6 @@ class Coworker extends \yii\db\ActiveRecord
                 'createdByAttribute' => 'created_by',
                 'updatedByAttribute' => false,
             ],
-            [
-                'class' => TimestampBehavior::class,
-                'createdAtAttribute' => 'created_at',
-                'updatedAtAttribute' => false,
-            ],
         ];
     }
 
@@ -82,7 +76,7 @@ class Coworker extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['category_id', 'priority', 'notify_date', 'user_id', 'created_by', 'created_at'], 'integer'],
+            [['category_id', 'priority', 'notify_date', 'user_id', 'created_by'], 'integer'],
             [['firstname', 'lastname', 'phone', 'email', 'chat_id', 'device_id'], 'string', 'max' => 255],
             [['firstname'], 'default', 'value' => ''],
             [['coworkerProperties', 'attachments'], 'safe'],
