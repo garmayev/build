@@ -36,6 +36,7 @@ use yii\bootstrap4\Breadcrumbs;
 
     <!-- Main content -->
     <div class="content">
+        <?= \app\widgets\Alert::widget(); ?>
         <?= $content ?><!-- /.container-fluid -->
     </div>
     <!-- /.content -->

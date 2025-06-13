@@ -25,7 +25,6 @@ use yii\db\ActiveQuery;
  * @property int $priority
  * @property int $user_id
  * @property int $created_by
- * @property int $created_at
  * @property string $chat_id
  * @property string $device_id
  *
