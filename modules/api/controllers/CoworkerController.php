@@ -17,7 +17,7 @@ class CoworkerController extends ActiveController
     public function behaviors()
     {
         return [
-/*            'corsFilter' => [
+            'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
                     'Origin' => ['*'],
@@ -34,9 +34,9 @@ class CoworkerController extends ActiveController
                     // Guests
                     [ 'allow' => true, 'roles' => ['?'], 'actions' => [] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders', 'calendar-month'] ],
                 ],
-            ], */
+            ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
                 'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD']
@@ -129,12 +129,6 @@ class CoworkerController extends ActiveController
                 if ($coworker->id === $item->id) {
                     $suitableOrders[] = $order;
                 }
-//                $list = \app\models\Coworker::searchByFilter($filter, $order->priority_level);
-//                foreach ($list as $item) {
-//                    if ($coworker->id === $item->id) {
-//                        $suitableOrders[] = $order;
-//                    }
-//                }
             }
         }
 
@@ -145,5 +139,26 @@ class CoworkerController extends ActiveController
     {
         $order = \app\models\Order::findOne($order_id);
         $order->notify();
+    }
+
+    public function actionCalendarMonth($year, $month)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $result = [];
+        $coworkers = \app\models\Coworker::find()->where(['created_by' => \Yii::$app->user->getId()])->orWhere(['priority' => \app\models\Coworker::PRIORITY_LOW])->all();
+        foreach ($coworkers as $coworker) {
+            $hours = \app\models\Hours::find()
+                ->where(['>=', 'date', date("$year-$month-01")])
+                ->andWhere(['<=', 'date', date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year))])
+                ->andWhere(['coworker_id' => $coworker->id])
+                ->all();
+            $result[] = [
+                'id' => $coworker->id,
+                'name' => $coworker->firstname.' '.$coworker->lastname,
+                'data' => $hours,
+                'total' => 0
+            ];
+        }
+        return $result;
     }
 }

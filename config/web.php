@@ -8,6 +8,7 @@ $config = [
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'language' => 'ru-RU',
+    'name' => 'Стройка',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
@@ -29,7 +30,7 @@ $config = [
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
             'viewPath' => '@app/mail',
-            'useFileTransport' => true,
+            'useFileTransport' => false,
             'transport' => [
                 'scheme' => 'smtps',
                 'host' => 'smtp.mail.ru',
@@ -37,6 +38,7 @@ $config = [
                 'password' => 'dAV5dj7Y28JrBThXmNWk',
                 'ssl' => true,
                 'port' => 465,
+//                'dsn' => 'smtp://buryatagro:motmtimsudchctinh@smtp.yandex.ru:465'
             ],
         ],
         'log' => [
