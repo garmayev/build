@@ -1,0 +1,46 @@
+thead {
+	cursor: default;
+	td {
+		min-width: 30px;
+	}
+	td[colspan] {
+		text-align: center;
+		font-weight: bold;
+	}
+	tr:last-child {
+		td {
+			text-align: center;
+		}
+	}
+}
+tbody, tfoot {
+	td, span {
+		padding: 8px;
+		text-align: center;
+		font-size: 14px;
+	}
+	span {
+		display: inline-block;
+		min-width: 40px;
+	}
+	.is-payed {
+		color: white;
+		background: green;
+	}
+	.un-payed {
+		background: darkred;
+		color: white;
+	}
+}
+tbody td.free, tbody td.is-payed, tbody td.un-payed {
+	cursor: pointer;
+}
+tfoot {
+	td:first-child {
+		text-align: right;
+	}
+}
+td {
+	vertical-align: middle;
+	text-align: center;
+}

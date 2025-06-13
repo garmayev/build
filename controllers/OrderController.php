@@ -20,14 +20,14 @@ class OrderController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index', 'view', 'delete', 'coworker', 'material', 'get-list'],
+                        'actions' => ['index', 'view', 'delete', 'coworker', 'material'],
                         'roles' => ['@'],
                     ],
-/*                    [
+                    [
                         'allow' => true,
                         'actions' => ['get-list'],
                         'roles' => ['?']
-                    ] */
+                    ]
                 ],
             ],
         ];

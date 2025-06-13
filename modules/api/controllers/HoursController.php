@@ -1,6 +1,8 @@
 <?php
 namespace app\modules\api\controllers;
 
+use app\models\Hours;
+
 class HoursController extends \yii\rest\Controller {
     public $serializer = [
         'class' => 'yii\rest\Serializer',
@@ -25,7 +27,7 @@ class HoursController extends \yii\rest\Controller {
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create', 'get-hours'] ],
                     // Users
                     [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker'] ],
                 ],
@@ -70,11 +72,7 @@ class HoursController extends \yii\rest\Controller {
 
     public function actionCreate($time, $coworker_id, $is_payed, $count, $order_id = null)
     {
-//        $order = \app\models\Order::find()->where(['id' => $order_id])->one();
         $coworker = \app\models\Coworker::findOne($coworker_id);
-//        \Yii::error($time);
-//        \Yii::error(time());
-//        \Yii::error(date('Y-m-d', $time));
         if (isset($coworker)) {
             $hours = \app\models\Hours::find()->where(['coworker_id' => $coworker->id])->andWhere(['date' => date('Y-m-d', $time)])->one();
             if (isset($hours)) {
@@ -88,5 +86,13 @@ class HoursController extends \yii\rest\Controller {
             return ['ok' => $is_saved, 'message' => $hours->getErrorSummary(true)];
         }
         return ['ok' => false];
+    }
+
+    public function actionGetHours($coworker_id, $date)
+    {
+        $time = \Yii::$app->formatter->asDate($date, 'php:YYYY-m-d');
+        if ($coworker_id) {
+            return ["ok" => true, "model" => Hours::find()->where(['date' => $time])->andWhere(['coworker_id' => $coworker_id])->one()];
+        }
     }
 }
