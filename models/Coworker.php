@@ -79,7 +79,7 @@ class Coworker extends \yii\db\ActiveRecord
             [['category_id', 'priority', 'notify_date', 'user_id', 'created_by'], 'integer'],
             [['firstname', 'lastname', 'phone', 'email', 'chat_id', 'device_id'], 'string', 'max' => 255],
             [['firstname'], 'default', 'value' => ''],
-            [['coworkerProperties', 'attachments'], 'safe'],
+            [['coworkerProperties', 'attachments', 'price'], 'safe'],
             [['phone', 'email'], 'unique'],
             [['phone'], PhoneValidator::class],
             [['firstname', 'lastname', 'phone', 'email'], 'default', 'value' => ''],
@@ -123,7 +123,8 @@ class Coworker extends \yii\db\ActiveRecord
                 return $result;
             },
             'attachments',
-            'hours'
+            'hours',
+            'price',
         ];
     }
 
@@ -166,6 +167,7 @@ class Coworker extends \yii\db\ActiveRecord
             'email' => Yii::t('app', 'Email'),
             'category_id' => Yii::t('app', 'Category'),
             'hours' => Yii::t('app', 'Hours'),
+            'contact' => Yii::t('app', 'Contact'),
         ];
     }
 
@@ -231,6 +233,23 @@ class Coworker extends \yii\db\ActiveRecord
             $transaction->rollBack();
             Yii::error('Error setting coworker properties: ' . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function getPrice()
+    {
+        return $this->hasOne(Price::class, ['coworker_id' => 'id'])->orderBy(['date' => SORT_DESC]);
+    }
+
+    public function setPrice($value)
+    {
+        $model = Price::find()->where(['coworker_id' => $this->id])->andWhere(['date' => $value['date']]);
+        if ($model) {
+            $model->price = $value["price"];
+            $model->save();
+        } else {
+            $model = new Price(array_merge($value, ["coworker_id" => $this->id]));
+            $model->save();
         }
     }
 
@@ -368,11 +387,24 @@ class Coworker extends \yii\db\ActiveRecord
 
     public function invite()
     {
-        \Yii::$app->mailer
-            ->compose('coworker/invite', ['model' => $this])
-            ->setFrom(['build@amgcompany.ru' => 'build@amgcompany.ru'])
-            ->setTo($this->email)
-            ->setSubject(\Yii::$app->name . ' robot')
-            ->send();
+        if (!empty($this->email)) {
+            try {
+                $mail = \Yii::$app->mailer
+                    ->compose('coworker/invite', ['model' => $this])
+                    ->setFrom(['amg.company@inbox.ru' => 'amg.company@inbox.ru'])
+                    ->setTo($this->email)
+                    ->setSubject(\Yii::$app->name . ' robot');
+                if ( $mail->send() ) {
+                    \Yii::$app->session->setFlash('success', \Yii::t('app', 'Email is sended successfully'));
+                } else {
+                    \Yii::error("Mail is not sended");
+                    \Yii::error($mail);
+                }
+            } catch (\Exception $e) {
+                \Yii::error($e);
+            }
+        } else {
+            \Yii::$app->session->setFlash('danger', \Yii::t('app', 'Missing email address'));
+        }
     }
 }

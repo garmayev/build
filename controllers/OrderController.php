@@ -73,6 +73,7 @@ class OrderController extends Controller
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             }
+            \Yii::$app->session->setFlash('danger', \Yii::t('app', 'Order is not saved'));
         }
 
         return $this->render('coworker', [
@@ -88,17 +89,10 @@ class OrderController extends Controller
         ]);
     }
 
-    public function actionGetList()
-    {
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        return Order::find()->where(['created_by' => \Yii::$app->user->getId()])->andWhere(['<>', 'status', Order::STATUS_COMPLETE])->all();
-    }
-
     public function actionDetail($id)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         if ($id) {
-            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             $model = Order::findOne($id);
             if (\Yii::$app->user->isGuest) {
                 return ["ok" => false, "message" => "Unknown user"];
@@ -112,7 +106,7 @@ class OrderController extends Controller
     {
         $model = Order::findOne($id);
         $result = $model->sendAndUpdateTelegramNotifications();
-        \Yii::error( $result );
+//        \Yii::error( $result );
         return $this->redirect(['view', 'id' => $id]);
     }
 }

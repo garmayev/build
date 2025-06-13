@@ -50,8 +50,6 @@ JS);
     <?= $this->render('control-sidebar') ?>
     <!-- /.control-sidebar -->
 
-    <!-- Main Footer -->
-    <?= $this->render('footer') ?>
 </div>
 
 <?php $this->endBody() ?>

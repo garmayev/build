@@ -29,12 +29,12 @@ class HoursController extends \yii\rest\Controller {
                     // Guests
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create', 'get-hours'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'create']
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'create', 'get-hours']
             ],
         ];
     }
@@ -72,7 +72,9 @@ class HoursController extends \yii\rest\Controller {
 
     public function actionCreate($time, $coworker_id, $is_payed, $count, $order_id = null)
     {
+        $order = \app\models\Order::find()->where(['id' => $order_id])->one();
         $coworker = \app\models\Coworker::findOne($coworker_id);
+
         if (isset($coworker)) {
             $hours = \app\models\Hours::find()->where(['coworker_id' => $coworker->id])->andWhere(['date' => date('Y-m-d', $time)])->one();
             if (isset($hours)) {
@@ -90,9 +92,9 @@ class HoursController extends \yii\rest\Controller {
 
     public function actionGetHours($coworker_id, $date)
     {
-        $time = \Yii::$app->formatter->asDate($date, 'php:YYYY-m-d');
+        $d = \Yii::$app->formatter->asDate($date, 'php:YYYY-m-d');
         if ($coworker_id) {
-            return ["ok" => true, "model" => Hours::find()->where(['date' => $time])->andWhere(['coworker_id' => $coworker_id])->one()];
+            return ["ok" => true, "model" => \app\models\Hours::find()->where(["date" => $d])->andWhere(["coworker_id" => $coworker_id])->one()];
         }
     }
 }

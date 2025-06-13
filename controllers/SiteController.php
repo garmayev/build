@@ -25,7 +25,7 @@ class SiteController extends Controller
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['logout', 'index'],
+                        'actions' => ['logout', 'index', 'calendar-month'],
                         'roles' => ['@'],
                     ],
                 ],
@@ -65,6 +65,7 @@ class SiteController extends Controller
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $result = [];
+        \Yii::error( \Yii::$app->user->getId() );
         $coworkers = \app\models\Coworker::find()->where(['created_by' => \Yii::$app->user->getId()])->orWhere(['priority' => \app\models\Coworker::PRIORITY_LOW])->all();
         foreach ($coworkers as $coworker) {
             $hours = \app\models\Hours::find()

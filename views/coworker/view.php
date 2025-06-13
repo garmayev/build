@@ -15,6 +15,8 @@ $this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Coworkers'), 'url' =
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 $invite_link = "https://t.me/" . \Yii::$app->params["bot_name"] . "?start=" . $model->id;
+
+var_dump( $model->price );
 ?>
     <div class="coworker-view">
         <p>
@@ -62,7 +64,9 @@ $invite_link = "https://t.me/" . \Yii::$app->params["bot_name"] . "?start=" . $m
                         }
                         return '';
                     }
-                ], [
+                ],
+                "price.price",
+                [
                     'attribute' => 'type',
                     'label' => \Yii::t('app', 'Type'),
                     'value' => function (Coworker $model) {

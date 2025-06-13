@@ -64,6 +64,7 @@ class Property extends \yii\db\ActiveRecord
         return [
             'id' => Yii::t('app', 'ID'),
             'title' => Yii::t('app', 'Title'),
+            'dimensions' => Yii::t('app', 'Dimensions'),
         ];
     }
 

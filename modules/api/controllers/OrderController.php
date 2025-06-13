@@ -35,7 +35,8 @@ class OrderController extends \yii\rest\ActiveController
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'set-hours'] ],
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker', 'free', 'apply', 'reject', 'set-hours', 'set-status'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker', 'free', 'apply', 
+                        'reject', 'set-hours', 'set-status', 'get-list'] ],
                 ],
             ],
             'authenticator' => [
@@ -56,6 +57,7 @@ class OrderController extends \yii\rest\ActiveController
             'delete' => ['DELETE', 'OPTIONS'],
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
+            'get-list' => ['GET', 'OPTIONS']
         ];
     }
 
@@ -205,5 +207,13 @@ class OrderController extends \yii\rest\ActiveController
         $model = Order::findOne($id);
         $model->status = $status;
         $model->save();
+    }
+
+    public function actionGetList($date, $coworker_id)
+    {
+        $result = [];
+        $hours = \app\models\Hours::find()->where(['coworker_id' => $coworker_id])->andWhere(['date' => $date])->all();
+        $links = \yii\helpers\ArrayHelper::map( $hours, 'id', 'order_id' );
+        return \app\models\Order::findAll(['id' => $links]);
     }
 }

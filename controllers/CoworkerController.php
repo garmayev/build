@@ -71,7 +71,7 @@ class CoworkerController extends Controller
      */
     public function actionView($id)
     {
-        $model = \app\models\Coworker::findOne($id);
+        $model = $this->findModel($id);
         return $this->render('view', [
             'model' => $model,
         ]);

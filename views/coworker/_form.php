@@ -33,6 +33,8 @@ echo $form->field($model, "priority")->dropDownList([
     Coworker::PRIORITY_NORMAL => \Yii::t('app', 'Priority normal'),
     Coworker::PRIORITY_HIGH => \Yii::t('app', 'Priority high'),
 ])->label(\Yii::t('app', 'Priority'));
+echo $form->field($model, "price[price]")->textInput()->label(\Yii::t('app', 'Price'));
+echo $form->field($model, "price[date]")->hiddenInput(["value" => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->label(false);
 echo $form->field($model, "files[]")->fileInput([
     'multiple' => true,
 ])->label(\Yii::t("app", "Attachments"));
