@@ -6,9 +6,9 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <a href="/" class="brand-link">
-<!--        <img src="/images/logo-white.svg" alt="AdminLTE Logo" class="brand-image"
-             style="opacity: .8; min-width: 70px;"> -->
-        <span class="brand-text font-weight-light px-3" style="letter-spacing: 10px;">AMG Systems</span>
+<!--        <img src="/images/logo-white.svg" alt="AdminLTE Logo" class="brand-image"-->
+<!--             style="opacity: .8; min-width: 70px;">-->
+        <span class="brand-text font-weight-light px-3" style="letter-spacing: 10px;">&nbsp;</span>
     </a>
 
     <!-- Sidebar -->

@@ -65,7 +65,6 @@ $config = [
         'migrate' => [
             'class' => 'yii\console\controllers\MigrateController',
             'migrationPath' => [
-                '@app/modules/user/migrations',
                 '@yii/rbac/migrations',
                 '@app/migrations/',
             ],

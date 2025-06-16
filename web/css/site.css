@@ -91,3 +91,7 @@ a.desc:after {
     padding: 0;
     margin: 0;
 }
+
+.main-sidebar {
+    overflow-x: hidden;
+}

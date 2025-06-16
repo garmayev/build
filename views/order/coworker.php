@@ -14,7 +14,7 @@ use yii\widgets\ActiveForm;
  * @var Order $model
  */
 
-\app\assets\ReactAsset::register($this);
+//\app\assets\ReactAsset::register($this);
 
 $form = ActiveForm::begin([
     'options' => [
@@ -62,72 +62,8 @@ echo $form->field($model, 'comment')->textarea(['rows' => 6]);
 
 echo $form->field($model, 'orderFilters')->hiddenInput(['value' => Json::encode($model->orderFilters)])->label(false);
 
-echo Html::tag('div', '', ['id' => 'dynamicTable']);
+echo Html::tag('div', '', ['class' => 'dynamicTable', 'data-content' => $model->filters]);
 
 echo Html::submitButton(\Yii::t('app', 'Save'), ['class' => 'btn btn-success']);
 
 ActiveForm::end();
-
-$this->registerJsFile('/js/react/DynamicTable.js', ['position' => View::POS_HEAD, 'type' => 'text/babel']);
-$t = Json::encode([
-    'submit.title' => \Yii::t('app', 'Add Filter'),
-    'modal.close' => \Yii::t('app', 'Close'),
-    'modal.save' => \Yii::t('app', 'Save'),
-    'header.category' => \Yii::t('app', 'Category'),
-    'header.count' => \Yii::t('app', 'Count'),
-    'header.requirement' => \Yii::t('app', 'Requirement'),
-    'modal.addRequirement' => \Yii::t('app', 'Add Requirement'),
-    'modal.type.less' => \Yii::t('app', 'Less'),
-    'modal.type.more' => \Yii::t('app', 'More'),
-    'modal.type.equal' => \Yii::t('app', 'Equal'),
-    'modal.type.not-equal' => \Yii::t('app', 'Not Equal'),
-]);
-
-$this->registerJsVar('filters', $model->filters); ;
-
-$script = <<<JS
-    yii.t = $t ;
-    const root = ReactDOM.createRoot(document.getElementById('dynamicTable'));
-
-    root.render(
-        <DynamicTable 
-            data={filters ?? []} 
-            dataUrl={'/order/detail?id={$model->id}'}
-            categoryUrl={'/api/category/index?type=1'}
-            propertyUrl={'/api/property/by-category'}
-            tableHeader={[{
-                header: yii.t['header.category'],
-                key: 'category.title',
-                inputName: '[category_id]',
-                inputValue: 'category.id'
-            }, {
-                header: yii.t['header.count'],
-                key: 'count',
-                inputName: '[count]',
-                inputValue: 'count'
-            }, {
-                header: yii.t['header.requirement'],
-                key: {
-                    header: 'requirements',
-                    subkey: ['property.title', 'type', 'value', 'dimension.short'],
-                    values: [{
-                        inputName: '[property][id]',
-                        inputValue: 'property.id'
-                    }, {
-                        inputName: '[type]',
-                        inputValue: 'type'
-                    }, {
-                        inputName: '[value]',
-                        inputValue: 'value'
-                    }, {
-                        inputName: '[dimension][id]',
-                        inputValue: 'dimension.id'
-                    }]
-                }
-            }]}
-            formName={'Order[filters]'} 
-        />
-    )
-JS;
-
-echo Html::script($script, ['type' => 'text/babel']);
