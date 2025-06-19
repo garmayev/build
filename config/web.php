@@ -6,7 +6,7 @@ $db = require __DIR__ . '/db.php';
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log', 'app\modules\user\Bootstrap'],
+    'bootstrap' => ['log'],
     'language' => 'ru-RU',
     'name' => 'Стройка',
     'aliases' => [
@@ -21,8 +21,9 @@ $config = [
             'class' => 'yii\caching\FileCache',
         ],
         'user' => [
-            'identityClass' => 'app\modules\user\models\User',
+            'identityClass' => 'app\models\User',
             'enableAutoLogin' => true,
+            'loginUrl' => ['user/login'],
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -91,10 +92,6 @@ $config = [
             'telegram_bot_id' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
             'use_database' => true,
         ],
-        'user' => [
-            'class' => 'app\modules\user\Module',
-            'admins' => ['garmayev'],
-        ]
     ],
     'params' => $params,
 ];

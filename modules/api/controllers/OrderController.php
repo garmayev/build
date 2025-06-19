@@ -23,10 +23,10 @@ class OrderController extends \yii\rest\ActiveController
             'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
-                    'Origin' => ['*'],
+                    'Origin' => ['http://localhost:3000', 'http://build.local', 'https://build.amgcompany.ru'],
                     'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
                     'Access-Control-Request-Headers' => ['*'],
-                    'Access-Control-Allow-Credentials' => false,
+                    'Access-Control-Allow-Credentials' => true,
                     'Access-Control-Max-Age' => 86400,
                     'Access-Control-Allow-Origin' => ['*'],
                 ],
@@ -34,14 +34,14 @@ class OrderController extends \yii\rest\ActiveController
             'access' => [
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'set-hours'] ],
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'close', 'detail', 'by-coworker', 'free', 'apply', 
-                        'reject', 'set-hours', 'set-status', 'get-list'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete',
+                        'close', 'detail', 'by-coworker', 'free', 'apply', 'reject', 'set-status', 'get-list', 'set-hours'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'set-hours', 'detail']
+                'except' => ['set-hours'],
             ],
         ];
     }
@@ -57,7 +57,8 @@ class OrderController extends \yii\rest\ActiveController
             'delete' => ['DELETE', 'OPTIONS'],
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
-            'get-list' => ['GET', 'OPTIONS']
+            'get-list' => ['GET', 'OPTIONS'],
+            'set-hours' => ['POST', 'PUT', 'OPTIONS'],
         ];
     }
 
@@ -71,7 +72,6 @@ class OrderController extends \yii\rest\ActiveController
     public function actions()
     {
         $actions = parent::actions();
-//        unset($actions['index']);
         $actions['index']['prepareDataProvider'] = [$this, 'prepareDataProvider'];
         $actions['options'] = [
             'class' => \yii\rest\OptionAction::class
@@ -100,14 +100,18 @@ class OrderController extends \yii\rest\ActiveController
 
     public function actionSetHours()
     {
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = $this->request->post();
         $result = [];
         $model = Hours::find()->where(["coworker_id" => $data["coworker_id"]])->andWhere(["date" => $data["date"]])->one();
         if (empty($model)) {
             $hours = new Hours($data);
             $result[] = ["ok" => $hours->save()];
         } else {
-            $result[] = ["ok" => $model->load(["Hours" => $data]) && $model->save()];
+            $ok = $model->load(["Hours" => $data]) && $model->save();
+            if (!$ok) {
+                \Yii::error($model->errors);
+            }
+            $result[] = ["ok" => $ok];
         }
         return $result;
     }
@@ -211,9 +215,8 @@ class OrderController extends \yii\rest\ActiveController
 
     public function actionGetList($date, $coworker_id)
     {
-        $result = [];
         $hours = \app\models\Hours::find()->where(['coworker_id' => $coworker_id])->andWhere(['date' => $date])->all();
         $links = \yii\helpers\ArrayHelper::map( $hours, 'id', 'order_id' );
-        return \app\models\Order::findAll(['id' => $links]);
+        return $links;
     }
 }

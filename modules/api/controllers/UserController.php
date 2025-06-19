@@ -2,6 +2,7 @@
 
 namespace app\modules\api\controllers;
 
+use app\models\Profile;
 use yii\filters\AccessControl;
 use yii\rest\Controller;
 use app\models\User;
@@ -16,10 +17,10 @@ class UserController extends \yii\rest\Controller
             'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
-                    'Origin' => ['*'],
+                    'Origin' => ['http://localhost:3000', 'http://build.local', 'https://build.amgcompany.ru'],
                     'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
                     'Access-Control-Request-Headers' => ['*'],
-                    'Access-Control-Allow-Credentials' => false,
+                    'Access-Control-Allow-Credentials' => true,
                     'Access-Control-Max-Age' => 86400,
                     'Access-Control-Allow-Origin' => ['*'],
                 ],
@@ -28,9 +29,9 @@ class UserController extends \yii\rest\Controller
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email', 'check', 'set-token'] ],
+                    ['allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email', 'check', 'set-token', 'info', 'change-password', 'check-password', 'update-account', 'update-profile']],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login'] ],
+                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login']],
                 ],
             ],
             'authenticator' => [
@@ -45,12 +46,17 @@ class UserController extends \yii\rest\Controller
         return [
             'index' => ['GET', 'OPTIONS'],
             'view' => ['GET', 'OPTIONS'],
+            'info' => ['GET', 'OPTIONS'],
             'create' => ['POST', 'OPTIONS'],
             'update' => ['POST', 'PUT', 'OPTIONS'],
             'delete' => ['DELETE', 'OPTIONS'],
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
             'set-token' => ['POST', 'OPTIONS'],
+            'change-password' => ['POST', 'OPTIONS'],
+            'check-password' => ['POST', 'OPTIONS'],
+            'update-account' => ['POST', 'OPTIONS'],
+            'update-profile' => ['POST', 'OPTIONS'],
         ];
     }
 
@@ -70,22 +76,24 @@ class UserController extends \yii\rest\Controller
         return $actions;
     }
 
-    public function actionLogin() {
+    public function actionLogin()
+    {
         $data = $_POST;
         $model = User::findOne(['username' => $data['username']]);
         if (empty($data['username']) || empty($data['password'])) {
-            return [ "ok" => false, "message" => \Yii::t("app", "Missing Username or Password") ];
+            return ["ok" => false, "message" => \Yii::t("app", "Missing Username or Password")];
         }
-        if ( $model && $model->validatePassword($data['password']) ) {
-            return [ 'ok' => true, 'user' => $model, 'token' => $model->access_token ];
+        if ($model && $model->validatePassword($data['password'])) {
+            return ['ok' => true, 'user' => $model, 'token' => $model->access_token];
         }
-        if ( $model ) {
+        if ($model) {
             return ["ok" => false, 'message' => \Yii::t("app", 'Missing Username or Password')];
         }
         return ["ok" => false, 'message' => \Yii::t("app", 'Missing Username or Password')];
     }
 
-    public function actionCheck() {
+    public function actionCheck()
+    {
         return ["ok" => !\Yii::$app->user->isGuest, 'model' => \Yii::$app->user->identity];
     }
 
@@ -94,7 +102,8 @@ class UserController extends \yii\rest\Controller
         return User::find()->all();
     }
 
-    public function actionRegister() {
+    public function actionRegister()
+    {
         $data = json_decode(file_get_contents("php://input"), true) ?? $_POST;
         $model = new User();
         $model->username = $data['username'];
@@ -132,16 +141,68 @@ class UserController extends \yii\rest\Controller
 
     public function actionSetToken($user_id)
     {
-//        \Yii::error($user_id);
-//        $user = User::findOne($user_id);
         $model = \app\models\Coworker::findOne(['user_id' => $user_id]);
         $data = \Yii::$app->request->post();
         if ($data["token"]) {
             $model->device_id = $data["token"];
-            \Yii::error( $data );
+            \Yii::error($data);
             $saved = $model->save();
             return ["ok" => $saved, "message" => !$saved ? $model->errors : ""];
         }
         return ["ok" => false, "message" => \Yii::t("app", "Missing token")];
+    }
+
+    public function actionInfo($id = null)
+    {
+        $user = User::find()->joinWith('profile')->where(['user.id' => $id])->one();
+        if (empty($user)) {
+            return \Yii::$app->user->identity;
+        }
+        return $user;
+    }
+
+    public function actionChangePassword($id)
+    {
+        $model = User::findOne(['id' => $id]);
+        $post = \Yii::$app->request->post();
+        if ($model->validatePassword($post['old_password'])) {
+            $model->password_hash = \Yii::$app->security->generatePasswordHash($post['new_password']);
+            if ($model->save()) {
+                return ["ok" => true, "message" => \Yii::t("app", "Password changed successfully")];
+            }
+            return ["ok" => false, "message" => $model->getErrorSummary(true)];
+        } else {
+            return ["ok" => false, "message" => \Yii::t("app", "Wrong password")];
+        }
+    }
+
+    public function actionCheckPassword($id)
+    {
+        $model = User::findOne($id);
+        $post = \Yii::$app->request->post();
+        if ($model->validatePassword($post['password'])) {
+            return ["ok" => true, "message" => \Yii::t("app", "Password checked successfully")];
+        }
+        return ["ok" => false, "message" => \Yii::t("app", "Wrong password")];
+    }
+
+    public function actionUpdateAccount($id)
+    {
+        $model = User::findOne($id);
+        $post = \Yii::$app->request->post();
+        if ($model->load(["User" => $post]) && $model->save()) {
+            return ["ok" => true, "message" => \Yii::t("app", "Account updated successfully")];
+        }
+        return ["ok" => false, "message" => $model->getErrorSummary(true)];
+    }
+
+    public function actionUpdateProfile($id)
+    {
+        $model = Profile::findOne($id);
+        $post = \Yii::$app->request->post();
+        if ($model->load(["Profile" => $post]) && $model->save()) {
+            return ["ok" => true, "message" => \Yii::t("app", "Profile updated successfully")];
+        }
+        return ["ok" => false, "message" => $model->getErrorSummary(true)];
     }
 }

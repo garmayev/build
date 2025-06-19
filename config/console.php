@@ -7,7 +7,7 @@ $config = [
     'id' => 'basic-console',
     'basePath' => dirname(__DIR__),
     'language' => 'ru',
-    'bootstrap' => ['log', 'app\modules\user\Bootstrap'],
+    'bootstrap' => ['log'],
     'controllerNamespace' => 'app\commands',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
@@ -65,17 +65,12 @@ $config = [
         'migrate' => [
             'class' => 'yii\console\controllers\MigrateController',
             'migrationPath' => [
-                '@yii/rbac/migrations',
                 '@app/migrations/',
+                '@yii/rbac/migrations',
             ],
         ]
     ],
     'params' => $params,
-    'modules' => [
-        'user' => [
-            'class' => 'app\modules\user\Module',
-        ]
-    ]
 ];
 
 if (YII_ENV_DEV) {

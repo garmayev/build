@@ -29,8 +29,8 @@ $actionButtons = [
         'label' => \Yii::t('app', 'View'),
         'url' => ['view'],
     ], [
-        'label' => \Yii::t('app', 'Profile'),
-        'url' => ['profile'],
+        'label' => \Yii::t('app', 'Update'),
+        'url' => ['update'],
     ], [
         'label' => \Yii::t('app', 'Invite Mail'),
         'url' => ['invite'],
@@ -65,9 +65,32 @@ $actionButtons = [
             [
                 'class' => 'yii\grid\SerialColumn',
             ],
-            'name',
+            [
+                'attribute' => 'profile.name',
+                'format' => 'raw',
+                'value' => function (User $model) {
+                    $profileName = ltrim("{$model->profile->family} {$model->profile->name} {$model->profile->surname}");
+                    return strlen($profileName) ? $profileName : $model->username;
+                }
+            ],
             'email:email',
-            'profile.phone',
+            [
+                'attribute' => 'profile.phone',
+                'format' => 'raw',
+                'value' => function (User $model) {
+                    return !empty($model->profile->phone) ? $model->profile->phone : Html::tag('span', \Yii::t('yii', '(not set)'), ['class' => 'not-set']);
+                }
+            ],
+            'profile.birthday:date',
+            [
+                'format' => 'raw',
+                'label' => \Yii::t('yii', 'Social'),
+                'value' => function (User $model) {
+                    $result = $model->profile->chat_id ? Html::tag('span', "", ['class' => 'fab fa-telegram mx-2']) : '';
+                    $result .= $model->profile->device_id ? Html::tag('span', "", ['class' => 'fas fa-mobile mx-2']) : '';
+                    return !empty($result) ? $result : Html::tag('span', \Yii::t('yii', '(not set)'), ['class' => 'not-set']);
+                }
+            ],
             [
                 'class' => \microinginer\dropDownActionColumn\DropDownActionColumn::className(),
                 'items' => $actionButtons
