@@ -119,23 +119,21 @@ class Requirement extends \yii\db\ActiveRecord
     public function getCoworkers()
     {
         $query = Coworker::find()
-            ->select('filter.*, coworker.*')
-//            ->joinWith('coworkerProperties')
-//            ->leftJoin('filter', "filter.id = $this->filter_id")
+            ->select('filter.*, user.*')
             ->where(['filter.id' => $this->filter_id])
             ->andWhere(['filter.category_id' => 'coworker.category_id'])
             ->andWhere(['property_id' => $this->property_id]);
-        switch ($this->type) {
-            case \Yii::t('app', 'Less'):
+        switch (strtolower($this->type)) {
+            case 'Less':
                 $query->andWhere(['<=', 'value', $this->value]);
                 break;
-            case \Yii::t('app', 'More'):
+            case 'More':
                 $query->andWhere(['>=', 'value', $this->value]);
                 break;
-            case \Yii::t('app', 'Equal'):
+            case 'Equal':
                 $query->andWhere(['=', 'value', $this->value]);
                 break;
-            case \Yii::t('app', 'Not Equal'):
+            case 'Not Equal':
                 $query->andWhere(['<>', 'value', $this->value]);
                 break;
         }

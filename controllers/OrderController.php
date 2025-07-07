@@ -21,7 +21,7 @@ class OrderController extends Controller
                     [
                         'allow' => true,
                         'actions' => ['index', 'view', 'delete', 'coworker', 'material'],
-                        'roles' => ['@'],
+                        'roles' => ['employee'],
                     ],
                     [
                         'allow' => true,
@@ -69,7 +69,9 @@ class OrderController extends Controller
         if (\Yii::$app->request->isPost) {
             $model->files = UploadedFile::getInstances($model, 'files');
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
-                $result = $model->sendAndUpdateTelegramNotifications();
+                \Yii::error($model->attributes);
+//                @TODO: Remove comment
+//                $result = $model->sendAndUpdateTelegramNotifications();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             }

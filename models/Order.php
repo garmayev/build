@@ -91,9 +91,6 @@ class Order extends \yii\db\ActiveRecord
                 'createdByAttribute' => 'created_by',
                 'updatedByAttribute' => false,
             ],
-//            [
-//                'class' => LogBehavior::class,
-//            ]
         ];
     }
 
@@ -301,7 +298,7 @@ class Order extends \yii\db\ActiveRecord
      */
     public function getCoworkers(): ActiveQuery
     {
-        return $this->hasMany(Coworker::class, ['id' => 'coworker_id'])
+        return $this->hasMany(User::class, ['id' => 'coworker_id'])
             ->viaTable('order_coworker', ['order_id' => 'id']);
     }
 
@@ -379,17 +376,6 @@ class Order extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets related Material models through order_material table
-     *
-     * @return ActiveQuery Query for related Materials
-     */
-    public function getMaterials()
-    {
-        return $this->hasMany(Material::class, ['id' => 'material_id'])
-            ->viaTable('order_material', ['order_id' => 'id']);
-    }
-
-    /**
      * Gets related OrderCoworker models
      *
      * @return ActiveQuery Query for related OrderCoworkers
@@ -423,8 +409,9 @@ class Order extends \yii\db\ActiveRecord
      * Gets related Filter models through order_filter table
      *
      * @return ActiveQuery Query for related Filters
+     * @throws InvalidConfigException
      */
-    public function getFilters()
+    public function getFilters(): ActiveQuery
     {
         return $this->hasMany(Filter::class, ['id' => 'filter_id'])
             ->viaTable('order_filter', ['order_id' => 'id']);
@@ -435,7 +422,7 @@ class Order extends \yii\db\ActiveRecord
      *
      * @return ActiveQuery Query for related TelegramMessages
      */
-    public function getTelegramMessages()
+    public function getTelegramMessages(): ActiveQuery
     {
         return $this->hasMany(TelegramMessage::class, ['order_id' => 'id']);
     }
@@ -542,7 +529,6 @@ class Order extends \yii\db\ActiveRecord
                     }
                 }
             }
-//            \Yii::error($this->owner->attributes);
             if ( $this->owner->chat_id ) {
                 $notificationService->sendTelegramMessage($this->owner->chat_id, "<b>".\Yii::t("app", "Order #{id}", ["id" => $this->id])."</b>\n".$message, null, $this->id);
             }

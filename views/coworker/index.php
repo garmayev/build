@@ -32,12 +32,6 @@ $actionButtons = [
         'label' => \Yii::t('app', 'Update'),
         'url' => ['update'],
     ], [
-        'label' => \Yii::t('app', 'Invite Mail'),
-        'url' => ['invite'],
-    ], [
-        'label' => \Yii::t('app', 'Telegram Link'),
-        'url' => ['telegram-link']
-    ], [
         'label' => \Yii::t('app', 'Delete'),
         'url' => ['delete'],
         'linkOptions' => [
@@ -89,6 +83,17 @@ $actionButtons = [
                     $result = $model->profile->chat_id ? Html::tag('span', "", ['class' => 'fab fa-telegram mx-2']) : '';
                     $result .= $model->profile->device_id ? Html::tag('span', "", ['class' => 'fas fa-mobile mx-2']) : '';
                     return !empty($result) ? $result : Html::tag('span', \Yii::t('yii', '(not set)'), ['class' => 'not-set']);
+                }
+            ],
+            [
+                'attribute' => 'userProperties',
+                'format' => 'raw',
+                'value' => function (User $model) {
+                    $result = "";
+                    foreach ($model->userProperties as $userProperty) {
+                        $result .= "<p>{$userProperty->category->title} {$userProperty->property->title} {$userProperty->value} {$userProperty->dimension->title}</p>";
+                    }
+                    return strlen($result) ? $result : "<span class='not-set'>" . \Yii::t('yii', '(not set)') . "</span>";
                 }
             ],
             [

@@ -54,9 +54,8 @@ class CoworkerController extends ActiveController
             'create' => ['POST', 'OPTIONS'],
             'update' => ['POST', 'PUT', 'OPTIONS'],
             'delete' => ['DELETE', 'OPTIONS'],
-            'check' => ['POST', 'OPTIONS'],
-            'login' => ['POST', 'OPTIONS'],
             'calendar-month' => ['GET', 'OPTIONS'],
+            'advanced' => ['POST', 'OPTIONS'],
         ];
     }
 
@@ -190,5 +189,24 @@ class CoworkerController extends ActiveController
             ];
         }
         return $result;
+    }
+
+    public function actionAdvanced($id)
+    {
+        $model = User::findOne($id);
+        $db = \Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            if ($model->load(\Yii::$app->request->post()) && $model->save()) {
+                $transaction->commit();
+                return ['ok' => true, 'model' => $model];
+            }
+            $transaction->rollBack();
+            return ["ok" => false];
+        } catch (\Exception $exception) {
+            $transaction->rollBack();
+            \Yii::error($exception->getMessage());
+            throw $exception;
+        }
     }
 }

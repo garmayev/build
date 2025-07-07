@@ -186,5 +186,8 @@ return [
     'Password checked successfully' => 'Пароль успешно проверен',
     'Account updated successfully' => 'Аккаунт успешно обновлен',
     'Profile updated successfully' => 'Профиль успешно обновлен',
-    'Name' => 'Имя'
+    'Name' => 'Имя',
+    'Active' => 'Активирован',
+    'Disabled' => 'Отключен',
+    'Inactive' => 'Не активирован'
 ];

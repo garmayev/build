@@ -27,7 +27,7 @@ class Hours extends ActiveRecord
         return [
             [['coworker_id'], 'required'],
             [['coworker_id', 'order_id'], 'integer'],
-            [['coworker_id'], 'exist', 'skipOnError' => true, 'targetClass' => Coworker::className(), 'targetAttribute' => ['coworker_id' => 'id']],
+            [['coworker_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['coworker_id' => 'id']],
             [['order_id'], 'exist', 'skipOnError' => true, 'targetClass' => Order::className(), 'targetAttribute' => ['order_id' => 'id']],
             [['count'], 'integer'],
             [['is_payed'], 'boolean'],

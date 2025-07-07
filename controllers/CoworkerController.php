@@ -85,24 +85,18 @@ class CoworkerController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Coworker();
-        $userForm = new UserRegisterForm();
+        $model = new Profile();
         $transaction = Yii::$app->db->beginTransaction();
 
         try {
             if ($this->request->isPost) {
-                $model->user_id = Yii::$app->user->identity->id;
-                $model->files = UploadedFile::getInstances($model, 'files');
+                $model->referrer_id = Yii::$app->user->identity->id;
+//                $model->files = UploadedFile::getInstances($model, 'files');
                 $data = \Yii::$app->request->post();
-                if ($model->load($data) && $model->validate()) {
-                    if ($model->upload() && $model->save()) {
-                        if ($data['Coworker']['coworkerProperties']) {
-                            $model->setCoworkerProperties($data["Coworker"]["coworkerProperties"]);
-                        }
-                        $transaction->commit();
-                        \Yii::$app->session->setFlash('success', \Yii::t('app', 'Coworker was successfully created'));
-                        return $this->redirect(['view', 'id' => $model->id]);
-                    }
+                if ($model->load($data) && $model->save()) {
+                    $transaction->commit();
+                    \Yii::$app->session->setFlash('success', \Yii::t('app', 'Coworker was successfully created'));
+                    return $this->redirect(['view', 'id' => $model->id]);
                 }
                 $transaction->rollBack();
                 \Yii::$app->session->setFlash('danger', \Yii::t('app', 'Coworker is not created'));

@@ -22,6 +22,8 @@ use yii\web\IdentityInterface;
  * @property array $statusList
  * @property string $statusName
  * @property string $name
+ * @property UserProperty[] $userProperties
+ * @property Property[] $properties
  */
 class User extends ActiveRecord implements IdentityInterface
 {
@@ -41,6 +43,7 @@ class User extends ActiveRecord implements IdentityInterface
             [['username', 'email', 'auth_key', 'access_token'], 'string'],
             [['status'], 'integer'],
             [['status'], 'default', 'value' => self::STATUS_ACTIVE],
+            [['userProperties'], 'safe'],
         ];
     }
 
@@ -53,7 +56,10 @@ class User extends ActiveRecord implements IdentityInterface
             'access_token',
             'status',
             'auth_key',
-            'profile'
+            'profile',
+            'userProperties' => function (User $model) {
+                return $model->userProperties;
+            }
         ];
     }
 
@@ -124,23 +130,6 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->hasOne(Profile::class, ['id' => 'id']);
     }
 
-    public function getStatusList()
-    {
-        return [
-            self::STATUS_DISABLED => \Yii::t('app', 'Disabled'),
-            self::STATUS_ACTIVE => \Yii::t('app', 'Active'),
-            self::STATUS_INACTIVE => \Yii::t('app', 'Inactive')
-        ];
-    }
-
-    public function getStatusName($status = null): string
-    {
-        if (empty($status)) {
-            $status = $this->status;
-        }
-        return $this->statusList[$status];
-    }
-
     public function setProfile($data)
     {
         $db = \Yii::$app->db;
@@ -163,6 +152,55 @@ class User extends ActiveRecord implements IdentityInterface
             \Yii::error($e);
             throw $e;
         }
+    }
+
+    public function getUserProperties()
+    {
+        return $this->hasMany(UserProperty::class, ['user_id' => 'id']);
+    }
+
+    public function getProperties()
+    {
+        return $this->hasMany(Property::class, ['id' => 'property_id'])->via('userProperties');
+    }
+
+    public function setUserProperties($data)
+    {
+        foreach ($this->userProperties as $property) {
+            $this->unlink('userProperties', $property, true);
+        }
+        $db = \Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            foreach ($data as $item) {
+                $property = new UserProperty();
+                if ($property->load(['UserProperty' => $item]) && $property->save()) {
+                    $this->link('userProperties', $property);
+                }
+            }
+            $transaction->commit();
+        } catch (\Exception $exception) {
+            $transaction->rollBack();
+            \Yii::error($exception);
+            throw $exception;
+        }
+    }
+
+    public function getStatusList()
+    {
+        return [
+            self::STATUS_DISABLED => \Yii::t('app', 'Disabled'),
+            self::STATUS_ACTIVE => \Yii::t('app', 'Active'),
+            self::STATUS_INACTIVE => \Yii::t('app', 'Inactive')
+        ];
+    }
+
+    public function getStatusName($status = null): string
+    {
+        if (empty($status)) {
+            $status = $this->status;
+        }
+        return $this->statusList[$status];
     }
 
     public function getName(): string

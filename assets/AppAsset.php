@@ -24,16 +24,13 @@ class AppAsset extends AssetBundle
     public $baseUrl = '@web';
     public $css = [
         '/css/site.css',
-        '/react/css/main.b748a397.css',
+        '/react/css/main.d37e276b.css',
     ];
     public $js = [
         '/js/jquery.maskedinput.js',
         '/react/js/453.abd1f321.chunk.js',
-        '/react/js/main.4d1d9fe7.js',
+        '/react/js/main.ca855874.js',
     ];
-//    public $jsOptions = [
-//        'position' => \yii\web\View::POS_LOAD,
-//    ];
     public $depends = [
         YiiAsset::class,
         JQueryAsset::class,

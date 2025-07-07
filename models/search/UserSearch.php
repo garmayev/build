@@ -24,7 +24,7 @@ class UserSearch extends Model
 
     public function search($params, $roleName = 'employee')
     {
-        $userIds = \Yii::$app->authManager->getUserIdsByRole($roleName);
+        $userIds = array_merge(\Yii::$app->authManager->getUserIdsByRole('employee'), \Yii::$app->authManager->getUserIdsByRole('director'), \Yii::$app->authManager->getUserIdsByRole('admin'));
         $query = User::find()->joinWith(['profile'])->where(['user.id' => $userIds]);
 
         if ($this->load($params) && $this->validate()) {
