@@ -44,7 +44,7 @@ echo GridView::widget([
         ],
         'date:date',
         [
-            'label' => \Yii::t("app", 'full'),
+            'label' => \Yii::t("app", 'Full'),
             'format' => 'raw',
             'value' => function (Order $model) {
                 $totalCount = 0;
@@ -53,6 +53,7 @@ echo GridView::widget([
             }
         ], [
             'attribute' => 'owner',
+            'label' => \Yii::t("app", 'Owner'),
             'value' => function (Order $model) {
                 return $model->owner->name;
             }

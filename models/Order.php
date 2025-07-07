@@ -43,7 +43,7 @@ use yii\helpers\ArrayHelper;
  *
  * @property int $requiredCoworkers
  * @property int $issetCoworkers
- * @property Coworker[] $suitableCoworkers
+ * @property User[] $suitableCoworkers
  */
 class Order extends \yii\db\ActiveRecord
 {
@@ -298,8 +298,8 @@ class Order extends \yii\db\ActiveRecord
      */
     public function getCoworkers(): ActiveQuery
     {
-        return $this->hasMany(User::class, ['id' => 'coworker_id'])
-            ->viaTable('order_coworker', ['order_id' => 'id']);
+        return $this->hasMany(User::class, ['id' => 'user_id'])
+            ->viaTable('order_user', ['order_id' => 'id']);
     }
 
     /**
@@ -518,14 +518,16 @@ class Order extends \yii\db\ActiveRecord
             ];
 
             foreach ($this->suitableCoworkers as $coworker) {
+                \Yii::error($coworker->attributes);
                 $telegramMessages = $this->telegramMessages;
+//                TODO: Remove comment for prod
                 if (count($telegramMessages)) {
                     foreach ($telegramMessages as $telegramMessage) {
-                        $telegramMessage->editMessageText($message, $keyboard);
+//                        $telegramMessage->editMessageText($message, $keyboard);
                     }
                 } else {
                     if ($coworker->chat_id) {
-                        $notificationService->sendTelegramMessage($coworker->chat_id, "<b>".\Yii::t("app", "Order #{id}", ["id" => $this->id])."</b>\n".$message, $keyboard, $this->id);
+//                        $notificationService->sendTelegramMessage($coworker->chat_id, "<b>".\Yii::t("app", "Order #{id}", ["id" => $this->id])."</b>\n".$message, $keyboard, $this->id);
                     }
                 }
             }

@@ -2,9 +2,9 @@
 
 namespace app\models\search;
 
+use app\models\User;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\Coworker;
 
 /**
  * CoworkerSearch represents the model behind the search form of `app\models\Coworker`.
@@ -12,27 +12,20 @@ use app\models\Coworker;
  * @property int $category_id
  * @property string $text
  */
-class CoworkerSearch extends Coworker
+class CoworkerSearch extends User
 {
-    public $text = "";
-    /**
-     * {@inheritdoc}
-     */
-    public function rules()
-    {
-        return [
-            [['id', 'category_id'], 'integer'],
-            [['text'], 'string']
-        ];
-    }
+    public string $name = "";
+    public string $phone = "";
+    public string $email = "";
 
     /**
      * {@inheritdoc}
      */
-    public function scenarios()
+    public function rules(): array
     {
-        // bypass scenarios() implementation in the parent class
-        return Model::scenarios();
+        return [
+            [['name', 'phone', 'email'], 'string']
+        ];
     }
 
     /**
@@ -44,27 +37,46 @@ class CoworkerSearch extends Coworker
      */
     public function search($params)
     {
-        $query = Coworker::find()->where(['or', ['created_by' => \Yii::$app->user->identity->getId()], ['priority' => \app\models\Coworker::PRIORITY_LOW]]);
+        $ids = \Yii::$app->authManager->getUserIdsByRole("employee");
+        $query = User::find()
+            ->joinWith('profile')
+            ->joinWith('userProperties')
+            ->where(['user.id' => $ids])
+            ->andWhere(['or',
+                ['user.referrer_id' => \Yii::$app->user->identity->getId()],
+                ['user.priority_level' => \app\models\Coworker::PRIORITY_LOW]
+            ]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
 
-//        $this->load($params);
-//
+        $this->load($params);
+
         if (!$this->validate()) {
             return $dataProvider;
         }
 
-        // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'category_id' => $this->category_id,
+            'user.id' => $this->id,
         ]);
-        $query->andFilterWhere(['or', ['like', 'phone', $this->text], ['like', 'firstname', $this->text], ['like', 'lastname', $this->text], ['like', 'email', $this->text]]);
-
-//        \Yii::error($query->createCommand()->getRawSql());
+        $query->andFilterWhere(['or',
+            ['like', 'profile.phone', preg_replace('/[\+\-\ \(\)]*/', "", $this->phone)],
+            ['like', 'profile.family', $this->name],
+            ['like', 'profile.name', $this->name],
+            ['like', 'user.username', $this->name],
+            ['like', 'user.email', $this->email]]);
 
         return $dataProvider;
+    }
+
+    public function getPhone()
+    {
+        return $this->profile->phone;
+    }
+
+    public function getBirthday()
+    {
+        return $this->profile->birthday;
     }
 }

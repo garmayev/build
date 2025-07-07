@@ -29,9 +29,7 @@ class TelegramController extends \yii\web\Controller
 
         // Handle /start command
         Command::run("/start", function ($telegram, $args) {
-//            \Yii::error($args);
             $chatId = $telegram->input->message ? $telegram->input->message->from->id : null;
-//            \Yii::error($chatId);
             if (!$chatId) {
                 return;
             }
@@ -62,7 +60,6 @@ class TelegramController extends \yii\web\Controller
 
         // Handle /agree command
         Command::run("/accept", function ($telegram, $args) {
-//            \Yii::error($args);
             if (!$telegram->input->callback_query) {
                 return;
             }
@@ -79,7 +76,6 @@ class TelegramController extends \yii\web\Controller
 
             $order = Order::findOne($orderId);
             $coworker = Coworker::findOne(['chat_id' => $telegram->input->callback_query->from["id"]]);
-//            \Yii::error( $coworker->chat_id );
 
             if (!$order || !$coworker) {
                 \Yii::error([

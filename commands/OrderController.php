@@ -15,10 +15,9 @@ class OrderController extends Controller
     {
         $order = Order::findOne($order_id);
         foreach ($order->suitableCoworkers as $coworker) {
-            echo "{$coworker->firstname} {$coworker->lastname}\n";
+            $name = strlen(ltrim($coworker->profile->fullName)) ? $coworker->profile->fullName : $coworker->username;
+            echo "{$name}\n";
         }
-//        $result = $order->sendAndUpdateTelegramNotifications();
-//        print_r($result);
     }
 
     public function actionNotify($order_id = null, $priority = Coworker::PRIORITY_HIGH)

@@ -273,13 +273,13 @@ class Filter extends \yii\db\ActiveRecord
      */
     public function findCoworkers($priority)
     {
-        $cacheKey = 'filter-find-coworkers-' . $this->id . '-' . $priority;
         $query = User::find()
             ->joinWith('properties')
+            ->joinWith('userProperties')
             ->where([
-                'coworker.category_id' => $this->category_id,
-                'coworker.priority' => $priority,
-                'coworker.created_by' => isset(\Yii::$app->user) ? \Yii::$app->user->id : 1,
+                'user_property.category_id' => $this->category_id,
+                'user.priority_level' => $priority,
+                'user.referrer_id' => isset(\Yii::$app->user) ? \Yii::$app->user->id : 1,
             ]);
         $resultQuery = $this->extracted($query);
         return $resultQuery->all();
@@ -295,7 +295,7 @@ class Filter extends \yii\db\ActiveRecord
     protected function extracted(ActiveQuery $query): ActiveQuery
     {
         foreach ($this->requirements as $requirement) {
-            $query->andWhere(['coworker_property.property_id' => $requirement->property_id]);
+            $query->andWhere(['user_property.property_id' => $requirement->property_id]);
             
             $value = $requirement->value;
             switch ($requirement->type) {

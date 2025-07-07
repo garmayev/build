@@ -3,8 +3,6 @@
 namespace app\modules\api\controllers;
 
 use app\models\Profile;
-use yii\filters\AccessControl;
-use yii\rest\Controller;
 use app\models\User;
 
 class UserController extends \yii\rest\Controller

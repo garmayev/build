@@ -105,9 +105,13 @@ class CoworkerController extends ActiveController
 
     public function actionSearch($text)
     {
-        $models = Coworker::find()
-            ->where(['user_id' => \Yii::$app->user->getId()])
-            ->andWhere(['or', ['like', 'firstname', $text], ['like', 'lastname', $text], ['like', 'email', $text], ['like', 'phone', $text]]);
+        $models = User::find()
+            ->where(['referrer_id' => \Yii::$app->user->getId()])
+            ->andWhere(['or',
+                ['like', 'fullName', $text],
+                ['like', 'email', $text],
+                ['like', 'phone', $text]
+            ]);
 
         return ["ok" => true, "data" => $models->all()];
     }
@@ -127,7 +131,7 @@ class CoworkerController extends ActiveController
         $suitableOrders = [];
 
         foreach ($orders as $order) {
-            foreach ( $order->getSuitableCoworkers($order->priority_level) as $item ) {
+            foreach ( $order->getSuitableCoworkers() as $item ) {
                 if ($coworker->id === $item->id) {
                     $suitableOrders[] = $order;
                 }
