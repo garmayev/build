@@ -28,14 +28,14 @@ class UserController extends \yii\rest\Controller
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email', 'check', 'set-token'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email', 'check', 'set-token', 'info'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login', 'info'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login', 'register', 'check-username', 'check-email', 'set-token'],
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login', 'register', 'check-username', 'check-email', 'set-token', 'info'],
             ],
         ];
     }
@@ -143,5 +143,16 @@ class UserController extends \yii\rest\Controller
             return ["ok" => $saved, "message" => !$saved ? $model->errors : ""];
         }
         return ["ok" => false, "message" => \Yii::t("app", "Missing token")];
+    }
+
+    public function actionInfo($id)
+    {
+        $coworker = \app\models\Coworker::findOne($id);
+        $model = \app\models\User::findOne(['id' => $coworker->user_id]);
+        if (empty($model)) {
+            \Yii::$app->user->identity;
+        }
+        return $model;
+//        return ['ok' => true, ''];
     }
 }

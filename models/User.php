@@ -16,7 +16,7 @@ use yii\web\IdentityInterface;
  *
  * @property Profile $profile
  */
-class User extends \app\modules\user\models\User implements IdentityInterface
+class User extends ActiveRecord implements IdentityInterface
 {
     const STATUS_DISABLED = 0;
     const STATUS_ACTIVE = 1;
@@ -49,6 +49,9 @@ class User extends \app\modules\user\models\User implements IdentityInterface
             'coworker' => function (User $model) {
                 return $model->coworker;
             },
+            'profile' => function (User $model) {
+                return $model->profile;
+            }
 //            'name',
         ];
     }
@@ -146,5 +149,10 @@ class User extends \app\modules\user\models\User implements IdentityInterface
 //        }
 //        return $this->username;
         return $this->username;
+    }
+
+    public function getProfile()
+    {
+        return $this->hasOne(Profile::class, ['user_id' => 'id']);
     }
 }

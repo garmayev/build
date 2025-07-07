@@ -100,7 +100,7 @@
                                 'url' => ['/dimension/index'],
                                 'active' => \Yii::$app->controller->id === 'dimension',
                             ], [
-                                'label' => \Yii::t('user', 'Users'),
+                                'label' => \Yii::t('app', 'Users'),
                                 'icon' => 'person',
                                 'url' => ['/user/admin/index'],
                                 'active' => \Yii::$app->controller->id === 'admin',

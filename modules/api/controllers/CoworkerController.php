@@ -20,26 +20,27 @@ class CoworkerController extends ActiveController
             'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
-                    'Origin' => ['*'],
-                    'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
-                    'Access-Control-Request-Headers' => ['*'],
-                    'Access-Control-Allow-Credentials' => false,
-                    'Access-Control-Max-Age' => 86400,
-                    'Access-Control-Allow-Origin' => ['*'],
+                    'Origin' => [ 'http://localhost:3000', 'https://web.telegram.org' ],
+                    'Access-Control-Allow-Origin' => [ 'http://localhost:3000', 'https://web.telegram.org' ],
+                    'Access-Control-Request-Method' => [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS' ],
+                    'Access-Control-Request-Headers' => [ 'Origin', 'X-Auth-Token', 'Authorization', 'Content-Type', 'X-Requested-With', 'X-Wsse' ],
+                    'Access-Control-Allow-Credentials' => true,
+                    'Access-Control-Max-Age' => 3600,
+                    'Access-Control-Expose-Headers' => [ 'X-Pagination-Current-Page' ],
                 ],
             ],
             'access' => [
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => [] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['calendar-month'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders', 'calendar-month'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD']
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'calendar-month']
             ],
         ];
     }
@@ -54,6 +55,7 @@ class CoworkerController extends ActiveController
             'delete' => ['DELETE', 'OPTIONS'],
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
+            'calendar-month' => ['POST', 'GET', 'OPTIONS']
         ];
     }
 
@@ -70,6 +72,10 @@ class CoworkerController extends ActiveController
         $actions['index']['dataFilter'] = [
             'class' => \yii\data\ActiveDataFilter::class,
             'searchModel' => $this->modelClass,
+        ];
+//        $actions['calendarMonth'] = [$this, 'actionCalendarMonth'];
+        $actions['options'] = [
+            'class' => \yii\rest\OptionsAction::class,
         ];
         return $actions;
     }
@@ -89,7 +95,7 @@ class CoworkerController extends ActiveController
 
     public function actionImages() 
     {
-        \Yii::error("check?");
+//        \Yii::error("check?");
         $files = $_FILES;
         $target_path = "/upload/".basename($files['file']['name']);
 
