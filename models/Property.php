@@ -3,7 +3,6 @@
 namespace app\models;
 
 use Yii;
-use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "property".
@@ -11,8 +10,8 @@ use yii\helpers\ArrayHelper;
  * @property int $id
  * @property string $title
  *
- * @property CoworkerProperty[] $coworkerProperties
- * @property Coworker[] $coworkers
+ * @property UserProperty[] $userProperties
+ * @property Property[] $properties
  * @property Dimension[] $dimensions
  * @property Filter[] $filters
  * @property MaterialProperty[] $materialProperties
@@ -36,7 +35,7 @@ class Property extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['title'], 'required'],
@@ -45,7 +44,7 @@ class Property extends \yii\db\ActiveRecord
         ];
     }
 
-    public function fields()
+    public function fields(): array
     {
         return [
             'id',
@@ -59,7 +58,7 @@ class Property extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id' => Yii::t('app', 'ID'),
@@ -73,9 +72,9 @@ class Property extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getCoworkerProperties()
+    public function getUserProperties(): \yii\db\ActiveQuery
     {
-        return $this->hasMany(CoworkerProperty::class, ['property_id' => 'id']);
+        return $this->hasMany(UserProperty::class, ['property_id' => 'id']);
     }
 
     /**

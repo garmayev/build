@@ -11,7 +11,7 @@ $config = [
     'name' => 'Стройка',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
-        '@npm'   => '@vendor/npm-asset',
+        '@npm' => '@vendor/npm-asset',
     ],
     'components' => [
         'request' => [
@@ -23,6 +23,7 @@ $config = [
         'user' => [
             'identityClass' => 'app\models\User',
             'enableAutoLogin' => true,
+            'loginUrl' => ['user/login'],
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -67,7 +68,7 @@ $config = [
                 'app*' => [
                     'class' => 'yii\i18n\PhpMessageSource',
                     'fileMap' => [
-                        'app'       => 'app.php',
+                        'app' => 'app.php',
                         'app/error' => 'error.php',
                     ],
                 ],

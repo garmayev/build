@@ -6,6 +6,7 @@ use app\models\Coworker;
 use app\models\forms\UserRegisterForm;
 use app\models\Profile;
 use app\models\search\CoworkerSearch;
+use app\models\search\UserSearch;
 use app\models\User;
 use Yii;
 use yii\filters\AccessControl;
@@ -32,7 +33,7 @@ class CoworkerController extends Controller
                     [
                         'allow' => true,
                         'actions' => ['index', 'view', 'create', 'update', 'delete'],
-                        'roles' => ['@'],
+                        'roles' => ['director'],
                     ],
                 ],
             ],
@@ -54,7 +55,7 @@ class CoworkerController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new CoworkerSearch();
+        $searchModel = new UserSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('index', [
@@ -84,26 +85,18 @@ class CoworkerController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Coworker();
-        $userForm = new UserRegisterForm();
+        $model = new Profile();
         $transaction = Yii::$app->db->beginTransaction();
 
         try {
             if ($this->request->isPost) {
-                $model->user_id = Yii::$app->user->identity->id;
-                $model->files = UploadedFile::getInstances($model, 'files');
+                $model->referrer_id = Yii::$app->user->identity->id;
+//                $model->files = UploadedFile::getInstances($model, 'files');
                 $data = \Yii::$app->request->post();
-                if ($model->load($data)) {
-                    if ($model->validate()) {
-                        if ($model->upload() && $model->save()) {
-                            if ($data['Coworker']['coworkerProperties']) {
-                                $model->setCoworkerProperties($data["Coworker"]["coworkerProperties"]);
-                            }
-                            $transaction->commit();
-                            \Yii::$app->session->setFlash('success', \Yii::t('app', 'Coworker was successfully created'));
-                            return $this->redirect(['view', 'id' => $model->id]);
-                        }
-                    }
+                if ($model->load($data) && $model->save()) {
+                    $transaction->commit();
+                    \Yii::$app->session->setFlash('success', \Yii::t('app', 'Coworker was successfully created'));
+                    return $this->redirect(['view', 'id' => $model->id]);
                 }
                 $transaction->rollBack();
                 \Yii::$app->session->setFlash('danger', \Yii::t('app', 'Coworker is not created'));
@@ -139,7 +132,6 @@ class CoworkerController extends Controller
                 $model->files = UploadedFile::getInstances($model, 'files');
                 if ($model->load($this->request->post()) && $model->validate()) {
                     if ($model->upload() && $model->save()) {
-                        TagDependency::invalidate(Yii::$app->cache, ['coworker-' . $id, 'coworker-list']);
                         $transaction->commit();
                         \Yii::$app->session->setFlash('success', \Yii::t('app', 'Coworker was successfully updated'));
                         return $this->redirect(['view', 'id' => $model->id]);
@@ -191,16 +183,9 @@ class CoworkerController extends Controller
 
     public function actionAccount($id)
     {
-        $coworker = $this->findModel($id);
-        if ( \Yii::$app->request->isPost ) {
-            $form = new \app\models\forms\UserRegisterForm();
-            if ( $form->load(\Yii::$app->request->post()) && $form->update() ) {
-                \Yii::$app->session->setFlash('success', \Yii::t('app', 'Account is updated'));
-                $this->redirect(['index']);
-            }
-        }
-        return $this->render('account', [
-            'model' => $coworker->user
+        $model = $this->findModel($id);
+        return $this->render('view', [
+            'model' => $model
         ]);
     }
 
@@ -224,7 +209,7 @@ class CoworkerController extends Controller
         $botName = \Yii::$app->params["bot_name"];
         $link = "https://t.me/{$botName}?start={$id}";
         \Yii::$app->session->setFlash('success', \yii\helpers\Html::a($link, $link, ['class' => 'text-primary']));
-        return $this->redirect( \Yii::$app->request->referrer );
+        return $this->redirect(\Yii::$app->request->referrer);
     }
 
     /**
@@ -236,7 +221,7 @@ class CoworkerController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = Coworker::findOne(['id' => $id])) !== null) {
+        if (($model = User::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

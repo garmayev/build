@@ -21,7 +21,7 @@
             <div class="info">
                 <a href="#" class="d-block">
                     <?php
-                    echo \Yii::$app->user->identity->username;
+                    echo \Yii::$app->user->identity->name;
                     ?>
                 </a>
             </div>
@@ -88,6 +88,7 @@
                     ], [
                         'label' => \Yii::t('app', 'Configuration'),
                         'icon' => 'cog',
+                        'visible' => \Yii::$app->user->can('admin'),
                         'items' => [
                             [
                                 'label' => \Yii::t('app', 'Properties'),
@@ -101,9 +102,9 @@
                                 'active' => \Yii::$app->controller->id === 'dimension',
                             ], [
                                 'label' => \Yii::t('app', 'Users'),
-                                'icon' => 'person',
-                                'url' => ['/user/admin/index'],
-                                'active' => \Yii::$app->controller->id === 'admin',
+                                'icon' => '',
+                                'url' => ['/user/index'],
+                                'active' => \Yii::$app->controller->id === 'user',
                             ]
                         ],
                     ]

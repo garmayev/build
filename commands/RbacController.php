@@ -2,7 +2,7 @@
 
 namespace app\commands;
 
-use app\modules\user\models\User;
+use app\models\User;
 use Yii;
 use yii\console\Controller;
 

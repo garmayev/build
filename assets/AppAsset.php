@@ -29,11 +29,8 @@ class AppAsset extends AssetBundle
     public $js = [
         '/js/jquery.maskedinput.js',
         '/react/js/453.abd1f321.chunk.js',
-        '/react/js/main.b289c4ea.js',
+        '/react/js/main.ca855874.js',
     ];
-//    public $jsOptions = [
-//        'position' => \yii\web\View::POS_LOAD,
-//    ];
     public $depends = [
         YiiAsset::class,
         JQueryAsset::class,

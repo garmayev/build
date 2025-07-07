@@ -3,11 +3,10 @@
 namespace app\modules\api\controllers;
 
 use app\models\Category;
-use yii\rest\ActiveController;
+use yii\rest\Controller;
 
-class CategoryController extends ActiveController
+class CategoryController extends Controller
 {
-    public $modelClass = Category::class;
 
     public function behaviors()
     {
@@ -15,10 +14,10 @@ class CategoryController extends ActiveController
             'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
-                    'Origin' => ['*'],
+                    'Origin' => ['http://localhost:3000', 'http://build.local', 'https://build.amgcompany.ru'],
                     'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
                     'Access-Control-Request-Headers' => ['*'],
-                    'Access-Control-Allow-Credentials' => false,
+                    'Access-Control-Allow-Credentials' => true,
                     'Access-Control-Max-Age' => 86400,
                     'Access-Control-Allow-Origin' => ['*'],
                 ],
@@ -29,12 +28,12 @@ class CategoryController extends ActiveController
                     // Guests
                     [ 'allow' => true, 'roles' => ['?'], 'actions' => [] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['index', 'check', 'list', 'view', 'create', 'suitableOrders', 'calendar-month'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['index', 'list', 'view', 'info'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'index']
+                'except' => ['index', 'list', 'view'],
             ],
         ];
     }
@@ -49,6 +48,7 @@ class CategoryController extends ActiveController
             'delete' => ['DELETE', 'OPTIONS'],
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
+            'calendar-month' => ['GET', 'OPTIONS'],
         ];
     }
 
@@ -56,20 +56,6 @@ class CategoryController extends ActiveController
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return parent::beforeAction($action);
-    }
-
-    public function actions()
-    {
-        $actions = parent::actions();
-        unset($actions['index']);
-        return $actions;
-    }
-
-    public function prepareDataProvider()
-    {
-        return new \yii\data\ActiveDataProvider([
-            'query' => \app\models\Coworker::find()->where(['created_by' => \Yii::$app->user->getId()])
-        ]);
     }
 
     public function actionIndex($type = 1)

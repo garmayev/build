@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use Yii;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
@@ -12,9 +13,17 @@ use yii\web\IdentityInterface;
  * @property string $password
  * @property string $password_hash
  * @property string $auth_key
- * @property string $chat_id
+ * @property string $access_token
+ * @property int $status
+ * @property int $referrer_id
  *
+ * @property User $referrer
  * @property Profile $profile
+ * @property array $statusList
+ * @property string $statusName
+ * @property string $name
+ * @property UserProperty[] $userProperties
+ * @property Property[] $properties
  */
 class User extends ActiveRecord implements IdentityInterface
 {
@@ -31,9 +40,10 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             [['username', 'email', 'auth_key', 'access_token', 'password_hash'], 'required'],
-            [['username', 'email', 'auth_key', 'access_token', 'chat_id', 'device_id'], 'string'],
+            [['username', 'email', 'auth_key', 'access_token'], 'string'],
             [['status'], 'integer'],
             [['status'], 'default', 'value' => self::STATUS_ACTIVE],
+            [['userProperties'], 'safe'],
         ];
     }
 
@@ -46,13 +56,10 @@ class User extends ActiveRecord implements IdentityInterface
             'access_token',
             'status',
             'auth_key',
-            'coworker' => function (User $model) {
-                return $model->coworker;
-            },
-            'profile' => function (User $model) {
-                return $model->profile;
+            'profile',
+            'userProperties' => function (User $model) {
+                return $model->userProperties;
             }
-//            'name',
         ];
     }
 
@@ -69,7 +76,6 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function findIdentityByAccessToken($token, $type = null): ?User
     {
-//        \Yii::error($token);
         return self::findOne(['access_token' => $token]);
     }
 
@@ -119,40 +125,91 @@ class User extends ActiveRecord implements IdentityInterface
         return \Yii::$app->security->validatePassword($password, $this->password_hash);
     }
 
-/*    public function getProfile(): \yii\db\ActiveQuery
+    public function getProfile(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Profile::class, ['id' => 'id']);
     }
 
     public function setProfile($data)
     {
-        $profile = $this->profile;
-        if (isset($profile)) {
-            if ($profile->load() && $profile->save()) {
-                return ["ok" => true];
-            } else {
-                return ["ok" => false];
+        $db = \Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            $profile = $this->profile;
+            if (empty($profile)) {
+                $profile = new Profile();
             }
+            $profile->setAttributes($data);
+            if ($profile->save()) {
+                $this->link('profile', $profile);
+                $transaction->commit();
+            } else {
+                $transaction->rollBack();
+                \Yii::error($profile->errors);
+            }
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            \Yii::error($e);
+            throw $e;
         }
-    } */
+    }
 
-    public function getCoworker()
+    public function getUserProperties()
     {
-        return $this->hasOne(Coworker::class, ['user_id' => 'id']);
+        return $this->hasMany(UserProperty::class, ['user_id' => 'id']);
+    }
+
+    public function getProperties()
+    {
+        return $this->hasMany(Property::class, ['id' => 'property_id'])->via('userProperties');
+    }
+
+    public function setUserProperties($data)
+    {
+        foreach ($this->userProperties as $property) {
+            $this->unlink('userProperties', $property, true);
+        }
+        $db = \Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            foreach ($data as $item) {
+                $property = new UserProperty();
+                if ($property->load(['UserProperty' => $item]) && $property->save()) {
+                    $this->link('userProperties', $property);
+                }
+            }
+            $transaction->commit();
+        } catch (\Exception $exception) {
+            $transaction->rollBack();
+            \Yii::error($exception);
+            throw $exception;
+        }
+    }
+
+    public function getStatusList()
+    {
+        return [
+            self::STATUS_DISABLED => \Yii::t('app', 'Disabled'),
+            self::STATUS_ACTIVE => \Yii::t('app', 'Active'),
+            self::STATUS_INACTIVE => \Yii::t('app', 'Inactive')
+        ];
+    }
+
+    public function getStatusName($status = null): string
+    {
+        if (empty($status)) {
+            $status = $this->status;
+        }
+        return $this->statusList[$status];
     }
 
     public function getName(): string
     {
-//        $profileName = "{$this->profile->last_name} {$this->profile->patronymic} {$this->profile->first_name}";
-//        if (strlen($profileName) > 2) {
-//            return $profileName;
-//        }
-//        return $this->username;
-        return $this->username;
+        return $this->profile->fullName !== "" ? $this->profile->fullName : $this->username;
     }
 
-    public function getProfile()
+    public function getReferrer()
     {
-        return $this->hasOne(Profile::class, ['user_id' => 'id']);
+        return $this->hasOne(User::className(), ['id' => 'referrer_id']);
     }
 }

@@ -4,6 +4,9 @@
 
 		td {
 			min-width: 30px;
+			.button {
+				cursor: pointer;
+			}
 		}
 
 		td[colspan] {
@@ -19,25 +22,10 @@
 	}
 
 	tbody, tfoot {
-		td, span {
-			padding: 8px;
+		td {
+			padding: 0;
 			text-align: center;
 			font-size: 14px;
-		}
-
-		span {
-			display: inline-block;
-			min-width: 40px;
-		}
-
-		.is-payed {
-			color: white;
-			background: green;
-		}
-
-		.un-payed {
-			background: darkred;
-			color: white;
 		}
 	}
 
@@ -54,5 +42,51 @@
 	td {
 		vertical-align: middle;
 		text-align: center;
+		&.final {
+			display: inline-flex;
+			flex-direction: row;
+		}
+	}
+	.final {
+		.total, .is-payed, .un-payed {
+			cursor: pointer;
+			min-width: 40px;
+			min-height: 40px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+	}
+	.total {
+		cursor: pointer;
+		min-width: 40px;
+		height: 40px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.is-payed {
+		min-width: 40px;
+		color: white;
+		background: green;
+	}
+
+	.un-payed {
+		min-width: 40px;
+		background: darkred;
+		color: white;
+	}
+}
+
+.tooltip-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 40px;
+	cursor: pointer;
+	&.is-payed, &.un-payed {
+		min-width: 40px;
 	}
 }

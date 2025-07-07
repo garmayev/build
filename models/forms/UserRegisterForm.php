@@ -13,6 +13,8 @@ class UserRegisterForm extends Model
     public $current_password;
 
     private $_user;
+    public $is_mail = false;
+    public $referrer;
 
     public function rules()
     {
@@ -76,5 +78,25 @@ class UserRegisterForm extends Model
     public function getId()
     {
         return $this->_user->id;
+    }
+
+    public function register()
+    {
+        $this->_user = new User();
+        $this->_user->username = $this->username;
+        $this->_user->email = $this->email;
+        $this->_user->password_hash = \Yii::$app->security->generatePasswordHash($this->new_password);
+        $this->_user->auth_key = \Yii::$app->security->generateRandomString();
+        $this->_user->access_token = \Yii::$app->security->generateRandomString();
+        $this->_user->status = User::STATUS_ACTIVE;
+        $this->_user->profile = [];
+        $this->_user->referrer_id = $this->referrer;
+        if ($this->_user->save()) {
+            if ($this->is_mail) $this->sendMail();
+            return true;
+        } else {
+            \Yii::error($this->_user->errors);
+        }
+        return false;
     }
 }

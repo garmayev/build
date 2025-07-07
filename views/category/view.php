@@ -31,10 +31,11 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'id',
             'title',
-            'type',
-            'parent_id'
+            [
+                'attribute' => 'parent_id',
+                'label' => Yii::t('app', 'Parent category'),
+            ]
         ],
     ]) ?>
 
@@ -49,14 +50,16 @@ $this->params['breadcrumbs'][] = $this->title;
         'columns' => [
             [
                 'attribute' => 'property_id',
+                'label' => Yii::t('app', 'Property'),
                 'value' => function (CategoryProperty $categoryProperty) {
                     return $categoryProperty->property->title;
                 }
             ],
             [
                 'attribute' => 'dimension_id',
+                'label' => Yii::t('app', 'Dimension'),
                 'value' => function (CategoryProperty $categoryProperty) {
-                    return implode(', ', ArrayHelper::map( $categoryProperty->property->dimensions, 'id', 'title' ));
+                    return implode(', ', ArrayHelper::map($categoryProperty->property->dimensions, 'id', 'title'));
                 }
             ],
         ]

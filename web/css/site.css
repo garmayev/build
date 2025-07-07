@@ -95,3 +95,7 @@ a.desc:after {
 .main-sidebar {
     overflow-x: hidden;
 }
+
+.btn.btn-default.btn-sm.dropdown-toggle {
+    max-width: 40px;
+}

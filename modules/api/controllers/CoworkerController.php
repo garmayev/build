@@ -3,6 +3,8 @@
 namespace app\modules\api\controllers;
 
 use app\models\Coworker;
+use app\models\Hours;
+use app\models\User;
 use yii\rest\ActiveController;
 
 class CoworkerController extends ActiveController
@@ -20,27 +22,26 @@ class CoworkerController extends ActiveController
             'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
-                    'Origin' => [ 'http://localhost:3000', 'https://web.telegram.org' ],
-                    'Access-Control-Allow-Origin' => [ 'http://localhost:3000', 'https://web.telegram.org' ],
-                    'Access-Control-Request-Method' => [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS' ],
-                    'Access-Control-Request-Headers' => [ 'Origin', 'X-Auth-Token', 'Authorization', 'Content-Type', 'X-Requested-With', 'X-Wsse' ],
+                    'Origin' => ['http://localhost:3000', 'http://build.local', 'https://build.amgcompany.ru'],
+                    'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
+                    'Access-Control-Request-Headers' => ['*'],
                     'Access-Control-Allow-Credentials' => true,
-                    'Access-Control-Max-Age' => 3600,
-                    'Access-Control-Expose-Headers' => [ 'X-Pagination-Current-Page' ],
+                    'CORS_ORIGIN_WHITELIST' => '',
+                    'Access-Control-Max-Age' => 86400,
+                    'Access-Control-Allow-Origin' => ['*'],
                 ],
             ],
             'access' => [
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['calendar-month'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => [] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders', 'calendar-month'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'calendar-month']
             ],
         ];
     }
@@ -53,9 +54,8 @@ class CoworkerController extends ActiveController
             'create' => ['POST', 'OPTIONS'],
             'update' => ['POST', 'PUT', 'OPTIONS'],
             'delete' => ['DELETE', 'OPTIONS'],
-            'check' => ['POST', 'OPTIONS'],
-            'login' => ['POST', 'OPTIONS'],
-            'calendar-month' => ['POST', 'GET', 'OPTIONS']
+            'calendar-month' => ['GET', 'OPTIONS'],
+            'advanced' => ['POST', 'OPTIONS'],
         ];
     }
 
@@ -72,10 +72,6 @@ class CoworkerController extends ActiveController
         $actions['index']['dataFilter'] = [
             'class' => \yii\data\ActiveDataFilter::class,
             'searchModel' => $this->modelClass,
-        ];
-//        $actions['calendarMonth'] = [$this, 'actionCalendarMonth'];
-        $actions['options'] = [
-            'class' => \yii\rest\OptionsAction::class,
         ];
         return $actions;
     }
@@ -95,7 +91,7 @@ class CoworkerController extends ActiveController
 
     public function actionImages() 
     {
-//        \Yii::error("check?");
+        \Yii::error("check?");
         $files = $_FILES;
         $target_path = "/upload/".basename($files['file']['name']);
 
@@ -151,20 +147,66 @@ class CoworkerController extends ActiveController
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $result = [];
-        $coworkers = \app\models\Coworker::find()->where(['created_by' => \Yii::$app->user->getId()])->orWhere(['priority' => \app\models\Coworker::PRIORITY_LOW])->all();
-        foreach ($coworkers as $coworker) {
+        $users = \app\models\User::find()->all();
+        /**
+         * @var User $user
+         */
+        foreach ($users as $user) {
             $hours = \app\models\Hours::find()
                 ->where(['>=', 'date', date("$year-$month-01")])
                 ->andWhere(['<=', 'date', date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year))])
-                ->andWhere(['coworker_id' => $coworker->id])
+                ->andWhere(['coworker_id' => $user->id])
                 ->all();
+            $payed = 0;
+            $payed_hours = 0;
+            $un_payed = 0;
+            $un_payed_hours = 0;
+            /**
+             * @var Hours $hour
+             * @var int $payed
+             * @var int $un_payed
+             * @var int $payed_hours
+             * @var int $un_payed_hours
+             */
+            foreach ($hours as $hour) {
+                if ($hour->is_payed) {
+                    $payed += $hour->price;
+                    $payed_hours += $hour->count;
+                } else {
+                    $un_payed += $hour->price;
+                    $un_payed_hours += $hour->count;
+                }
+            }
             $result[] = [
-                'id' => $coworker->id,
-                'name' => $coworker->firstname.' '.$coworker->lastname,
+                'id' => $user->id,
+                'name' => $user->name,
                 'data' => $hours,
-                'total' => 0
+                'total' => 0,
+                'payed' => $payed,
+                'payed_hours' => $payed_hours,
+                'un_payed' => $un_payed,
+                'un_payed_hours' => $un_payed_hours,
             ];
         }
         return $result;
+    }
+
+    public function actionAdvanced($id)
+    {
+        $model = User::findOne($id);
+        $db = \Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            if ($model->load(\Yii::$app->request->post()) && $model->save()) {
+                $transaction->commit();
+                return ['ok' => true, 'model' => $model];
+            }
+            $transaction->rollBack();
+            return ["ok" => false];
+        } catch (\Exception $exception) {
+            $transaction->rollBack();
+            \Yii::error($exception->getMessage());
+            throw $exception;
+        }
     }
 }

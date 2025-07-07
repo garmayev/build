@@ -37,6 +37,7 @@ use yii\db\ActiveQuery;
  * @property Attachment[] $attachments
  * @property User $user
  * @property string $name
+ * @property Price $price
  *
  * @property Notification[] $notifications
  */
@@ -94,8 +95,8 @@ class Coworker extends \yii\db\ActiveRecord
     public function scenarios()
     {
         return [
-            self::SCENARIO_DEFAULT => ['firstname', 'lastname', 'phone', 'email', 'type', 'category_id', 'priority', 'user_id', 'coworkerProperties'],
-            self::SCENARIO_CUSTOMER => ['firstname', 'lastname', 'phone', 'email', 'type', 'priority', 'user_id'],
+            self::SCENARIO_DEFAULT => ['firstname', 'lastname', 'phone', 'email', 'type', 'category_id', 'priority', 'user_id', 'coworkerProperties', 'price'],
+            self::SCENARIO_CUSTOMER => ['firstname', 'lastname', 'phone', 'email', 'type', 'priority', 'user_id', 'price'],
         ];
     }
 
@@ -228,7 +229,6 @@ class Coworker extends \yii\db\ActiveRecord
                 }
             }
             $transaction->commit();
-            TagDependency::invalidate(Yii::$app->cache, ['coworker-' . $this->id]);
         } catch (\Exception $e) {
             $transaction->rollBack();
             Yii::error('Error setting coworker properties: ' . $e->getMessage());
@@ -243,13 +243,25 @@ class Coworker extends \yii\db\ActiveRecord
 
     public function setPrice($value)
     {
-        $model = Price::find()->where(['coworker_id' => $this->id])->andWhere(['date' => $value['date']]);
-        if ($model) {
-            $model->price = $value["price"];
-            $model->save();
-        } else {
-            $model = new Price(array_merge($value, ["coworker_id" => $this->id]));
-            $model->save();
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $model = Price::find()->where(['coworker_id' => $this->id])->andWhere(['date' => $value['date']])->one();
+            if ($model) {
+                if (!($model->load(["Price" => $value]) && $model->save())) {
+                    \Yii::error($model->getErrors());
+                }
+            } else {
+                $model = new Price(array_merge($value, ["coworker_id" => $this->id]));
+                if ($model->save()) {
+                    \Yii::error($model->getErrors());
+                }
+            }
+            $this->link('price', $model);
+            $transaction->commit();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::error('Error setting coworker properties: ' . $e->getMessage());
+            throw $e;
         }
     }
 

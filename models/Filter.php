@@ -232,7 +232,7 @@ class Filter extends \yii\db\ActiveRecord
      */
     public function getCoworkers($priority = Coworker::PRIORITY_HIGH)
     {
-        $query = Coworker::find()
+        $query = User::find()
             ->joinWith('properties')
             ->where(['coworker.priority' => $priority, 'coworker.category_id' => $this->category_id]);
         return $this->extracted($query);
@@ -274,7 +274,7 @@ class Filter extends \yii\db\ActiveRecord
     public function findCoworkers($priority)
     {
         $cacheKey = 'filter-find-coworkers-' . $this->id . '-' . $priority;
-        $query = Coworker::find()
+        $query = User::find()
             ->joinWith('properties')
             ->where([
                 'coworker.category_id' => $this->category_id,
@@ -300,16 +300,16 @@ class Filter extends \yii\db\ActiveRecord
             $value = $requirement->value;
             switch ($requirement->type) {
                 case Yii::t('app', 'Less'):
-                    $query->andWhere(['<=', 'coworker_property.value', $value]);
+                    $query->andWhere(['<=', 'user_property.value', $value]);
                     break;
                 case Yii::t('app', 'More'):
-                    $query->andWhere(['>=', 'coworker_property.value', $value]);
+                    $query->andWhere(['>=', 'user_property.value', $value]);
                     break;
                 case Yii::t('app', 'Equal'):
-                    $query->andWhere(['=', 'coworker_property.value', $value]);
+                    $query->andWhere(['=', 'user_property.value', $value]);
                     break;
                 case Yii::t('app', 'Not Equal'):
-                    $query->andWhere(['<>', 'coworker_property.value', $value]);
+                    $query->andWhere(['<>', 'user_property.value', $value]);
                     break;
             }
         }

@@ -6,8 +6,9 @@ class Price extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['price'], 'double', 'required'],
-            [['coworker_id'], 'exists', 'targetClass' => Coworker::class, 'targetAttribute' => 'id'],
+            [['price'], 'required'],
+            [['price'], 'number'],
+            [['coworker_id'], 'exist', 'targetClass' => Coworker::class, 'targetAttribute' => ['coworker_id' => 'id']],
             [['date'], 'default', 'value' => function () { return \Yii::$app->formatter->saDate(time(), 'php:Y-m-d'); }],
         ];
     }
