@@ -45,7 +45,7 @@
                     ], [
                         'label' => \Yii::t('app', 'Control Panel'),
                         'icon' => 'th',
-                        'visible' => \Yii::$app->user->can('director'),
+                        'visible' => \Yii::$app->user->can('director') || \Yii::$app->user->can('admin'),
                         'items' => [
                             [
                                 'label' => \Yii::t('app', 'Categories'),

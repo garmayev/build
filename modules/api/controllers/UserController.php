@@ -2,6 +2,7 @@
 
 namespace app\modules\api\controllers;
 
+use app\models\forms\UserRegisterForm;
 use app\models\Profile;
 use app\models\User;
 
@@ -27,7 +28,23 @@ class UserController extends \yii\rest\Controller
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    ['allow' => true, 'roles' => ['?'], 'actions' => ['login', 'register', 'check-username', 'check-email', 'check', 'set-token', 'info', 'change-password', 'check-password', 'update-account', 'update-profile']],
+                    ['allow' => true, 'roles' => ['?'], 'actions' => [
+                        'login',
+                        'register',
+                        'check-username',
+                        'check-email',
+                        'check',
+                        'set-token',
+                        'info',
+                        'change-password',
+                        'check-password',
+                        'update-account',
+                        'update-profile',
+                        'get-roles',
+                        'get-roles',
+                        'create-profile',
+                        'create-account',
+                    ]],
                     // Users
                     ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login']],
                 ],
@@ -154,7 +171,7 @@ class UserController extends \yii\rest\Controller
     {
         $user = User::find()->joinWith('profile')->where(['user.id' => $id])->one();
         if (empty($user)) {
-            return \Yii::$app->user->identity;
+            return new User();
         }
         return $user;
     }
@@ -194,6 +211,15 @@ class UserController extends \yii\rest\Controller
         return ["ok" => false, "message" => $model->getErrorSummary(true)];
     }
 
+    public function actionCreateAccount()
+    {
+        $model = new User();
+        if ($model->loadApi(\Yii::$app->request->post())) {
+            return ["ok" => true, "message" => \Yii::t("app", "Account created successfully"), 'model' => $model];
+        }
+        return ["ok" => false, "message" => $model->errors];
+    }
+
     public function actionUpdateProfile($id)
     {
         $model = Profile::findOne($id);
@@ -202,5 +228,33 @@ class UserController extends \yii\rest\Controller
             return ["ok" => true, "message" => \Yii::t("app", "Profile updated successfully")];
         }
         return ["ok" => false, "message" => $model->getErrorSummary(true)];
+    }
+
+    public function actionCreateProfile()
+    {
+        $profile = new Profile();
+        if ($profile->load(\Yii::$app->request->post()) && $profile->save()) {
+            return ["ok" => true, "message" => \Yii::t("app", "Profile created successfully"), "model" => $profile];
+        }
+        return ["ok" => false, "message" => $profile->errors];
+    }
+
+    public function actionGetRoles()
+    {
+        $roles = \Yii::$app->authManager->getRoles();
+        if (\Yii::$app->user->can('admin')) {
+            return [
+                'admin' => ['name' => 'admin'],
+                'director' => ['name' => 'director'],
+                'employee' => ['name' => 'employee'],
+            ];
+        } else if (\Yii::$app->user->can('director')) {
+            return [
+                'director' => ['name' => 'director'],
+                'employee' => ['name' => 'employee'],
+            ];
+        } else {
+            return ['employee' => ['name' => 'employee']];
+        }
     }
 }

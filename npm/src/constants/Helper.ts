@@ -1,6 +1,6 @@
 export const Helper = {
-    // url: "http://build.local",
-    url: "https://build.amgcompany.ru",
+    url: "http://build.local",
+    // url: "https://build.amgcompany.ru",
     types: {
         more: 'Больше',
         less: 'Меньше',

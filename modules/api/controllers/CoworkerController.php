@@ -151,7 +151,13 @@ class CoworkerController extends ActiveController
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $result = [];
-        $users = \app\models\User::find()->all();
+        if (\Yii::$app->user->can('admin')) {
+            $users = \app\models\User::find()->all();
+        } else if (\Yii::$app->user->can('director')) {
+            $users = \app\models\User::find()->where(['referrer_id' => \Yii::$app->user->id])->all();
+        } else {
+            $users = \app\models\User::find()->where(['id' => \Yii::$app->user->id])->all();
+        }
         /**
          * @var User $user
          */
@@ -198,17 +204,12 @@ class CoworkerController extends ActiveController
     public function actionAdvanced($id)
     {
         $model = User::findOne($id);
-        $db = \Yii::$app->db;
-        $transaction = $db->beginTransaction();
         try {
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
-                $transaction->commit();
                 return ['ok' => true, 'model' => $model];
             }
-            $transaction->rollBack();
             return ["ok" => false];
         } catch (\Exception $exception) {
-            $transaction->rollBack();
             \Yii::error($exception->getMessage());
             throw $exception;
         }

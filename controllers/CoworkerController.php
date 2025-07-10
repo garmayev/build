@@ -85,7 +85,7 @@ class CoworkerController extends Controller
      */
     public function actionCreate()
     {
-        $model = new Profile();
+        $model = new User();
         $transaction = Yii::$app->db->beginTransaction();
 
         try {

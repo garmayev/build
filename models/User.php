@@ -60,10 +60,29 @@ class User extends ActiveRecord implements IdentityInterface
             'userProperties' => function (User $model) {
                 return $model->userProperties;
             },
-            'roles' => function (User $model) {
-                return \Yii::$app->authManager->getRolesByUser($model->id);
-            },
+            'roles'
         ];
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if ($insert) {
+                $profile = new Profile(['id' => $this->id]);
+                if ($profile->save()) {
+                    $transaction->commit();
+                } else {
+                    \Yii::error($profile->getErrors());
+                    $transaction->rollBack();
+                }
+            }
+        } catch (\Exception $exception) {
+            $transaction->rollBack();
+            \Yii::error($exception->getMessage());
+            throw $exception;
+        }
+        parent::afterSave($insert, $changedAttributes);
     }
 
     /**
@@ -125,7 +144,6 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function validatePassword($password): bool
     {
-        \Yii::error(\Yii::$app->security->validatePassword($password, $this->password_hash));
         return \Yii::$app->security->validatePassword($password, $this->password_hash);
     }
 
@@ -215,5 +233,37 @@ class User extends ActiveRecord implements IdentityInterface
     public function getReferrer()
     {
         return $this->hasOne(User::className(), ['id' => 'referrer_id']);
+    }
+
+    public function getRoles()
+    {
+        return \Yii::$app->authManager->getRolesByUser($this->id);
+    }
+
+    public function loadApi($data)
+    {
+        $transaction = \Yii::$app->db->beginTransaction();
+        try {
+            $this->username = $data['username'];
+            $this->email = $data['email'];
+            $this->status = $data['status'];
+            $this->password_hash = \Yii::$app->security->generatePasswordHash($data['password']);
+            $this->auth_key = \Yii::$app->security->generateRandomString();
+            $this->access_token = \Yii::$app->security->generateRandomString();
+            if ($this->validate() && $this->save()) {
+                $transaction->commit();
+                $authManager = \Yii::$app->authManager;
+                $role = $authManager->getRole($data['role']);
+                $authManager->assign($role, $this->id);
+                return true;
+            } else {
+                $transaction->rollBack();
+                \Yii::error($this->getErrors());
+            }
+        } catch (\Exception $exception) {
+            $transaction->rollBack();
+            \Yii::error($exception);
+        }
+        return false;
     }
 }

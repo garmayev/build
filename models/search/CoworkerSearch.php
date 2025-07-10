@@ -37,15 +37,14 @@ class CoworkerSearch extends User
      */
     public function search($params)
     {
-        $ids = \Yii::$app->authManager->getUserIdsByRole("employee");
+        $ids = array_merge(
+            \Yii::$app->authManager->getUserIdsByRole("employee"),
+            \Yii::$app->authManager->getUserIdsByRole("director"));
+        \Yii::error($ids);
         $query = User::find()
             ->joinWith('profile')
             ->joinWith('userProperties')
-            ->where(['user.id' => $ids])
-            ->andWhere(['or',
-                ['user.referrer_id' => \Yii::$app->user->identity->getId()],
-                ['user.priority_level' => \app\models\Coworker::PRIORITY_LOW]
-            ]);
+            ->where(['user.id' => $ids]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
