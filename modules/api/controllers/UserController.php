@@ -46,7 +46,7 @@ class UserController extends \yii\rest\Controller
                         'create-account',
                     ]],
                     // Users
-                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login']],
+                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login', 'get-roles']],
                 ],
             ],
             'authenticator' => [
