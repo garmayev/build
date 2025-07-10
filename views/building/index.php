@@ -24,10 +24,20 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
         'summary' => false,
         'columns' => [
-            'title',
-            'location.address',
+            ['class' => 'yii\grid\SerialColumn'],
+            [
+                'attribute' => 'title',
+                'format' => 'raw',
+                'headerOptions' => ['class' => 'text-center col-4'],
+            ],
+            [
+                'attribute' => 'location.address',
+                'format' => 'raw',
+                'headerOptions' => ['class' => 'text-center col-7'],
+            ],
             [
                 'class' => ActionColumn::className(),
+                'headerOptions' => ['class' => 'text-center col-1'],
             ],
         ],
     ]); ?>

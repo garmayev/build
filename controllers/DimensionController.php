@@ -12,7 +12,7 @@ use yii\filters\VerbFilter;
 /**
  * DimensionController implements the CRUD actions for Dimension model.
  */
-class DimensionController extends Controller
+class DimensionController extends BaseController
 {
     /**
      * @inheritDoc

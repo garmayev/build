@@ -29,19 +29,23 @@ $this->params['breadcrumbs'][] = $this->title;
             'class' => 'table table-striped'
         ],
         'columns' => [
-            'title',
+            [
+                'attribute' => 'title',
+                'headerOptions' => ['class' => 'text-center col-6'],
+            ],
             [
                 'attribute' => 'type',
+                'headerOptions' => ['class' => 'text-center col-5'],
+                'format' => 'html',
                 'value' => function (Category $model) {
                     $list = [
                         \app\models\Order::TYPE_COWORKER => \Yii::t('app', 'Coworker'),
                         \app\models\Order::TYPE_MATERIAL => \Yii::t('app', 'Material'),
                         \app\models\Order::TYPE_TECHNIQUE => \Yii::t('app', 'Technique'),
                     ];
-                    return $list[$model->type];
+                    return Html::a($list[$model->type], ['coworker/index']);
                 }
             ],
-//            'parent_id',
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Category $model, $key, $index, $column) {

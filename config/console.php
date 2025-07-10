@@ -6,7 +6,7 @@ $db = require __DIR__ . '/db.php';
 $config = [
     'id' => 'basic-console',
     'basePath' => dirname(__DIR__),
-    'language' => 'ru',
+    'language' => 'ru-RU',
     'bootstrap' => ['log'],
     'controllerNamespace' => 'app\commands',
     'aliases' => [
@@ -64,9 +64,11 @@ $config = [
     'controllerMap' => [
         'migrate' => [
             'class' => 'yii\console\controllers\MigrateController',
-            'migrationPath' => [
-                '@app/migrations/',
-                '@yii/rbac/migrations',
+            'migrationPath' => null,
+            'migrationNamespaces' => [
+                'app\migrations',
+                'yii\rbac\migrations',
+                'app\modules\notifications\migrations',
             ],
         ]
     ],

@@ -31,7 +31,20 @@ class UserController extends Controller
             if ($model->save()) {
                 exit(\Yii::t('app', 'Password successfully changed.'));
             } else {
+                \Yii::error($model->getErrors());
                 exit(\Yii::t('app', 'Password changed is failed.'));
+            }
+        }
+        exit(\Yii::t('app', 'User not found.'));
+    }
+
+    public function actionSetStatus($username, $status)
+    {
+        $model = User::findByUsername($username);
+        if ($model) {
+            $model->status = $status;
+            if ($model->save()) {
+                exit(\Yii::t('app', 'Status successfully changed.'));
             }
         }
         exit(\Yii::t('app', 'User not found.'));

@@ -79,8 +79,7 @@ $config = [
             'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
         ],
         'notificationService' => [
-            'class' => \app\models\NotificationService::class,
-            'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
+            'class' => \app\modules\notifications\components\NotificationService::class,
         ],
     ],
     'modules' => [
@@ -92,6 +91,26 @@ $config = [
             'telegram_bot_id' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
             'use_database' => true,
         ],
+        'notifications' => [
+            'class' => \app\modules\notifications\Module::class,
+            'telegramConfig' => [
+                'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
+                'webhookUrl' => '',
+                'commandMap' => [
+                    'start' => \app\modules\notifications\handlers\StartHandler::class,
+                    'accept' => \app\modules\notifications\handlers\AcceptHandler::class,
+                    'decline' => \app\modules\notifications\handlers\DeclineHandler::class,
+                ],
+            ],
+            'fcmConfig' => [
+                'apiKey' => '',
+                'senderId' => ''
+            ],
+            'apnConfig' => [
+                'passphrase' => '',
+                'environment' => YII_ENV_DEV ? 'development' : 'production',
+            ],
+        ]
     ],
     'params' => $params,
 ];

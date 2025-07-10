@@ -518,21 +518,22 @@ class Order extends \yii\db\ActiveRecord
             ];
 
             foreach ($this->suitableCoworkers as $coworker) {
-                \Yii::error($coworker->attributes);
-                $telegramMessages = $this->telegramMessages;
+                if ($coworker->status === User::STATUS_ACTIVE) {
+                    $telegramMessages = $this->telegramMessages;
 //                TODO: Remove comment for prod
-                if (count($telegramMessages)) {
-                    foreach ($telegramMessages as $telegramMessage) {
+                    if (count($telegramMessages)) {
+                        foreach ($telegramMessages as $telegramMessage) {
 //                        $telegramMessage->editMessageText($message, $keyboard);
-                    }
-                } else {
-                    if ($coworker->chat_id) {
+                        }
+                    } else {
+                        if ($coworker->chat_id) {
 //                        $notificationService->sendTelegramMessage($coworker->chat_id, "<b>".\Yii::t("app", "Order #{id}", ["id" => $this->id])."</b>\n".$message, $keyboard, $this->id);
+                        }
                     }
                 }
             }
-            if ( $this->owner->chat_id ) {
-                $notificationService->sendTelegramMessage($this->owner->chat_id, "<b>".\Yii::t("app", "Order #{id}", ["id" => $this->id])."</b>\n".$message, null, $this->id);
+            if ($this->owner->chat_id) {
+                $notificationService->sendTelegramMessage($this->owner->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, null, $this->id);
             }
         } catch (\Exception $e) {
             Yii::error('Error in sendAndUpdateTelegramNotifications: ' . $e->getMessage());

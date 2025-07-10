@@ -9,11 +9,11 @@ use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\UploadedFile;
 
-class OrderController extends Controller
+class OrderController extends BaseController
 {
     public function behaviors()
     {
-        return [
+        return array_merge(parent::behaviors(), [
             'access' => [
                 'class' => AccessControl::class,
                 'only' => ['index', 'view', 'delete', 'coworker', 'material', 'get-list'],
@@ -30,7 +30,7 @@ class OrderController extends Controller
                     ]
                 ],
             ],
-        ];
+        ]);
     }
 
     public function actionIndex()

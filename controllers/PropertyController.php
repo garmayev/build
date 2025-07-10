@@ -5,14 +5,13 @@ namespace app\controllers;
 use app\models\Property;
 use app\models\search\PropertySearch;
 use yii\filters\AccessControl;
-use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 /**
  * PropertyController implements the CRUD actions for Property model.
  */
-class PropertyController extends Controller
+class PropertyController extends BaseController
 {
     /**
      * @inheritDoc

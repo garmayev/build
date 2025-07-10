@@ -2,18 +2,13 @@
 
 namespace app\controllers;
 
-use app\models\ContactForm;
-use app\models\forms\LoginForm;
-use Yii;
 use yii\filters\AccessControl;
-use yii\web\Controller;
-use yii\web\Response;
 
-class SiteController extends Controller
+class SiteController extends BaseController
 {
     public function behaviors()
     {
-        return [
+        return array_merge(parent::behaviors(), [
             'access' => [
                 'class' => AccessControl::class,
                 'only' => ['login', 'logout', 'index'],
@@ -30,7 +25,7 @@ class SiteController extends Controller
                     ],
                 ],
             ],
-        ];
+        ]);
     }
 
     /**

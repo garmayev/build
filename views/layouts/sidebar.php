@@ -40,10 +40,12 @@
                         'label' => \Yii::t('app', 'Building'),
                         'icon' => 'building',
                         'url' => ['/building/index'],
+                        'visible' => \Yii::$app->user->can('director'),
                         'active' => \Yii::$app->controller->id === 'building' || \Yii::$app->controller->id === 'location',
                     ], [
                         'label' => \Yii::t('app', 'Control Panel'),
                         'icon' => 'th',
+                        'visible' => \Yii::$app->user->can('director'),
                         'items' => [
                             [
                                 'label' => \Yii::t('app', 'Categories'),
@@ -92,17 +94,17 @@
                         'items' => [
                             [
                                 'label' => \Yii::t('app', 'Properties'),
-                                'icon' => '',
+                                'icon' => 'gears',
                                 'url' => ['/property/index'],
                                 'active' => \Yii::$app->controller->id === 'property',
                             ], [
                                 'label' => \Yii::t('app', 'Dimensions'),
-                                'icon' => '',
+                                'icon' => 'ruler',
                                 'url' => ['/dimension/index'],
                                 'active' => \Yii::$app->controller->id === 'dimension',
                             ], [
                                 'label' => \Yii::t('app', 'Users'),
-                                'icon' => '',
+                                'icon' => 'users',
                                 'url' => ['/user/index'],
                                 'active' => \Yii::$app->controller->id === 'user',
                             ]

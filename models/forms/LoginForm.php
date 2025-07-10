@@ -33,6 +33,7 @@ class LoginForm extends Model
             ['rememberMe', 'boolean'],
             // password is validated by validatePassword()
             ['password', 'validatePassword'],
+            ['password', 'validateStatus'],
         ];
     }
 
@@ -63,6 +64,21 @@ class LoginForm extends Model
         }
     }
 
+    public function validateStatus($attribute, $params)
+    {
+        if (!$this->hasErrors()) {
+            $user = $this->getUser();
+            switch ($user->status) {
+                case User::STATUS_INACTIVE:
+                    $this->addError('username', \Yii::t('app', 'You must activate your account.'));
+                    break;
+                case User::STATUS_DISABLED:
+                    $this->addError('username', \Yii::t('app', 'Your account is disabled.'));
+                    break;
+            }
+        }
+    }
+
     /**
      * Logs in a user using the provided username and password.
      * @return bool whether the user is logged in successfully
@@ -70,7 +86,7 @@ class LoginForm extends Model
     public function login()
     {
         if ($this->validate()) {
-            return Yii::$app->user->login($this->getUser(), $this->rememberMe ? 3600*24*30 : 0);
+            return Yii::$app->user->login($this->getUser(), $this->rememberMe);
         }
         return false;
     }

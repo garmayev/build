@@ -14,7 +14,7 @@ class PropertySearch extends Property
     /**
      * {@inheritdoc}
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['id'], 'integer'],

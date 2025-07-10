@@ -13,7 +13,7 @@ use yii\filters\VerbFilter;
 /**
  * BuildingController implements the CRUD actions for Building model.
  */
-class BuildingController extends Controller
+class BuildingController extends BaseController
 {
     /**
      * @inheritDoc

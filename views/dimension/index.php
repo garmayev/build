@@ -29,14 +29,21 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
         'summary' => false,
         'columns' => [
-            'title',
-            'multiplier',
-            'short',
+            [
+                'attribute' => 'title',
+                'headerOptions' => ['class' => 'text-center col-8'],
+            ],
+            [
+                'attribute' => 'short',
+                'headerOptions' => ['class' => 'text-center col-3'],
+            ],
             [
                 'class' => ActionColumn::className(),
+                'headerOptions' => ['class' => 'col-1'],
+                'contentOptions' => ['class' => 'd-flex justify-content-around'],
                 'urlCreator' => function ($action, Dimension $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
-                 }
+                }
             ],
         ],
     ]); ?>

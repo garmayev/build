@@ -59,7 +59,10 @@ class User extends ActiveRecord implements IdentityInterface
             'profile',
             'userProperties' => function (User $model) {
                 return $model->userProperties;
-            }
+            },
+            'roles' => function (User $model) {
+                return \Yii::$app->authManager->getRolesByUser($model->id);
+            },
         ];
     }
 
@@ -122,6 +125,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function validatePassword($password): bool
     {
+        \Yii::error(\Yii::$app->security->validatePassword($password, $this->password_hash));
         return \Yii::$app->security->validatePassword($password, $this->password_hash);
     }
 

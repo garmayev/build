@@ -1,8 +1,9 @@
 <?php
 
 return [
-    'sourcePath' => __DIR__ . DIRECTORY_SEPARATOR,
+    'sourcePath' => dirname(__DIR__, 1),
     'languages' => ['ru'],
+    'interactive' => true,
     'translator' => ['\Yii::t', 'Yii::t'],
     'sort' => true,
     'removeUnused' => false,

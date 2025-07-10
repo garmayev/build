@@ -12,7 +12,7 @@ use yii\filters\VerbFilter;
 /**
  * LocationController implements the CRUD actions for Location model.
  */
-class LocationController extends Controller
+class LocationController extends BaseController
 {
     /**
      * @inheritDoc

@@ -28,12 +28,16 @@ $this->params['breadcrumbs'][] = $this->title;
             'class' => ['table', 'table-striped']
         ],
         'columns' => [
-            'title',
+            [
+                'attribute' => 'title',
+                'headerOptions' => ['class' => 'col-11'],
+            ],
             [
                 'class' => ActionColumn::className(),
+                'headerOptions' => ['class' => 'col-1'],
                 'urlCreator' => function ($action, Property $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
-                 }
+                }
             ],
         ],
     ]); ?>
