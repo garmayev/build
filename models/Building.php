@@ -95,7 +95,6 @@ class Building extends ActiveRecord
 
     public function setLocation($data)
     {
-        \Yii::error($data);
         $location = Location::find()
             ->where(['address' => $data['address']])
             ->andWhere(['latitude' => $data['latitude']])

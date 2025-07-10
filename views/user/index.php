@@ -57,7 +57,7 @@ echo GridView::widget([
             'format' => 'raw',
             'value' => function (\app\models\User $model) {
                 $roles = \Yii::$app->authManager->getRoles();
-                \Yii::error($roles);
+//                \Yii::error($roles);
                 $currentRole = \Yii::$app->authManager->getRolesByUser($model->id);
                 return Html::dropDownList('',
                     ArrayHelper::map($currentRole, 'name', 'name'),
