@@ -273,6 +273,7 @@ class Filter extends \yii\db\ActiveRecord
      */
     public function findCoworkers($priority)
     {
+//        \Yii::error($priority);
         $query = User::find()
             ->joinWith('properties')
             ->joinWith('userProperties')
@@ -282,6 +283,7 @@ class Filter extends \yii\db\ActiveRecord
                 'user.referrer_id' => isset(\Yii::$app->user) ? \Yii::$app->user->id : 1,
             ]);
         $resultQuery = $this->extracted($query);
+        \Yii::error($resultQuery->createCommand()->rawSql);
         return $resultQuery->all();
     }
 

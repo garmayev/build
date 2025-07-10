@@ -31,7 +31,7 @@ class RbacController extends Controller
 
         $role = $auth->getRole($role);
         $model = User::findOne(['username' => $username]);
-
+        $auth->revokeAll($model->id);
         $auth->assign($role, $model->id);
     }
 }

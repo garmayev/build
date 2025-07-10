@@ -4,7 +4,7 @@ namespace app\modules\api\controllers;
 
 use aki\telegram\base\Command;
 use app\components\Helper;
-use app\models\Coworker;
+use app\models\Profile;
 use app\models\telegram\TelegramMessage;
 use app\models\User;
 use app\models\Order;
@@ -35,18 +35,16 @@ class TelegramController extends \yii\web\Controller
             }
 
             if ($args[0]) {
-                $coworker = Coworker::findOne($args[0]);
+                $coworker = Profile::findOne($args[0]);
             } else {
                 // Find coworker without chat_id or with this chat_id
-                $coworker = Coworker::find()
+                $coworker = Profile::find()
                     ->where(['chat_id' => $chatId])
                     ->one();
             }
 
-//            \Yii::error($coworker->id);
-
             if ($coworker) {
-                $coworker->chat_id = $chatId;
+                $coworker->chat_id = "$chatId";
                 if ($coworker->save()) {
                     $telegram->sendMessage([
                         'chat_id' => $chatId,
@@ -75,7 +73,9 @@ class TelegramController extends \yii\web\Controller
             }
 
             $order = Order::findOne($orderId);
-            $coworker = Coworker::findOne(['chat_id' => $telegram->input->callback_query->from["id"]]);
+            $coworker = User::find()->joinWith('profile')->where(['profile.chat_id' => $telegram->input->callback_query->from["id"]]);
+            \Yii::error($coworker->createCommand()->rawSql);
+            $coworker = $coworker->one();
 
             if (!$order || !$coworker) {
                 \Yii::error([
@@ -113,14 +113,14 @@ class TelegramController extends \yii\web\Controller
                     }
                 } else {
                     foreach ($messages->all() as $message) {
-                        $header = $message->chat_id == $coworker->chat_id ?
+                        $header = $message->chat_id == $coworker->profile->chat_id ?
                             \Yii::t('app', 'You have agreed to complete the order') . " #{$order->id}\n" :
                             \Yii::t('app', 'New Order') . " #{$order->id}\n";
 
                         // Для сотрудника, который согласился, убираем кнопки
                         $replyMarkup = null;
                         $text = "";
-                        if ($message->chat_id == $coworker->chat_id) {
+                        if ($message->chat_id == $coworker->profile->chat_id) {
                             $replyMarkup = []; // Убираем кнопки
                         } else {
                             $replyMarkup = json_decode($message->reply_markup); // Оставляем существующие кнопки

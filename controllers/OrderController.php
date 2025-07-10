@@ -35,11 +35,25 @@ class OrderController extends BaseController
 
     public function actionIndex()
     {
-        return $this->render('index', [
-            'dataProvider' => new ActiveDataProvider([
-                'query' => Order::find()->where(['created_by' => \Yii::$app->user->identity->getId()])
-            ])
-        ]);
+        if (\Yii::$app->user->can('admin')) {
+            return $this->render('index', [
+                'dataProvider' => new ActiveDataProvider([
+                    'query' => Order::find()->all()
+                ])
+            ]);
+        } else if (\Yii::$app->user->can('director')) {
+            return $this->render('index', [
+                'dataProvider' => new ActiveDataProvider([
+                    'query' => Order::find()->where(['created_by' => \Yii::$app->user->identity->getId()])
+                ])
+            ]);
+        } else {
+            return $this->render('index', [
+                'dataProvider' => new ActiveDataProvider([
+                    'query' => \Yii::$app->user->identity->getSuitableOrders()
+                ])
+            ]);
+        }
     }
 
     public function actionView($id)
