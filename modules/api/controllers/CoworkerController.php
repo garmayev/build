@@ -118,27 +118,8 @@ class CoworkerController extends ActiveController
 
     public function actionSuitableOrders()
     {
-        $coworker = Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
-
-        if (!$coworker) {
-            return ["ok" => false, "message" => \Yii::t("app", "Coworker not found")];
-        }
-
-        $orders = \app\models\Order::find()
-            ->where(['status' => \app\models\Order::STATUS_NEW])
-            ->orderBy(['id' => SORT_DESC])
-            ->all();
-        $suitableOrders = [];
-
-        foreach ($orders as $order) {
-            foreach ( $order->getSuitableCoworkers() as $item ) {
-                if ($coworker->id === $item->id) {
-                    $suitableOrders[] = $order;
-                }
-            }
-        }
-
-        return ["ok" => true, "data" => $suitableOrders];
+        $coworker = User::findOne(\Yii::$app->user->getId());
+        return ["ok" => true, "data" => $coworker->getSuitableOrders()->all()];
     }
 
     public function actionInviteRequest($order_id)

@@ -38,7 +38,7 @@ class OrderController extends BaseController
         if (\Yii::$app->user->can('admin')) {
             return $this->render('index', [
                 'dataProvider' => new ActiveDataProvider([
-                    'query' => Order::find()->all()
+                    'query' => Order::find()
                 ])
             ]);
         } else if (\Yii::$app->user->can('director')) {
@@ -84,8 +84,7 @@ class OrderController extends BaseController
             $model->files = UploadedFile::getInstances($model, 'files');
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
                 \Yii::error($model->attributes);
-//                @TODO: Remove comment
-//                $result = $model->sendAndUpdateTelegramNotifications();
+                $result = $model->sendAndUpdateTelegramNotifications();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             }

@@ -49,4 +49,12 @@ class UserController extends Controller
         }
         exit(\Yii::t('app', 'User not found.'));
     }
+
+    public function actionGetSuitable($username)
+    {
+        $model = User::findByUsername($username);
+        foreach ($model->getSuitableOrders()->all() as $order) {
+            echo "Order #{$order->id}\n";
+        }
+    }
 }

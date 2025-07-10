@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
@@ -30,6 +31,17 @@ class User extends ActiveRecord implements IdentityInterface
     const STATUS_DISABLED = 0;
     const STATUS_ACTIVE = 1;
     const STATUS_INACTIVE = 2;
+
+    public function behaviors()
+    {
+        return [
+            'blameable' => [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'referrer_id',
+                'updatedByAttribute' => false,
+            ]
+        ];
+    }
 
     public static function tableName(): string
     {
@@ -265,5 +277,43 @@ class User extends ActiveRecord implements IdentityInterface
             \Yii::error($exception);
         }
         return false;
+    }
+
+    public function getSuitableOrders()
+    {
+        /**
+         * @var Requirement[] $requirements
+         */
+        $userId = $this->id;
+        return Order::find()
+            ->joinWith(['filters', 'filters.requirements' => function ($query) use ($userId) {
+                $query->alias('req');
+            }])
+            ->leftJoin(
+                'user_property up',
+                'up.property_id = req.property_id 
+             AND up.dimension_id = req.dimension_id 
+             AND up.user_id = :userId',
+                [':userId' => $userId]
+            )
+            ->groupBy('order.id')
+            ->having([
+                'or',
+                [
+                    'and',
+                    'COUNT(req.id) > 0', // Есть требования
+                    'SUM(CASE 
+                        WHEN (req.type = \'less\' AND up.value <= req.value) THEN 0
+                        WHEN (req.type = \'more\' AND up.value >= req.value) THEN 0
+                        WHEN (req.type = \'equal\' AND up.value = req.value) THEN 0
+                        WHEN (req.type = \'not-equal\' AND up.value != req.value) THEN 0
+                        ELSE 1 
+                    END) = 0'
+                ],
+                [
+                    'and',
+                    'COUNT(req.id) = 0' // Нет требований
+                ]
+            ]);
     }
 }

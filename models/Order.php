@@ -38,6 +38,7 @@ use yii\helpers\ArrayHelper;
  * @property OrderTechnique[] $orderTechniques
  * @property Technique[] $techniques
  * @property Attachment[] $attachments
+ * @property Requirement[] $requirements
  * @property TelegramMessage[] $telegramMessages
  * @property User $owner
  *
@@ -417,6 +418,12 @@ class Order extends \yii\db\ActiveRecord
             ->viaTable('order_filter', ['order_id' => 'id']);
     }
 
+    public function getRequirements(): ActiveQuery
+    {
+        return $this->hasMany(Requirement::class, ['filter_id' => 'id'])
+            ->via('filters');
+    }
+
     /**
      * Gets related TelegramMessage models
      *
@@ -468,11 +475,26 @@ class Order extends \yii\db\ActiveRecord
      */
     public function getSuitableCoworkers(): array
     {
-        $suitable = [];
-        foreach ($this->filters as $filter) {
-            $suitable = array_merge($suitable, $filter->findCoworkers($this->priority_level));
+        $users = User::find()->joinWith(['userProperties']);
+        foreach ($this->requirements as $requirement) {
+            $q = new ActiveQuery(Requirement::class);
+            switch ($requirement->type) {
+                case 'less':
+                    $q = $q->andWhere(['<=', 'requirement.value', $requirement->value]);
+            }
+            $users->orFilterWhere([
+                'and',
+                ['user_property.property_id' => $requirement->property_id],
+                ['user_property.dimension_id' => $requirement->dimension_id],
+                ['or',
+                    ['and', ['requirement.type' => 'less'], ['<=', 'user_property.value', $requirement->value]],
+                    ['and', ['requirement.type' => 'more'], ['>=', 'user_property.value', $requirement->value]],
+                    ['and', ['requirement.type' => 'equal'], ['=', 'user_property.value', $requirement->value]],
+                    ['and', ['requirement.type' => 'not-equal'], ['!=', 'user_property.value', $requirement->value]],
+                ]
+            ]);
         }
-        return $suitable;
+        return $users->all();
     }
 
     public function getOwner()

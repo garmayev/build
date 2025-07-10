@@ -29,6 +29,8 @@ $this->params['breadcrumbs'][] = [
     'url' => ['/order/index']
 ];
 
+$this->registerJsVar('token', \Yii::$app->user->identity->access_token);
+
 $this->params['breadcrumbs'][] = $this->title;
 
 echo $form->field($model, 'status')->dropDownList($model->statusList);
