@@ -17,7 +17,7 @@ $this->title = \Yii::$app->name;
             'linkUrl' => ['building/index']
         ]), ['class' => 'col-3']);
     }
-    if (\Yii::$app->user->can('employee')) {
+    if (!\Yii::$app->user->can('admin')) {
         $model = \Yii::$app->user->identity;
         if (empty($model->profile->chat_id)) {
             echo \yii\helpers\Html::tag('div', \hail812\adminlte\widgets\SmallBox::widget([

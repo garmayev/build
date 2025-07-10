@@ -25,6 +25,7 @@ use yii\web\IdentityInterface;
  * @property string $name
  * @property UserProperty[] $userProperties
  * @property Property[] $properties
+ * @property Order[] $suitableOrders
  */
 class User extends ActiveRecord implements IdentityInterface
 {

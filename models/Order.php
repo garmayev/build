@@ -487,8 +487,8 @@ class Order extends \yii\db\ActiveRecord
                 ['user_property.property_id' => $requirement->property_id],
                 ['user_property.dimension_id' => $requirement->dimension_id],
                 ['or',
-                    ['and', ['requirement.type' => 'less'], ['<=', 'user_property.value', $requirement->value]],
-                    ['and', ['requirement.type' => 'more'], ['>=', 'user_property.value', $requirement->value]],
+                    ['and', ['requirement.type' => 'less'], ['>=', 'user_property.value', $requirement->value]],
+                    ['and', ['requirement.type' => 'more'], ['<=', 'user_property.value', $requirement->value]],
                     ['and', ['requirement.type' => 'equal'], ['=', 'user_property.value', $requirement->value]],
                     ['and', ['requirement.type' => 'not-equal'], ['!=', 'user_property.value', $requirement->value]],
                 ]

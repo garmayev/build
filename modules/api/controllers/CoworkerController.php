@@ -119,7 +119,11 @@ class CoworkerController extends ActiveController
     public function actionSuitableOrders()
     {
         $coworker = User::findOne(\Yii::$app->user->getId());
-        return ["ok" => true, "data" => $coworker->getSuitableOrders()->all()];
+        \Yii::error($coworker->getSuitableOrders()->all());
+        if ($coworker) {
+            return [ "ok" => true, "data" => $coworker->getSuitableOrders()->all() ];
+        }
+        return ["ok" => false];
     }
 
     public function actionInviteRequest($order_id)

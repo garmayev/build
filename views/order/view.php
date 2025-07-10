@@ -71,7 +71,8 @@ echo GridView::widget([
             'value' => function (\app\models\Filter $model) {
                 $result = '';
                 foreach ($model->requirements as $requirement) {
-                    $result .= "<p>{$requirement->property->title} {$requirement->type} {$requirement->value} {$requirement->dimension->title}</p>";
+                    $type = \Yii::t("app", $requirement->type);
+                    $result .= "<p>{$requirement->property->title} {$type} {$requirement->value} {$requirement->dimension->title}</p>";
                 }
                 return $result;
             }
@@ -112,6 +113,7 @@ if (count($data)) {
                 'value' => function (app\models\Coworker $model) {
                     $result = "";
                     foreach ($model->coworkerProperties as $coworkerProperty) {
+//                        $type = \Yii::t('app', $coworkerProperty->),
                         $result .= Html::tag("p", "{$coworkerProperty->property->title} {$coworkerProperty->value} {$coworkerProperty->dimension->title}");
                     }
                     return $result;

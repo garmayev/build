@@ -156,7 +156,7 @@ class UserController extends \yii\rest\Controller
 
     public function actionSetToken($user_id)
     {
-        $model = \app\models\Coworker::findOne(['user_id' => $user_id]);
+        $model = \app\models\Profile::findOne(['id' => $user_id]);
         $data = \Yii::$app->request->post();
         if ($data["token"]) {
             $model->device_id = $data["token"];
