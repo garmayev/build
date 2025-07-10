@@ -287,7 +287,7 @@ class User extends ActiveRecord implements IdentityInterface
          */
         $userId = $this->id;
         return Order::find()
-            ->joinWith(['filters', 'filters.requirements' => function ($query) use ($userId) {
+            ->joinWith(['requirements' => function ($query) use ($userId) {
                 $query->alias('req');
             }])
             ->leftJoin(

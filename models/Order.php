@@ -116,8 +116,8 @@ class Order extends \yii\db\ActiveRecord
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
-            foreach ($this->filters as $filter) {
-                $filter->delete();
+            foreach ($this->requirements as $requirement) {
+                $requirement->delete();
             }
             foreach ($this->telegramMessages as $message) {
                 $message->remove();
@@ -158,7 +158,7 @@ class Order extends \yii\db\ActiveRecord
             [['building_id'], 'exist', 'skipOnError' => true, 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
             [['priority_level'], 'default', 'value' => Coworker::PRIORITY_HIGH],
             [['comment'], 'string'],
-            [['filters', 'datetime', 'attachments'], 'safe'],
+            [['datetime', 'attachments', 'requirements'], 'safe'],
             [['created_at'], 'default', 'value' => time()],
         ];
     }
@@ -345,58 +345,6 @@ class Order extends \yii\db\ActiveRecord
     }
 
     /**
-     * Sets filters for the order within a transaction
-     *
-     * @param array $data Array of filter IDs
-     * @throws \Exception if setting filters fails
-     */
-    public function setFilters($data)
-    {
-        $transaction = Yii::$app->db->beginTransaction();
-        try {
-            $this->save(false);
-            foreach ($this->filters as $filter) {
-                $this->unlink('filters', $filter, true);
-            }
-            if ($data) {
-                foreach ($data as $item) {
-                    $filter = new Filter();
-                    if ($filter->load(['Filter' => $item]) && $filter->save()) {
-                        $this->link('filters', $filter);
-                    } else {
-                        \Yii::error('Error saving filter: ' . json_encode($filter->getErrorSummary(true)));
-                    }
-                }
-            }
-            $transaction->commit();
-        } catch (\Exception $e) {
-            $transaction->rollBack();
-//            Yii::error('Error setting filters: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    /**
-     * Gets related OrderCoworker models
-     *
-     * @return ActiveQuery Query for related OrderCoworkers
-     */
-    public function getOrderCoworkers()
-    {
-        return $this->hasMany(OrderCoworker::class, ['order_id' => 'id']);
-    }
-
-    /**
-     * Gets related OrderFilter models
-     *
-     * @return ActiveQuery Query for related OrderFilters
-     */
-    public function getOrderFilters()
-    {
-        return $this->hasMany(OrderFilter::class, ['order_id' => 'id']);
-    }
-
-    /**
      * Gets related Notification models
      *
      * @return ActiveQuery Query for related Notifications
@@ -406,22 +354,34 @@ class Order extends \yii\db\ActiveRecord
         return $this->hasMany(Notification::class, ['order_id' => 'id']);
     }
 
-    /**
-     * Gets related Filter models through order_filter table
-     *
-     * @return ActiveQuery Query for related Filters
-     * @throws InvalidConfigException
-     */
-    public function getFilters(): ActiveQuery
-    {
-        return $this->hasMany(Filter::class, ['id' => 'filter_id'])
-            ->viaTable('order_filter', ['order_id' => 'id']);
-    }
-
     public function getRequirements(): ActiveQuery
     {
-        return $this->hasMany(Requirement::class, ['filter_id' => 'id'])
-            ->via('filters');
+        return $this->hasMany(Requirement::class, ['order_id' => 'id']);
+    }
+
+    public function setRequirements($data)
+    {
+        $transaction = Yii::$app->db->beginTransaction();
+        $this->save(false);
+        try {
+            foreach ($this->requirements as $requirement) {
+                $this->unlink('requirements', $requirement, true);
+            }
+            foreach ($data as $item) {
+                $requirement = new Requirement($item);
+                if ($requirement->save()) {
+                    \Yii::error($requirement->attributes);
+                    $this->link('requirements', $requirement);
+                } else {
+                    \Yii::error($requirement->errors);
+                }
+            }
+            $transaction->commit();
+        } catch (\Exception $exception) {
+            Yii::error('Error setting requirements: ' . $exception->getMessage());
+            $transaction->rollBack();
+            throw $exception;
+        }
     }
 
     /**
@@ -475,26 +435,31 @@ class Order extends \yii\db\ActiveRecord
      */
     public function getSuitableCoworkers(): array
     {
-        $users = User::find()->joinWith(['userProperties']);
-        foreach ($this->requirements as $requirement) {
-            $q = new ActiveQuery(Requirement::class);
-            switch ($requirement->type) {
-                case 'less':
-                    $q = $q->andWhere(['<=', 'requirement.value', $requirement->value]);
-            }
-            $users->orFilterWhere([
-                'and',
-                ['user_property.property_id' => $requirement->property_id],
-                ['user_property.dimension_id' => $requirement->dimension_id],
-                ['or',
-                    ['and', ['requirement.type' => 'less'], ['>=', 'user_property.value', $requirement->value]],
-                    ['and', ['requirement.type' => 'more'], ['<=', 'user_property.value', $requirement->value]],
-                    ['and', ['requirement.type' => 'equal'], ['=', 'user_property.value', $requirement->value]],
-                    ['and', ['requirement.type' => 'not-equal'], ['!=', 'user_property.value', $requirement->value]],
-                ]
-            ]);
-        }
-        return $users->all();
+        $requirementSubQuery = Requirement::find()
+            ->select(['property_id', 'dimension_id', 'category_id', 'type', 'value'])
+            ->where(['order_id' => $this->id]);
+
+        // Основной запрос для поиска подходящих пользователей
+        return User::find()
+            ->where(['exists', (new \yii\db\Query())
+                ->select('*')
+                ->from(['r' => $requirementSubQuery])
+                ->leftJoin('user_property up', [
+                    'and',
+                    'up.property_id = r.property_id',
+                    'up.dimension_id = r.dimension_id',
+                    'up.category_id = r.category_id'
+                ])
+                ->where('up.user_id = user.id')
+                ->andWhere([
+                    'or',
+                    ['and', ['r.type' => 'less'], ['<=', 'up.value', new \yii\db\Expression('r.value')]],
+                    ['and', ['r.type' => 'more'], ['>=', 'up.value', new \yii\db\Expression('r.value')]],
+                    ['and', ['r.type' => 'equal'], ['=', 'up.value', new \yii\db\Expression('r.value')]],
+                    ['and', ['r.type' => 'not-equal'], ['!=', 'up.value', new \yii\db\Expression('r.value')]]
+                ])
+            ])
+            ->all();
     }
 
     public function getOwner()

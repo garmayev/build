@@ -48,9 +48,11 @@ class OrderController extends BaseController
                 ])
             ]);
         } else {
+            $user = \Yii::$app->user->identity;
+            $query = $user->getSuitableOrders();
             return $this->render('index', [
                 'dataProvider' => new ActiveDataProvider([
-                    'query' => \Yii::$app->user->identity->getSuitableOrders()
+                    'query' => $query
                 ])
             ]);
         }
@@ -84,7 +86,7 @@ class OrderController extends BaseController
             $model->files = UploadedFile::getInstances($model, 'files');
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
                 \Yii::error($model->attributes);
-                $result = $model->sendAndUpdateTelegramNotifications();
+//                $result = $model->sendAndUpdateTelegramNotifications();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             }

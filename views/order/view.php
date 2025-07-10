@@ -23,7 +23,13 @@ echo DetailView::widget([
     'model' => $model,
     'attributes' => [
         'building.title',
-        'building.location.address',
+        [
+            'attribute' => 'building.location.address',
+            'format' => 'html',
+            'value' => function (Order $model) {
+                return $model->building->location->link;
+            }
+        ],
         [
             'attribute' => 'date',
             'value' => function ($model) {
@@ -58,45 +64,46 @@ echo DetailView::widget([
 
 echo GridView::widget([
     'dataProvider' => new ArrayDataProvider([
-        'allModels' => $model->filters
+        'allModels' => $model->requirements
     ]),
     'summary' => false,
     'columns' => [
-        'category.title',
-        'count',
         [
-            'attribute' => 'requirements',
-            'label' => \Yii::t('app', 'Requirement'),
-            'format' => 'raw',
-            'value' => function (\app\models\Filter $model) {
-                $result = '';
-                foreach ($model->requirements as $requirement) {
-                    $type = \Yii::t("app", $requirement->type);
-                    $result .= "<p>{$requirement->property->title} {$type} {$requirement->value} {$requirement->dimension->title}</p>";
-                }
-                return $result;
+            'attribute' => 'category.title',
+            'headerOptions' => ['class' => 'col-2'],
+        ],
+        [
+            'attribute' => 'count',
+            'headerOptions' => ['class' => 'col-2'],
+        ],
+        [
+            'attribute' => 'property.title',
+            'headerOptions' => ['class' => 'col-2'],
+        ],
+        [
+            'attribute' => 'type',
+            'headerOptions' => ['class' => 'col-2'],
+            'value' => function (\app\models\Requirement $model) {
+                return \Yii::t('app', $model->type);
             }
         ],
+        [
+            'attribute' => 'value',
+            'headerOptions' => ['class' => 'col-2'],
+        ],
+        [
+            'attribute' => 'dimension.title',
+            'headerOptions' => ['class' => 'col-2'],
+        ]
     ],
     'tableOptions' => [
         'class' => 'table table-striped'
     ]
 ]);
 
-
-$data = [];
-
-switch ($model->type) {
-    case Order::TYPE_COWORKER:
-        $data = $model->coworkers;
-        break;
-}
-
-if (count($data)) {
-
     echo GridView::widget([
         'dataProvider' => new ArrayDataProvider([
-            'allModels' => $data
+            'allModels' => $model->coworkers
         ]),
         'summary' => false,
         'columns' => [
@@ -124,4 +131,3 @@ if (count($data)) {
             'class' => 'table table-striped'
         ]
     ]);
-}

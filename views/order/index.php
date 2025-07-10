@@ -48,7 +48,7 @@ echo GridView::widget([
             'format' => 'raw',
             'value' => function (Order $model) {
                 $totalCount = 0;
-                foreach ( $model->filters as $filter) { $totalCount += $filter->count; }
+                foreach ( $model->requirements as $requirement) { $totalCount += $requirement->count; }
                 return count($model->coworkers)."/".$totalCount;
             }
         ], [

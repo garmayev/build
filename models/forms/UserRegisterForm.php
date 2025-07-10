@@ -89,7 +89,6 @@ class UserRegisterForm extends Model
         $this->_user->auth_key = \Yii::$app->security->generateRandomString();
         $this->_user->access_token = \Yii::$app->security->generateRandomString();
         $this->_user->status = User::STATUS_ACTIVE;
-        $this->_user->profile = [];
         $this->_user->referrer_id = $this->referrer;
         if ($this->_user->save()) {
             if ($this->is_mail) $this->sendMail();

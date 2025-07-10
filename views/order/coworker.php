@@ -62,9 +62,7 @@ echo $form->field($model, 'files[]')->fileInput([
 
 echo $form->field($model, 'comment')->textarea(['rows' => 6]);
 
-echo $form->field($model, 'orderFilters')->hiddenInput(['value' => Json::encode($model->orderFilters)])->label(false);
-
-echo Html::tag('div', '', ['class' => 'dynamicTable', 'data-content' => $model->filters]);
+echo Html::tag('div', '', ['class' => 'dynamicTable', 'data-content' => $model->requirements]);
 
 echo Html::submitButton(\Yii::t('app', 'Save'), ['class' => 'btn btn-success']);
 
