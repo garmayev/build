@@ -14,10 +14,7 @@ class OrderController extends Controller
     public function actionStack($order_id)
     {
         $order = Order::findOne($order_id);
-        foreach ($order->suitableCoworkers as $coworker) {
-            $name = strlen(ltrim($coworker->profile->fullName)) ? $coworker->profile->fullName : $coworker->username;
-            echo "{$name}\n";
-        }
+        echo $order->isFull();
     }
 
     public function actionNotify($order_id = null, $priority = Coworker::PRIORITY_HIGH)

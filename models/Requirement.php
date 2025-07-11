@@ -15,6 +15,7 @@ use Yii;
  * @property float|null $value
  * @property string|null $type
  * @property int|null $filter_id
+ * @property int|null $count
  *
  * @property Dimension $dimension
  * @property Property $property

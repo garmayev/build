@@ -401,13 +401,13 @@ class Order extends \yii\db\ActiveRecord
      */
     public function getRequiredCoworkers()
     {
+        /**
+         * @var Requirement $requirement
+         */
         $total = 0;
         foreach ($this->requirements as $requirement) {
             $total += $requirement->count;
         }
-//        foreach ($this->filters as $filter) {
-//            $total += $filter->count;
-//        }
         return $total;
     }
 

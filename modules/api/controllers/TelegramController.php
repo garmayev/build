@@ -70,11 +70,11 @@ class TelegramController extends \yii\web\Controller
                     "ok" => false,
                     "message" => "Missing args['order_id']"
                 ]);
+                return ['ok' => false];
             }
 
             $order = Order::findOne($orderId);
             $coworker = User::find()->joinWith('profile')->where(['profile.chat_id' => $telegram->input->callback_query->from["id"]]);
-//            \Yii::error($coworker->createCommand()->rawSql);
             $coworker = $coworker->one();
 
             if (!$order || !$coworker) {
@@ -85,7 +85,7 @@ class TelegramController extends \yii\web\Controller
             }
 
             // Add coworker to order
-            \Yii::error('isFull: ' . $order->isFull());
+            \Yii::error($order->isFull());
             if (!$order->isFull()) {
                 if (!$order->assignCoworker($coworker)) {
                     \Yii::error(["ok" => false, "message" => "Coworker {$coworker->name} is already agreed to order #{$order->id}"]);
