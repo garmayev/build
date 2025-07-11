@@ -1,10 +1,8 @@
 <?php
 
-namespace app\migrations;
-
 use yii\db\Migration;
 
-class M250710105603AddColumnCategoryIdToRequirementTable extends Migration
+class m250710_105603_add_column_category_id_to_requirement_table extends Migration
 {
     /**
      * {@inheritdoc}

@@ -29,12 +29,12 @@ class Helper extends Component
         $totalRequired = $order->requiredCoworkers;
         $message .= "\n" . \Yii::t("app", "<b>Requirements</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
 //        $message .= \Yii::t("app", "Requirements:") . "\n";
-        foreach ($order->filters as $filter) {
-            $message .= "- {$filter->category->title}\n";
-            foreach ($filter->requirements as $requirement) {
+//        foreach ($order->filters as $filter) {
+//            $message .= "- {$filter->category->title}\n";
+            foreach ($order->requirements as $requirement) {
                 $message .= "--- {$requirement->property->title} {$requirement->type} {$requirement->value} {$requirement->dimension->title}\n";
             }
-        }
+//        }
         return $message;
     }
 

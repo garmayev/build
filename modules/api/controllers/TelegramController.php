@@ -74,7 +74,7 @@ class TelegramController extends \yii\web\Controller
 
             $order = Order::findOne($orderId);
             $coworker = User::find()->joinWith('profile')->where(['profile.chat_id' => $telegram->input->callback_query->from["id"]]);
-            \Yii::error($coworker->createCommand()->rawSql);
+//            \Yii::error($coworker->createCommand()->rawSql);
             $coworker = $coworker->one();
 
             if (!$order || !$coworker) {
@@ -85,6 +85,7 @@ class TelegramController extends \yii\web\Controller
             }
 
             // Add coworker to order
+            \Yii::error('isFull: ' . $order->isFull());
             if (!$order->isFull()) {
                 if (!$order->assignCoworker($coworker)) {
                     \Yii::error(["ok" => false, "message" => "Coworker {$coworker->name} is already agreed to order #{$order->id}"]);
@@ -99,13 +100,13 @@ class TelegramController extends \yii\web\Controller
                     $order->save();
                     if (YII_ENV === 'prod') {
                         foreach ($messages->all() as $message) {
-                            if ( in_array($message->chat_id, array_merge(\yii\helpers\ArrayHelper::map($order->coworkers, 'chat_id', 'chat_id'), [$order->owner->chat_id => $order->owner->chat_id])) ) {
+                            if ( in_array($message->chat_id, array_merge(\yii\helpers\ArrayHelper::map($order->coworkers, 'profile.chat_id', 'profile.chat_id'), [$order->owner->profile->chat_id => $order->owner->profile->chat_id])) ) {
                                 $message->editMessageText(Helper::generateTelegramHiddenMessage($order->id), null);
                             } else {
                                 $message->remove();
                             }
                         }
-                        if ( $order->owner->chat_id ) {
+                        if ( $order->owner->profile->chat_id ) {
                             $message->editMessageText(Helper::generateTelegramHiddenMessage($order->id), null);
                         }
                     } else {

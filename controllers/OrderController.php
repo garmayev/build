@@ -85,8 +85,8 @@ class OrderController extends BaseController
         if (\Yii::$app->request->isPost) {
             $model->files = UploadedFile::getInstances($model, 'files');
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
-                \Yii::error($model->attributes);
-//                $result = $model->sendAndUpdateTelegramNotifications();
+//                \Yii::error($model->attributes);
+                $result = $model->sendAndUpdateTelegramNotifications();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             }
