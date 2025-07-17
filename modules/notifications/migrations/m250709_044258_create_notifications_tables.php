@@ -1,7 +1,5 @@
 <?php
 
-namespace app\modules\notifications\migrations;
-
 use yii\db\Migration;
 
 class m250709_044258_create_notifications_tables extends Migration
@@ -21,7 +19,7 @@ class m250709_044258_create_notifications_tables extends Migration
             'created_at' => $this->integer()->notNull(),
         ]);
 
-        $this->createTable('{{%notification_log}}', [
+        $this->createTable('{{%notifications_log}}', [
             'id' => $this->primaryKey(),
             'notification_id' => $this->integer()->notNull(),
             'channel' => $this->string(50)->notNull(),
@@ -36,8 +34,8 @@ class m250709_044258_create_notifications_tables extends Migration
         ]);
 
         $this->addForeignKey(
-            'fk_notification_log_notification',
-            '{{%notification_log}}',
+            'fk_notifications_log_notification',
+            '{{%notifications_log}}',
             'notification_id',
             '{{%notifications}}',
             'id',
@@ -50,8 +48,8 @@ class m250709_044258_create_notifications_tables extends Migration
      */
     public function safeDown()
     {
-        $this->dropForeignKey('fk_notification_log_notification', '{{%notification_log}}');
-        $this->dropTable('{{%notification_log}}');
+        $this->dropForeignKey('fk_notifications_log_notification', '{{%notifications_log}}');
+        $this->dropTable('{{%notifications_log}}');
         $this->dropTable('{{%notifications}}');
     }
 }

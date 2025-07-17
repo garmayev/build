@@ -1,12 +1,6 @@
 <?php
 
-use app\models\Coworker;
-use app\models\CoworkerProperty;
-use app\models\Profile;
-use yii\data\ArrayDataProvider;
-use yii\grid\GridView;
 use yii\helpers\Html;
-use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
 /** @var app\models\User $model */

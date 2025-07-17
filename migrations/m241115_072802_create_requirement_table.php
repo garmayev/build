@@ -18,7 +18,6 @@ class m241115_072802_create_requirement_table extends Migration
             'dimension_id' => $this->integer(),
             'value' => $this->double(),
             'type' => $this->string(),
-            'filter_id' => $this->integer()
         ]);
         $this->createIndex(
             'idx-requirement-property_id',
@@ -44,18 +43,6 @@ class m241115_072802_create_requirement_table extends Migration
             '{{%dimension}}',
             'id'
         );
-        $this->createIndex(
-            'idx-requirement-filter_id',
-            '{{%requirement}}',
-            'filter_id',
-        );
-        $this->addForeignKey(
-            'fk-requirement-filter_id',
-            '{{%requirement}}',
-            'filter_id',
-            '{{%filter}}',
-            'id'
-        );
     }
 
     /**
@@ -67,8 +54,6 @@ class m241115_072802_create_requirement_table extends Migration
         $this->dropIndex('idx-requirement-property_id', '{{%requirement}}');
         $this->dropForeignKey('fk-requirement-dimension_id', '{{%requirement}}');
         $this->dropIndex('idx-requirement-dimension_id', '{{%requirement}}');
-        $this->dropForeignKey('fk-requirement-filter_id', '{{%requirement}}');
-        $this->dropIndex('idx-requirement-filter_id', '{{%requirement}}');
         $this->dropTable('{{%requirement}}');
     }
 }

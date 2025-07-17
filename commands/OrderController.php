@@ -17,70 +17,37 @@ class OrderController extends Controller
         echo $order->isFull();
     }
 
-    public function actionNotify($order_id = null, $priority = Coworker::PRIORITY_HIGH)
+    public function actionNotify($order_id = null, $priority = User::PRIORITY_HIGH)
     {
         session_start();
         if ($order_id) {
             $model = Order::findOne($order_id);
             $_SESSION['__id'] = $model->created_by;
 //            echo $model->notify_stage . "\n";
-            if ($model->notify_stage >= 0) {
+            if ($model->priority_level >= 0) {
                 if ($this->checkTime($model->notify_date)) {
-                    $model->notify($model->notify_stage - 1);
+                    $model->sendAndUpdateTelegramNotifications($model->priority_level - 1);
                 }
             }
         } else {
             $models = Order::find()->where(['status' => Order::STATUS_NEW])->all();
             foreach ($models as $model) {
                 echo "Order #{$model->id}\n";
-                $priority = $this->getPriority($model, isset($model->notify_stage) ? $model->notify_stage - 1 : Coworker::PRIORITY_HIGH);
+                $priority = $this->getPriority($model, isset($model->priority_level) ? $model->priority_level - 1 : User::PRIORITY_HIGH);
                 $_SESSION['__id'] = $model->created_by;
-                if ( $model->notify_stage > 0 ) {
-                    echo "\tStage: {$model->notify_stage}\n";
+                if ( $model->priority_level > 0 ) {
+                    echo "\tStage: {$model->priority_level}\n";
                     echo "\tDate: {$model->notify_date}\n";
                     if ($this->checkTime($model->notify_date)) {
                         echo "\tPriority: $priority\n";
-                        $model->notify($model);
+                        $model->sendAndUpdateTelegramNotifications($model);
                     }
                 }
             }
         }
     }
 
-    public function actionCoworkers($order_id, $priority = Coworker::PRIORITY_HIGH)
-    {
-        session_start();
-        $_SESSION['__id'] = 1;
-        $model = Order::findOne($order_id);
-//        if (isset($model->coworkers)) {
-//            echo "$model->id\n";
-//        }
-        $coworkerList = [];
-        foreach ($model->filters as $filter) {
-            $coworkerList = array_merge( \app\models\Coworker::searchByFilter($filter, 0), $coworkerList );
-
-            foreach ($coworkerList as $coworker) {
-                echo $coworker->firstname." ".$coworker->lastname."\n";
-            }
-        }
-        echo "$order_id\n";
-//        echo "Priority: {$this->findCoworkerByPriority($order_id, $priority)}\n";
-    }
-
-    public function actionAssign($order_id, $coworker_id)
-    {
-        $model = Order::findOne($order_id);
-        if ($model) {
-            echo "Order {$order_id} is founded\n";
-        }
-        $coworker = Coworker::findOne($coworker_id);
-        if ($coworker) {
-            echo "Coworker #{$coworker_id} is founded\n";
-        }
-        $model->assignCoworker($coworker);
-    }
-
-    private function checkTime($timestamp)
+    private function checkTime($timestamp): bool
     {
         $now = time();
         $delay = \Yii::$app->params['notify_delay'];
@@ -91,7 +58,7 @@ class OrderController extends Controller
     {
         for ($i = $priority; $i >= -1; $i--) {
 //            echo "#$i ";
-            if (count($model->issetCoworkers($i)) > 0) {
+            if (count($model->getSuitableCoworkers()) > 0) {
                 return $i;
             }
         }

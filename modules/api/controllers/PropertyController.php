@@ -5,9 +5,9 @@ namespace app\modules\api\controllers;
 use app\models\Category;
 use app\models\Property;
 use yii\helpers\ArrayHelper;
-use yii\rest\ActiveController;
+use yii\rest\Controller;
 
-class PropertyController extends ActiveController
+class PropertyController extends Controller
 {
     public $modelClass = Property::class;
 
@@ -21,7 +21,6 @@ class PropertyController extends ActiveController
                     'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
                     'Access-Control-Request-Headers' => ['*'],
                     'Access-Control-Allow-Credentials' => true,
-                    'CORS_ORIGIN_WHITELIST' => '',
                     'Access-Control-Max-Age' => 86400,
                     'Access-Control-Allow-Origin' => ['*'],
                 ],
@@ -32,11 +31,12 @@ class PropertyController extends ActiveController
                     // Guests
                     [ 'allow' => true, 'roles' => ['?'], 'actions' => [] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['index', 'view', 'create', 'update', 'delete', 'options'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['index', 'list', 'view', 'info'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
+                'except' => ['index', 'list', 'view'],
             ],
         ];
     }
@@ -49,14 +49,29 @@ class PropertyController extends ActiveController
             'create' => ['POST', 'OPTIONS'],
             'update' => ['POST', 'PUT', 'OPTIONS'],
             'delete' => ['DELETE', 'OPTIONS'],
-            'by-category' => ['GET', 'OPTIONS'],
+            'check' => ['POST', 'OPTIONS'],
+            'login' => ['POST', 'OPTIONS'],
+            'calendar-month' => ['GET', 'OPTIONS'],
         ];
     }
 
     public function beforeAction($action)
     {
-        $this->response->format = \yii\web\Response::FORMAT_JSON;
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return parent::beforeAction($action);
+    }
+
+    public function actionIndex()
+    {
+        return [
+            'ok' => true,
+            'data' => $this->modelClass::find()->all(),
+        ];
+    }
+
+    public function actionView($id)
+    {
+        return $this->modelClass::findOne($id);
     }
 
     public function actionByCategory($id = null)

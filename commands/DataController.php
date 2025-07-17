@@ -4,9 +4,7 @@ namespace app\commands;
 
 use app\models\Building;
 use app\models\Category;
-use app\models\Coworker;
 use app\models\Dimension;
-use app\models\Location;
 use app\models\Order;
 use app\models\Property;
 use app\models\Telegram;
@@ -71,6 +69,13 @@ class DataController extends Controller
         ]
     ];
 
+    protected $faker;
+    public function init()
+    {
+        parent::init();
+        $this->faker = Factory::create();
+    }
+
     public function actionDemo()
     {
         if ($this->createUser()) {
@@ -123,12 +128,78 @@ class DataController extends Controller
     public function actionMessage($user_id)
     {
         $user = User::findOne($user_id);
-        $coworker = Coworker::findOne(["user_id" => $user_id]);
         $message = new ExpoMessage([
             'title' => "Title",
             'body' => "Body",
         ]);
         $expo = new Expo();
-        $expo->send($message)->to($coworker->device_id)->push();
+        $expo->send($message)->to($user->profile->device_id)->push();
+    }
+
+    public function actionFixtureUsers()
+    {
+        $transaction = \Yii::$app->db->beginTransaction();
+        try {
+            for ($i = 1; $i <= 5; $i++) {
+                if (empty($temp = $this->generateUser(
+                    $this->faker->username,
+                    $this->faker->email,
+                    '123456',
+                    User::STATUS_ACTIVE,
+                    $this->faker->numberBetween(0, 2),
+                ))) {
+                    echo \Yii::t('app', "Fixture user #{$temp->id} {$temp->username} created")."\n";
+                }
+            }
+            for ($i = 1; $i <= 10; $i++) {
+                if (empty($temp = $this->generateUser(
+                    $this->faker->username,
+                    $this->faker->email,
+                    '123456',
+                    User::STATUS_ACTIVE,
+                    $this->faker->numberBetween(0, 2),
+                ))) {
+                    echo \Yii::t('app', "Fixture user #{$temp->id} {$temp->username} created")."\n";
+                }
+            }
+            $transaction->commit();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            \Yii::error($e->getMessage());
+            throw $e;
+        }
+
+    }
+
+    protected function generateUser($username, $email, $password, $status, $priority)
+    {
+        $user = new User([
+            'username' => $username,
+            'email' => $email,
+            'password_hash' => \Yii::$app->security->generatePasswordHash($password),
+            'auth_key' => \Yii::$app->security->generateRandomString(),
+            'access_token' => \Yii::$app->security->generateRandomString(),
+            'status' => $status,
+            'referrer_id' => 1,
+            'priority_level' => $priorities[$priority],
+        ]);
+        if( $user->save()) {
+            return $user;
+        } else {
+            \Yii::error($user->errors);
+            return null;
+        }
+    }
+
+    protected function createOrder($date)
+    {
+        $transaction = \Yii::$app->db->beginTransaction();
+        try {
+
+        }catch (\Exception $e){
+            $transaction->rollBack();
+            \Yii::error($e->getMessage());
+            return null;
+        }
     }
 }

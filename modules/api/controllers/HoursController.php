@@ -94,7 +94,7 @@ class HoursController extends \yii\rest\Controller {
     {
         $d = \Yii::$app->formatter->asDate($date, 'php:YYYY-m-d');
         if ($coworker_id) {
-            return ["ok" => true, "model" => \app\models\Hours::find()->where(["date" => $d])->andWhere(["coworker_id" => $coworker_id])->one()];
+            return ["ok" => true, "model" => \app\models\Hours::find()->where(["date" => $d])->andWhere(["user_id" => $coworker_id])->one()];
         }
     }
 }

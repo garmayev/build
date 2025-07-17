@@ -56,11 +56,10 @@ $config = [
     'controllerMap' => [
         'migrate' => [
             'class' => 'yii\console\controllers\MigrateController',
-//            'migrationPath' => null,
             'migrationPath' => [
-                'app\migrations',
-                'yii\rbac\migrations',
-                'app\modules\notifications\migrations',
+                '@app/migrations',
+                '@yii/rbac/migrations',
+                '@app/modules/notifications/migrations',
             ],
         ]
     ],

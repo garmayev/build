@@ -1,3 +1,5 @@
+import {useTranslation} from "react-i18next";
+
 export const Helper = {
     // url: "http://build.local",
     url: "",
@@ -7,6 +9,11 @@ export const Helper = {
         equal: 'Равно',
         'not-equal': 'Не равно'
     },
+    priorities: [
+        'Низкий приоритет',
+        'Средний приоритет',
+        'Высокий приоритет'
+    ],
     status: [
         'Выключен',
         'Активен',

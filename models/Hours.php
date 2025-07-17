@@ -11,31 +11,33 @@ use yii\db\ActiveRecord;
  * @property bool $is_payed
  * @property string $date
  *
- * @property Coworker $coworker
+ * @property User $user
  * @property Order $order
  * @property float $price
+ * @property int $debit
+ * @property int $credit
  */
 class Hours extends ActiveRecord 
 {
-    public static function tableName() 
+    public static function tableName(): string
     {
         return "hours";
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['coworker_id'], 'required'],
-            [['coworker_id', 'order_id'], 'integer'],
-            [['coworker_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['coworker_id' => 'id']],
+            [['user_id'], 'required'],
+            [['user_id', 'order_id'], 'integer'],
+            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
             [['order_id'], 'exist', 'skipOnError' => true, 'targetClass' => Order::className(), 'targetAttribute' => ['order_id' => 'id']],
             [['count'], 'integer'],
             [['is_payed'], 'boolean'],
-            [['date'], 'default', 'value' => date('Y-m-d')],
+            [['date'], 'date', 'format' => 'php:Y-m-d'],
         ];
     }
 
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'coworker_id' => \Yii::t('app', 'Coworker ID'),
@@ -45,47 +47,57 @@ class Hours extends ActiveRecord
         ];
     }
 
-    public function fields()
+    public function fields(): array
     {
         return [
-            'coworker_id',
+            'user_id',
             'date',
             'count',
             'is_payed',
             'order_id',
-            'current_price' => function (Hours $model) {
-                if ($model->price) {
-                    return $model->price;
-                }
+            'price' => function (Hours $model) {
+                return $model->getPrice();
             },
-            'payed_value' => function (Hours $model) {
-                if ($model->is_payed) {
-                    $price = $model->price ? $model->price : 0;
-                    return $model->count * $price;
-                }
-                return 0;
-            },
-            'unpayed_value' => function (Hours $model) {
-                if (!$model->is_payed) {
-                    $price = $model->price ? $model->price : 0;
-                    return $model->count * $price;
-                }
-                return 0;
-            }
+            'debit',
+            'credit'
         ];
     }
 
-    public function getCoworker() {
-        return $this->hasOne(Coworker::class, ['id' => 'coworker_id']);
+    public function getUser(): \yii\db\ActiveQuery
+    {
+        return $this->hasOne(User::class, ['id' => 'coworker_id']);
     }
 
-    public function getOrder() {
+    public function getOrder(): \yii\db\ActiveQuery
+    {
         return $this->hasOne(Order::class, ['id' => 'order_id']);
     }
 
-    public function getPrice()
+    public function getPrice(): float
     {
-        $priceModel =  $this->hasOne(Price::class, ['coworker_id' => 'coworker_id'])->andWhere(['<=', 'date', $this->date])->orderBy(['date' => SORT_DESC]);
-        return $priceModel->one() ? $priceModel->one()->price : 0;
+        $priceModel = Price::find()
+            ->where(['user_id' => $this->user_id])
+            ->andWhere(['>=', 'date', $this->date])
+            ->orderBy(['date' => SORT_DESC])
+            ->one();
+//        \Yii::error($priceModel->createCommand()->getRawSql());
+//        $priceModel = $priceModel->one();
+        return $priceModel ? $priceModel->price : 0;
+    }
+
+    public function getDebit(): float
+    {
+        if ($this->is_payed) {
+            return $this->count * $this->price;
+        }
+        return 0;
+    }
+
+    public function getCredit(): float
+    {
+        if (!$this->is_payed) {
+            return $this->count * $this->price;
+        }
+        return 0;
     }
 }

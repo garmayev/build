@@ -38,8 +38,11 @@ class UserProperty extends ActiveRecord
     public function fields()
     {
         return [
+            'property_id',
             'property',
+            'dimension_id',
             'dimension',
+            'category_id',
             'category',
             'value'
         ];

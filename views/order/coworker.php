@@ -45,16 +45,28 @@ echo $form->field($model, 'building_id')->dropDownList(
     )
 )->label(\Yii::t('app', 'Select building'));
 
-echo $form->field($model, 'datetime')->widget(DateTimePicker::class, [
-    'convertFormat' => true,
-    'pluginOptions' => [
-        'autoclose' => true,
-        'startDate' => date('Y.m.d'),
-        'minView' => 2,
-        'format' => 'dd.MM.yyyy',
-        'daysOfWeekDisabled' => [0, 6],
-    ]
-])->label(\Yii::t('app', 'Select date'));
+echo $form->field($model, 'datetime')->textInput(['type' => 'date', 'value' => \Yii::$app->formatter->asDate($model->date, 'php:Y-m-d')])->label(\Yii::t('app', 'Select date'));
+
+if (count($model->attachments)) {
+    echo \yii\grid\GridView::widget([
+        'dataProvider' => new \yii\data\ArrayDataProvider([
+            'allModels' => $model->attachments,
+        ]),
+        'summary' => false,
+        'tableOptions' => [
+            'class' => 'table table-striped',
+        ],
+        'columns' => [
+            [
+                'attribute' => 'url',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    return Html::a($model->url, $model->url);
+                }
+            ]
+        ]
+    ]);
+}
 
 echo $form->field($model, 'files[]')->fileInput([
     'multiple' => true,
@@ -62,7 +74,7 @@ echo $form->field($model, 'files[]')->fileInput([
 
 echo $form->field($model, 'comment')->textarea(['rows' => 6]);
 
-echo Html::tag('div', '', ['class' => 'dynamicTable', 'data-content' => $model->requirements]);
+echo Html::tag('div', '', ['class' => 'dynamicTable', 'data-index' => $model->id, 'data-lang' => \Yii::$app->language, 'data-is-new' => $model->isNewRecord ? "true" : "false"]);
 
 echo Html::submitButton(\Yii::t('app', 'Save'), ['class' => 'btn btn-success']);
 

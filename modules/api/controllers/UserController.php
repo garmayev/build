@@ -41,7 +41,6 @@ class UserController extends \yii\rest\Controller
                         'update-account',
                         'update-profile',
                         'get-roles',
-                        'get-roles',
                         'create-profile',
                         'create-account',
                     ]],

@@ -52,17 +52,13 @@ class Requirement extends \yii\db\ActiveRecord
     public function fields()
     {
         return [
-            'property' => function (Requirement $model) {
-                return $model->property;
-            },
-            'dimension' => function (Requirement $model) {
-                return $model->dimension;
-            },
+            'property_id',
+            'dimension_id',
+            'category_id',
+            'order_id',
             'value',
+            'count',
             'type',
-            'coworkers' => function (Requirement $model) {
-//                return $model->getCoworkers();
-            },
         ];
     }
 

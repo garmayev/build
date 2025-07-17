@@ -4,7 +4,11 @@ namespace app\modules\api\controllers;
 
 use app\models\Coworker;
 use app\models\Hours;
+use app\models\Order;
+use app\models\OrderCoworker;
+use app\models\OrderUser;
 use app\models\User;
+use yii\helpers\ArrayHelper;
 use yii\rest\ActiveController;
 
 class CoworkerController extends ActiveController
@@ -35,9 +39,9 @@ class CoworkerController extends ActiveController
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => [] ],
+                    ['allow' => true, 'roles' => ['?'], 'actions' => []],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders', 'calendar-month'] ],
+                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders', 'calendar-month']],
                 ],
             ],
             'authenticator' => [
@@ -89,13 +93,13 @@ class CoworkerController extends ActiveController
         return ["ok" => true, "data" => $model];
     }
 
-    public function actionImages() 
+    public function actionImages()
     {
         \Yii::error("check?");
         $files = $_FILES;
-        $target_path = "/upload/".basename($files['file']['name']);
+        $target_path = "/upload/" . basename($files['file']['name']);
 
-        if (move_uploaded_file($files['file']['tmp_name'], \Yii::getAlias("@webroot").$target_path)) {
+        if (move_uploaded_file($files['file']['tmp_name'], \Yii::getAlias("@webroot") . $target_path)) {
             return ["ok" => true, "data" => $target_path];
         } else {
             \Yii::error("Something went wrong");
@@ -121,7 +125,7 @@ class CoworkerController extends ActiveController
         $coworker = User::findOne(\Yii::$app->user->getId());
         \Yii::error($coworker->getSuitableOrders()->all());
         if ($coworker) {
-            return [ "ok" => true, "data" => $coworker->getSuitableOrders()->all() ];
+            return ["ok" => true, "data" => $coworker->getSuitableOrders()->all()];
         }
         return ["ok" => false];
     }
@@ -132,12 +136,32 @@ class CoworkerController extends ActiveController
         $order->notify();
     }
 
+    public function actionCalendar($startDate = null, $finishDate = null)
+    {
+        $user = \Yii::$app->user->identity;
+        $referrals = $user->referrals;
+        $result = [];
+
+        \Yii::error(count($referrals));
+        foreach ($referrals as $referral) {
+            $result[] = [
+                'user' => $referral,
+                'hours' => $referral->hours,
+                'debit_amount' => $referral->getDebitAmount($startDate, $finishDate),
+                'credit_amount' => $referral->getCreditAmount($startDate, $finishDate),
+                'debit_hours' => $referral->getDebitHours($startDate, $finishDate),
+                'credit_hours' => $referral->getCreditHours($startDate, $finishDate),
+            ];
+        }
+        return $result;
+    }
+
     public function actionCalendarMonth($year, $month)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $result = [];
         if (\Yii::$app->user->can('admin')) {
-            $users = \app\models\User::find()->all();
+            $users = \app\models\User::find()->where(['referrer_id' => \Yii::$app->user->id])->all();
         } else if (\Yii::$app->user->can('director')) {
             $users = \app\models\User::find()->where(['referrer_id' => \Yii::$app->user->id])->all();
         } else {
@@ -146,44 +170,56 @@ class CoworkerController extends ActiveController
         /**
          * @var User $user
          */
-        foreach ($users as $user) {
-            $hours = \app\models\Hours::find()
-                ->where(['>=', 'date', date("$year-$month-01")])
-                ->andWhere(['<=', 'date', date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year))])
-                ->andWhere(['coworker_id' => $user->id])
-                ->all();
-            $payed = 0;
-            $payed_hours = 0;
-            $un_payed = 0;
-            $un_payed_hours = 0;
-            /**
-             * @var Hours $hour
-             * @var int $payed
-             * @var int $un_payed
-             * @var int $payed_hours
-             * @var int $un_payed_hours
-             */
-            foreach ($hours as $hour) {
-                if ($hour->is_payed) {
-                    $payed += $hour->price;
-                    $payed_hours += $hour->count;
-                } else {
-                    $un_payed += $hour->price;
-                    $un_payed_hours += $hour->count;
-                }
-            }
-            $result[] = [
-                'id' => $user->id,
-                'name' => $user->name,
-                'data' => $hours,
-                'total' => 0,
-                'payed' => $payed,
-                'payed_hours' => $payed_hours,
-                'un_payed' => $un_payed,
-                'un_payed_hours' => $un_payed_hours,
-            ];
-        }
-        return $result;
+        $referrals = \Yii::$app->user->identity->referrals;
+        $orderIds = OrderUser::find()
+            ->select('order_id')
+            ->innerJoin('user', 'order_user.user_id = user.id')
+            ->where(['user.referrer_id' => \Yii::$app->user->id])
+            ->column();
+        $orders = Order::find()
+            ->where(['id' => $orderIds])
+            ->all();
+        $hours = Hours::find()
+            ->where(['order_id' => $orderIds])
+            ->all();
+//        foreach ($users as $user) {
+//            $hours = \app\models\Hours::find()
+//                ->where(['>=', 'date', date("$year-$month-01")])
+//                ->andWhere(['<=', 'date', date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year))])
+//                ->andWhere(['coworker_id' => $user->id])
+//                ->all();
+//            $payed = 0;
+//            $payed_hours = 0;
+//            $un_payed = 0;
+//            $un_payed_hours = 0;
+//            /**
+//             * @var Hours $hour
+//             * @var int $payed
+//             * @var int $un_payed
+//             * @var int $payed_hours
+//             * @var int $un_payed_hours
+//             */
+//            foreach ($hours as $hour) {
+//                if ($hour->is_payed) {
+//                    $payed += $hour->price;
+//                    $payed_hours += $hour->count;
+//                } else {
+//                    $un_payed += $hour->price;
+//                    $un_payed_hours += $hour->count;
+//                }
+//            }
+//            $result[] = [
+//                'id' => $user->id,
+//                'name' => $user->name,
+//                'data' => $hours,
+//                'total' => 0,
+//                'payed' => $payed,
+//                'payed_hours' => $payed_hours,
+//                'un_payed' => $un_payed,
+//                'un_payed_hours' => $un_payed_hours,
+//            ];
+//        }
+        return $hours;
     }
 
     public function actionAdvanced($id)

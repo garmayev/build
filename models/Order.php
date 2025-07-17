@@ -29,13 +29,8 @@ use yii\helpers\ArrayHelper;
  * @property array $details
  *
  * @property Building $building
- * @property Coworker[] $coworkers
+ * @property User[] $coworkers
  * @property Filter[] $filters
- * @property Material[] $materials
- * @property OrderCoworker[] $orderCoworkers
- * @property OrderFilter[] $orderFilters
- * @property OrderMaterial[] $orderMaterials
- * @property OrderTechnique[] $orderTechniques
  * @property Technique[] $techniques
  * @property Attachment[] $attachments
  * @property Requirement[] $requirements
@@ -146,6 +141,12 @@ class Order extends \yii\db\ActiveRecord
         return parent::beforeValidate();
     }
 
+    public function afterFind()
+    {
+        $this->datetime = \Yii::$app->formatter->asDate($this->date, 'php:d.m.Y');
+        parent::afterFind();
+    }
+
     /**
      * Defines validation rules for model attributes
      *
@@ -156,7 +157,7 @@ class Order extends \yii\db\ActiveRecord
         return [
             [['status', 'building_id', 'date', 'type', 'created_by', 'created_at', 'priority_level'], 'integer'],
             [['building_id'], 'exist', 'skipOnError' => true, 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
-            [['priority_level'], 'default', 'value' => Coworker::PRIORITY_HIGH],
+            [['priority_level'], 'default', 'value' => User::PRIORITY_HIGH],
             [['comment'], 'string'],
             [['datetime', 'attachments', 'requirements'], 'safe'],
             [['created_at'], 'default', 'value' => time()],
@@ -207,11 +208,11 @@ class Order extends \yii\db\ActiveRecord
                     ->andWhere(['target_id' => $model->id])
                     ->all();
             },
-            'filters' => function (Order $model) {
-                return $model->filters;
-            },
             'coworkers' => function (Order $model) {
                 return $model->coworkers;
+            },
+            'requirements' => function (Order $model) {
+                return $model->requirements;
             },
             'hours',
         ];
@@ -384,6 +385,11 @@ class Order extends \yii\db\ActiveRecord
         }
     }
 
+    public function getOderUsers()
+    {
+        return $this->hasMany(OrderUser::class, ['order_id' => 'id']);
+    }
+
     /**
      * Gets related TelegramMessage models
      *
@@ -444,7 +450,8 @@ class Order extends \yii\db\ActiveRecord
 
         // Основной запрос для поиска подходящих пользователей
         return User::find()
-            ->where(['exists', (new \yii\db\Query())
+            ->where(['and', ['priority_level' => $this->priority_level], ['referrer_id' => $this->owner->id]])
+            ->andWhere(['exists', (new \yii\db\Query())
                 ->select('*')
                 ->from(['r' => $requirementSubQuery])
                 ->leftJoin('user_property up', [
@@ -473,7 +480,7 @@ class Order extends \yii\db\ActiveRecord
     /**
      * Assigns a coworker to the order
      *
-     * @param Coworker $coworker The coworker to assign
+     * @param User $coworker The coworker to assign
      */
     public function assignCoworker($coworker)
     {
@@ -507,8 +514,7 @@ class Order extends \yii\db\ActiveRecord
                 ]
             ];
 
-            foreach ($this->getSuitableCoworkers() as $coworker) {
-                \Yii::error($coworker->attributes);
+            foreach ($this->suitableCoworkers as $coworker) {
                 if ($coworker->status === User::STATUS_ACTIVE) {
                     $telegramMessages = $this->telegramMessages;
                     if (count($telegramMessages)) {
@@ -522,7 +528,7 @@ class Order extends \yii\db\ActiveRecord
                     }
                 }
             }
-            if ($this->owner->chat_id) {
+            if ($this->owner->profile->chat_id) {
                 $notificationService->sendTelegramMessage($this->owner->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, null, $this->id);
             }
         } catch (\Exception $e) {

@@ -4,6 +4,7 @@ namespace app\models;
 
 use Yii;
 use yii\behaviors\BlameableBehavior;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
@@ -19,6 +20,7 @@ use yii\web\IdentityInterface;
  * @property int $referrer_id
  *
  * @property User $referrer
+ * @property User[] $referrals
  * @property Profile $profile
  * @property array $statusList
  * @property string $statusName
@@ -26,9 +28,17 @@ use yii\web\IdentityInterface;
  * @property UserProperty[] $userProperties
  * @property Property[] $properties
  * @property Order[] $suitableOrders
+ * @property Price[] $prices
+ * @property Hours[] $hours
+ * @property float $debitAmount
+ * @property float $creditAmount
  */
 class User extends ActiveRecord implements IdentityInterface
 {
+    const PRIORITY_LOW = 0;
+    const PRIORITY_NORMAL = 1;
+    const PRIORITY_HIGH = 2;
+
     const STATUS_DISABLED = 0;
     const STATUS_ACTIVE = 1;
     const STATUS_INACTIVE = 2;
@@ -56,11 +66,12 @@ class User extends ActiveRecord implements IdentityInterface
             [['username', 'email', 'auth_key', 'access_token'], 'string'],
             [['status'], 'integer'],
             [['status'], 'default', 'value' => self::STATUS_ACTIVE],
-            [['userProperties'], 'safe'],
+            [['priority_level'], 'default', 'value' => self::PRIORITY_HIGH],
+            [['userProperties', 'price'], 'safe'],
         ];
     }
 
-    public function fields()
+    public function fields(): array
     {
         return [
             'id',
@@ -69,6 +80,16 @@ class User extends ActiveRecord implements IdentityInterface
             'access_token',
             'status',
             'auth_key',
+            'price' => function (User $model) {
+                $price = Price::find()
+                    ->where(['user_id' => $model->id])
+                    ->orderBy(['date' => SORT_DESC])
+                    ->one();
+                return $price->price ?? 0;
+            },
+            'priority' => function (User $model) {
+                return $model->priority_level;
+            },
             'profile',
             'userProperties' => function (User $model) {
                 return $model->userProperties;
@@ -160,6 +181,52 @@ class User extends ActiveRecord implements IdentityInterface
         return \Yii::$app->security->validatePassword($password, $this->password_hash);
     }
 
+    public function getPrices()
+    {
+        return $this->hasMany(Price::class, ['user_id' => 'id']);
+    }
+
+    public function getPrice()
+    {
+        return $this->getPrices()->orderBy(['date' => SORT_DESC])->one();
+    }
+    public function setPrice($value)
+    {
+        $transaction = Yii::$app->db->beginTransaction();
+        $model = Price::find()
+            ->where(['user_id' => $this->id])
+            ->andWhere(['date' => date('Y-m-d')])
+            ->one();
+        if (empty($model)) {
+            try {
+                $model = new Price(['price' => $value, 'user_id' => $this->id, 'date' => date('Y-m-d')]);
+                if ($model->save()) {
+                    \Yii::error("Price is saved");
+                    $transaction->commit();
+                } else {
+                    $transaction->rollBack();
+                    \Yii::error($model->errors);
+                }
+            } catch (\Exception $exception) {
+                $transaction->rollBack();
+                \Yii::error($exception->getMessage());
+                throw $exception;
+            }
+        } else {
+            try {
+                $model->price = $value;
+                if ($model->save()) {
+                    $transaction->commit();
+                } else {
+                    \Yii::error($model->errors);
+                    $transaction->rollBack();
+                }
+            } catch (\Exception $exception) {
+                \Yii::error($exception->getMessage());
+            }
+        }
+    }
+
     public function getProfile(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Profile::class, ['id' => 'id']);
@@ -248,9 +315,27 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->hasOne(User::className(), ['id' => 'referrer_id']);
     }
 
+    public function getReferrals()
+    {
+        return User::find()
+            ->where(['referrer_id' => $this->id])
+            ->orWhere(['priority_level' => User::PRIORITY_LOW])
+            ->all();
+    }
+
     public function getRoles()
     {
         return \Yii::$app->authManager->getRolesByUser($this->id);
+    }
+
+    public function getOrders()
+    {
+        return $this->hasMany(Order::class, ['created_by' => 'id']);
+    }
+
+    public function getHours()
+    {
+        return $this->hasMany(Hours::class, ['user_id' => 'id']);
     }
 
     public function loadApi($data)
@@ -316,5 +401,73 @@ class User extends ActiveRecord implements IdentityInterface
                     'COUNT(req.id) = 0' // Нет требований
                 ]
             ]);
+    }
+
+    public function getDebitAmount($startDate, $finishDate)
+    {
+        $result = 0;
+        $hours = Hours::find()
+            ->andWhere(['user_id' => $this->id]);
+        if (!empty($startDate)) {
+            $hours->andWhere(['>=', 'date', $startDate]);
+        }
+        if (!empty($finishDate)) {
+            $hours->andWhere(['<=', 'date', $finishDate]);
+        }
+        foreach ($hours->all() as $hour) {
+            $result += $hour->debit;
+        }
+        return $result;
+    }
+
+    public function getCreditAmount($startDate, $finishDate)
+    {
+        $result = 0;
+        $hours = Hours::find()
+            ->andWhere(['user_id' => $this->id]);
+        if (!empty($startDate)) {
+            $hours->andWhere(['>=', 'date', $startDate]);
+        }
+        if (!empty($finishDate)) {
+            $hours->andWhere(['<=', 'date', $finishDate]);
+        }
+        foreach ($hours->all() as $hour) {
+            $result += $hour->credit;
+        }
+        return $result;
+    }
+
+    public function getDebitHours($startDate, $finishDate)
+    {
+        $result = 0;
+        $hours = Hours::find()
+            ->andWhere(['user_id' => $this->id]);
+        if (!empty($startDate)) {
+            $hours->andWhere(['>=', 'date', $startDate]);
+        }
+        if (!empty($finishDate)) {
+            $hours->andWhere(['<=', 'date', $finishDate]);
+        }
+        foreach ($hours->all() as $hour) {
+            $result += $hour->is_payed ? $hour->count : 0;
+        }
+        return $result;
+    }
+
+    public function getCreditHours($startDate, $finishDate)
+    {
+        $result = 0;
+        $hours = Hours::find()
+            ->andWhere(['user_id' => $this->id]);
+        if (!empty($startDate)) {
+            $hours->andWhere(['>=', 'date', $startDate]);
+        }
+        if (!empty($finishDate)) {
+            $hours->andWhere(['<=', 'date', $finishDate]);
+        }
+        foreach ($hours->all() as $hour) {
+            $result += $hour->is_payed ? 0 : $hour->count;
+        }
+        return $result;
     }
 }

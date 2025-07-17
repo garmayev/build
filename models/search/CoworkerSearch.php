@@ -40,7 +40,7 @@ class CoworkerSearch extends User
         $ids = array_merge(
             \Yii::$app->authManager->getUserIdsByRole("employee"),
             \Yii::$app->authManager->getUserIdsByRole("director"));
-        \Yii::error($ids);
+
         $query = User::find()
             ->joinWith('profile')
             ->joinWith('userProperties')

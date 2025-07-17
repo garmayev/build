@@ -14,8 +14,6 @@ use Yii;
  * @property Property[] $properties
  * @property Dimension[] $dimensions
  * @property Filter[] $filters
- * @property MaterialProperty[] $materialProperties
- * @property Material[] $materials
  * @property PropertyDimension[] $propertyDimensions
  * @property TechniqueProperty[] $techniqueProperties
  * @property Technique[] $techniques
@@ -49,9 +47,7 @@ class Property extends \yii\db\ActiveRecord
         return [
             'id',
             'title',
-            'dimensions' => function (Property $model) {
-                return $model->dimensions;
-            }
+            'dimensions'
         ];
     }
 

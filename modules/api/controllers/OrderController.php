@@ -103,12 +103,24 @@ class OrderController extends \yii\rest\ActiveController
     {
         $data = $this->request->post();
         $result = [];
-        $model = Hours::find()->where(["coworker_id" => $data["coworker_id"]])->andWhere(["date" => $data["date"]])->one();
+        $model = Hours::find()->where(["user_id" => $data["user_id"]])->andWhere(["date" => $data["date"]])->one();
         if (empty($model)) {
-            $hours = new Hours($data);
+            $hours = new Hours([
+                "order_id" => $data["order_id"],
+                "user_id" => $data["user_id"],
+                "date" => $data["date"],
+                "count" => $data["count"],
+                "is_payed" => $data["is_payed"],
+            ]);
             $result[] = ["ok" => $hours->save()];
         } else {
-            $ok = $model->load(["Hours" => $data]) && $model->save();
+            $ok = $model->load(["Hours" => [
+                    "order_id" => $data["order_id"],
+                    "user_id" => $data["user_id"],
+                    "date" => $data["date"],
+                    "count" => $data["count"],
+                    "is_payed" => $data["is_payed"],
+                ]]) && $model->save();
             if (!$ok) {
                 \Yii::error($model->errors);
             }
@@ -199,7 +211,7 @@ class OrderController extends \yii\rest\ActiveController
     public function actionReject($id)
     {
         $order = \app\models\Order::findOne($id);
-        $coworker = \app\models\Coworker::findOne(['user_id' => \Yii::$app->user->getId()]);
+        $coworker = \app\models\User::findOne(['id' => \Yii::$app->user->getId()]);
         if (isset($order)) {
             $order->unlink('coworkers', $coworker, true);
             return ['ok' => true];
@@ -214,9 +226,9 @@ class OrderController extends \yii\rest\ActiveController
         $model->save();
     }
 
-    public function actionGetList($date, $coworker_id)
+    public function actionGetList($date, $user_id)
     {
-        $hours = \app\models\Hours::find()->where(['coworker_id' => $coworker_id])->andWhere(['date' => $date])->all();
+        $hours = \app\models\Hours::find()->where(['user_id' => $user_id])->andWhere(['date' => $date])->all();
         $links = \yii\helpers\ArrayHelper::map( $hours, 'id', 'order_id' );
         return $links;
     }

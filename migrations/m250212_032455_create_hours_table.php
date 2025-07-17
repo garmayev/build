@@ -14,11 +14,12 @@ class m250212_032455_create_hours_table extends Migration
     {
         $this->createTable('{{%hours}}', [
             'order_id' => $this->integer(),
-            'coworker_id' => $this->integer(),
+            'user_id' => $this->integer(),
             'date' => $this->date(),
             'count' => $this->integer(),
-            'PRIMARY KEY(order_id, coworker_id, date)'
+            'PRIMARY KEY(order_id, user_id, date)'
         ]);
+
     }
 
     /**

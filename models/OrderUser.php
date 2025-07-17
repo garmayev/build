@@ -5,22 +5,22 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "order_technique".
+ * This is the model class for table "order_user".
  *
  * @property int $order_id
- * @property int $technique_id
+ * @property int $user_id
  *
  * @property Order $order
- * @property Technique $technique
+ * @property User $user
  */
-class OrderTechnique extends \yii\db\ActiveRecord
+class OrderUser extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'order_technique';
+        return 'order_user';
     }
 
     /**
@@ -29,11 +29,11 @@ class OrderTechnique extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['order_id', 'technique_id'], 'required'],
-            [['order_id', 'technique_id'], 'integer'],
-            [['order_id', 'technique_id'], 'unique', 'targetAttribute' => ['order_id', 'technique_id']],
+            [['order_id', 'user_id'], 'required'],
+            [['order_id', 'user_id'], 'integer'],
+            [['order_id', 'user_id'], 'unique', 'targetAttribute' => ['order_id', 'user_id']],
             [['order_id'], 'exist', 'skipOnError' => true, 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']],
-            [['technique_id'], 'exist', 'skipOnError' => true, 'targetClass' => Technique::class, 'targetAttribute' => ['technique_id' => 'id']],
+            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
     }
 
@@ -44,7 +44,7 @@ class OrderTechnique extends \yii\db\ActiveRecord
     {
         return [
             'order_id' => Yii::t('app', 'Order ID'),
-            'technique_id' => Yii::t('app', 'Technique ID'),
+            'user_id' => Yii::t('app', 'User ID'),
         ];
     }
 
@@ -59,12 +59,13 @@ class OrderTechnique extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[Technique]].
+     * Gets query for [[User]].
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getTechnique()
+    public function getUser()
     {
-        return $this->hasOne(Technique::class, ['id' => 'technique_id']);
+        return $this->hasOne(User::class, ['id' => 'user_id']);
     }
+
 }
