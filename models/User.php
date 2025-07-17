@@ -333,11 +333,6 @@ class User extends ActiveRecord implements IdentityInterface
         return \Yii::$app->authManager->getRolesByUser($this->id);
     }
 
-    public function getOrders()
-    {
-        return $this->hasMany(Order::class, ['created_by' => 'id']);
-    }
-
     public function getHours()
     {
         return $this->hasMany(Hours::class, ['user_id' => 'id']);
