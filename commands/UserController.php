@@ -53,7 +53,7 @@ class UserController extends Controller
     public function actionGetSuitable($username)
     {
         $model = User::findByUsername($username);
-        foreach ($model->getSuitableOrders()->all() as $order) {
+        foreach ($model->getSuitableOrders() as $order) {
             echo "Order #{$order->id}\n";
         }
     }

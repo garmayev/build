@@ -40,6 +40,12 @@ class BuildingController extends BaseController
         );
     }
 
+    public function beforeAction($action)
+    {
+        \Yii::$app->controller->enableCsrfValidation = false;
+        return parent::beforeAction($action);
+    }
+
     /**
      * Lists all Building models.
      *

@@ -29,12 +29,12 @@ class HoursController extends \yii\rest\Controller {
                     // Guests
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create', 'get-hours'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'create', 'get-hours']
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'get-hours']
             ],
         ];
     }
@@ -73,8 +73,8 @@ class HoursController extends \yii\rest\Controller {
     public function actionCreate($time, $coworker_id, $is_payed, $count, $order_id = null)
     {
         $order = \app\models\Order::find()->where(['id' => $order_id])->one();
-        $coworker = \app\models\Coworker::findOne($coworker_id);
-
+        $coworker = \app\models\User::findOne(\Yii::$app->user->getId());
+        \Yii::error( \Yii::$app->user->isGuest );
         if (isset($coworker)) {
             $hours = \app\models\Hours::find()->where(['coworker_id' => $coworker->id])->andWhere(['date' => date('Y-m-d', $time)])->one();
             if (isset($hours)) {
@@ -96,5 +96,11 @@ class HoursController extends \yii\rest\Controller {
         if ($coworker_id) {
             return ["ok" => true, "model" => \app\models\Hours::find()->where(["date" => $d])->andWhere(["user_id" => $coworker_id])->one()];
         }
+    }
+
+    public function actionCheckToday()
+    {
+        $hours = \app\models\Hours::find()->where(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->one();
+        return $hours;
     }
 }

@@ -110,18 +110,18 @@ echo GridView::widget([
             [
                 'attribute' => 'name',
                 'label' => \Yii::t('app', 'Coworkers'),
-                'value' => function (\app\models\Coworker $model) {
-                    return "{$model->lastname} {$model->firstname}";
+                'value' => function (\app\models\User  $model) {
+                    return "{$model->profile->family} {$model->profile->name} {$model->profile->surname}";
                 }
             ], [
                 'attribute' => 'coworkerProperties',
                 'label' => \Yii::t('app', 'Properties'),
                 'format' => 'raw',
-                'value' => function (app\models\Coworker $model) {
+                'value' => function (app\models\User  $model) {
                     $result = "";
-                    foreach ($model->coworkerProperties as $coworkerProperty) {
-//                        $type = \Yii::t('app', $coworkerProperty->),
-                        $result .= Html::tag("p", "{$coworkerProperty->property->title} {$coworkerProperty->value} {$coworkerProperty->dimension->title}");
+                    foreach ($model->userProperties as $userProperty) {
+//                        $type = \Yii::t('app', $userProperty->type);
+                        $result .= Html::tag("p", "{$userProperty->property->title} {$userProperty->value} {$userProperty->dimension->title}");
                     }
                     return $result;
                 }

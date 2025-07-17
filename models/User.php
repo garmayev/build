@@ -266,6 +266,11 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->hasMany(Property::class, ['id' => 'property_id'])->via('userProperties');
     }
 
+    public function getOrders()
+    {
+        return $this->hasMany(Order::class, ['id' => 'order_id'])->viaTable('order_user', ['user_id' => 'id']);
+    }
+
     public function setUserProperties($data)
     {
         foreach ($this->userProperties as $property) {
@@ -400,7 +405,9 @@ class User extends ActiveRecord implements IdentityInterface
                     'and',
                     'COUNT(req.id) = 0' // Нет требований
                 ]
-            ]);
+            ])
+            ->andWhere(['not in', 'order.id', \yii\helpers\ArrayHelper::map($this->orders, 'id', 'id')])
+            ->all();
     }
 
     public function getDebitAmount($startDate, $finishDate)

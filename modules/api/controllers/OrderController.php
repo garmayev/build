@@ -96,7 +96,7 @@ class OrderController extends \yii\rest\ActiveController
 //            $result[] = $oc->order;
 //        }
 //        return ['data' => $result];
-        return ['data' => $coworker->getSuitableOrders()->all()];
+        return ['data' => $coworker->orders];
     }
 
     public function actionSetHours()
@@ -186,13 +186,17 @@ class OrderController extends \yii\rest\ActiveController
 
     public function actionApply($id)
     {
-        $coworker = \app\models\Coworker::find()
-            ->where(['user_id' => \Yii::$app->user->getId()])
+        $coworker = \app\models\User::find()
+            ->where(['id' => \Yii::$app->user->getId()])
             ->one();
         $model = \app\models\Order::findOne($id);
 
-        if (!$model->checkSuccessfully()) {
+        if (!$model->isFull()) {
             $model->link('coworkers', $coworker);
+            if ($model->isFull()) {
+                $model->status = \app\models\Order::STATUS_PROCESS;
+                $model->save();
+            }
             $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $model->id])->all();
             foreach ($messages as $message) {
                 $header = $message->status ? 
@@ -200,7 +204,7 @@ class OrderController extends \yii\rest\ActiveController
                     \Yii::t('app', 'New order') . " #{$model->id}";
                 $message->editText(
                     null,
-                    $model->generateTelegramText($header)
+                    \app\components\Helper::generateTelegramMessage($model->id)
                 );
             }
             return ['ok' => true];
@@ -214,6 +218,8 @@ class OrderController extends \yii\rest\ActiveController
         $coworker = \app\models\User::findOne(['id' => \Yii::$app->user->getId()]);
         if (isset($order)) {
             $order->unlink('coworkers', $coworker, true);
+            $order->status = \app\models\Order::STATUS_NEW;
+            $order->save();
             return ['ok' => true];
         }
         return ['ok' => false, 'message' => \Yii::t('app', 'Missing order')];
