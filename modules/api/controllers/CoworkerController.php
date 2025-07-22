@@ -124,7 +124,7 @@ class CoworkerController extends ActiveController
     {
         $coworker = User::findOne(\Yii::$app->user->getId());
         if ($coworker) {
-            return ["ok" => true, "data" => $coworker->getSuitableOrders()->all()];
+            return ["ok" => true, "data" => $coworker->getSuitableOrders()];
         }
         return ["ok" => false];
     }

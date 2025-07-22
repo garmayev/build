@@ -76,13 +76,13 @@ class HoursController extends \yii\rest\Controller {
         $coworker = \app\models\User::findOne(\Yii::$app->user->getId());
         \Yii::error( \Yii::$app->user->isGuest );
         if (isset($coworker)) {
-            $hours = \app\models\Hours::find()->where(['coworker_id' => $coworker->id])->andWhere(['date' => date('Y-m-d', $time)])->one();
+            $hours = \app\models\Hours::find()->where(['user_id' => $coworker->id])->andWhere(['date' => date('Y-m-d', $time)])->one();
             if (isset($hours)) {
                 $result = $hours->load(['Hours' => ['is_payed' => $is_payed, 'count' => $count, 'order_id' => $order_id]]) && $hours->save();
                 if (!$result) { \Yii::error($hours->getErrorSummary(true)); }
                 return ['ok' => $result];
             } else {
-                $hours = new \app\models\Hours(['coworker_id' => $coworker->id, 'date' => date('Y-m-d', $time), 'count' => $count, 'is_payed' => $is_payed, 'order_id' => $order_id]);
+                $hours = new \app\models\Hours(['user_id' => $coworker->id, 'date' => date('Y-m-d', $time), 'count' => $count, 'is_payed' => $is_payed, 'order_id' => $order_id]);
             }
             $is_saved = $hours->save();
             return ['ok' => $is_saved, 'message' => $hours->getErrorSummary(true)];
