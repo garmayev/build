@@ -59,6 +59,7 @@ class OrderController extends \yii\rest\ActiveController
             'login' => ['POST', 'OPTIONS'],
             'get-list' => ['GET', 'OPTIONS'],
             'set-hours' => ['POST', 'PUT', 'OPTIONS'],
+            'by-coworker' => ['GET', 'POST', 'OPTIONS'],
         ];
     }
 
@@ -90,12 +91,12 @@ class OrderController extends \yii\rest\ActiveController
     public function actionByCoworker()
     {
         $coworker = \app\models\User::findOne(['id' => \Yii::$app->user->getId()]);
-//        $orderCoworkers = \app\models\OrderUser::findAll(['coworker_id' => $coworker->id]);
-//        $result = [];
-//        foreach ($orderCoworkers as $oc) {
-//            $result[] = $oc->order;
-//        }
-//        return ['data' => $result];
+        $orderCoworkers = \app\models\OrderUser::findAll(['user_id' => $coworker->id]);
+        $result = [];
+        foreach ($orderCoworkers as $oc) {
+            $result[] = $oc->order;
+        }
+        return ['data' => $result];
         return ['data' => $coworker->orders];
     }
 
