@@ -17,17 +17,32 @@ class Notification extends ActiveRecord
     const CHANNEL_FCM = 'fcm';
     const CHANNEL_APN = 'apn';
 
+    public function behaviors()
+    {
+        return [
+            'timestamp' => [
+                'class' => 'yii\behaviors\TimestampBehavior',
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => ['created_at'],
+                    ActiveRecord::EVENT_BEFORE_UPDATE => false,
+                ]
+            ]
+        ];
+    }
+
     public static function tableName()
     {
-        return '{{%notification}}';
+        return '{{%notifications}}';
     }
 
     public function rules()
     {
         return [
             [['title', 'message', 'recipient', 'channels'], 'required'],
-            ['channels', 'in', 'range' => [self::CHANNEL_TELEGRAM, self::CHANNEL_FCM, self::CHANNEL_APN], 'allowArray' => true],
-            ['actions', 'safe']
+            [['channels'], 'in',
+                'range' => [self::CHANNEL_TELEGRAM, self::CHANNEL_FCM, self::CHANNEL_APN],
+                'allowArray' => true],
+            [['actions'], 'safe']
         ];
     }
 
@@ -58,7 +73,8 @@ class Notification extends ActiveRecord
         return $this->channels;
     }
 
-    public function getActions() {
+    public function getActions()
+    {
         return $this->actions;
     }
 }

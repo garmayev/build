@@ -52,6 +52,9 @@ $config = [
             'class' => 'yii\rbac\DbManager',
         ],
         'db' => $db,
+        'notificationService' => [
+            'class' => \app\modules\notifications\components\NotificationService::class,
+        ],
     ],
     'controllerMap' => [
         'migrate' => [
@@ -60,6 +63,28 @@ $config = [
                 '@app/migrations',
                 '@yii/rbac/migrations',
                 '@app/modules/notifications/migrations',
+            ],
+        ]
+    ],
+    'modules' => [
+        'notifications' => [
+            'class' => \app\modules\notifications\Module::class,
+            'telegramConfig' => [
+                'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
+                'webhookUrl' => '',
+                'commandMap' => [
+                    'start' => \app\modules\notifications\handlers\StartHandler::class,
+                    'accept' => \app\modules\notifications\handlers\AcceptHandler::class,
+                    'decline' => \app\modules\notifications\handlers\DeclineHandler::class,
+                ],
+            ],
+            'fcmConfig' => [
+                'apiKey' => '1:523783308536:android:bf22707b654015434aa70d',
+                'senderId' => '523783308536'
+            ],
+            'apnConfig' => [
+                'passphrase' => '',
+                'environment' => YII_ENV_DEV ? 'development' : 'production',
             ],
         ]
     ],

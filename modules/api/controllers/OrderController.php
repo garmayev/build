@@ -34,9 +34,23 @@ class OrderController extends \yii\rest\ActiveController
             'access' => [
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status'] ],
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete',
-                        'close', 'detail', 'by-coworker', 'free', 'apply', 'reject', 'set-status', 'get-list', 'set-hours'] ],
+                    ['allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'by-coworker',]],
+                    ['allow' => true, 'roles' => ['?'], 'actions' => [
+                        'index',
+                        'view',
+                        'update',
+                        'create',
+                        'delete',
+                        'close',
+                        'detail',
+                        'by-coworker',
+                        'free',
+                        'apply',
+                        'reject',
+                        'set-status',
+                        'get-list',
+                        'set-hours'
+                    ]],
                 ],
             ],
             'authenticator' => [
@@ -88,16 +102,16 @@ class OrderController extends \yii\rest\ActiveController
         ]);
     }
 
-    public function actionByCoworker()
+    public function actionByCoworker($id)
     {
-        $coworker = \app\models\User::findOne(['id' => \Yii::$app->user->getId()]);
-        $orderCoworkers = \app\models\OrderUser::findAll(['user_id' => $coworker->id]);
-        $result = [];
-        foreach ($orderCoworkers as $oc) {
-            $result[] = $oc->order;
-        }
-        return ['data' => $result];
-        return ['data' => $coworker->orders];
+//        $coworker = \app\models\User::findOne(['id' => $id]);
+//        $orderCoworkers = \app\models\OrderUser::findAll(['user_id' => $coworker->id]);
+//        $result = [];
+//        foreach ($orderCoworkers as $oc) {
+//            $result[] = $oc->order;
+//        }
+//        return ['data' => $result];
+//        return ['data' => $coworker->orders];
     }
 
     public function actionSetHours()
@@ -200,7 +214,7 @@ class OrderController extends \yii\rest\ActiveController
             }
             $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $model->id])->all();
             foreach ($messages as $message) {
-                $header = $message->status ? 
+                $header = $message->status ?
                     \Yii::t('app', 'You have agreed to complete the order') . " #{$model->id}" :
                     \Yii::t('app', 'New order') . " #{$model->id}";
                 $message->editText(
@@ -236,7 +250,7 @@ class OrderController extends \yii\rest\ActiveController
     public function actionGetList($date, $user_id)
     {
         $hours = \app\models\Hours::find()->where(['user_id' => $user_id])->andWhere(['date' => $date])->all();
-        $links = \yii\helpers\ArrayHelper::map( $hours, 'id', 'order_id' );
+        $links = \yii\helpers\ArrayHelper::map($hours, 'id', 'order_id');
         return $links;
     }
 }

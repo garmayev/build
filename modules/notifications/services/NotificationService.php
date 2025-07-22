@@ -11,7 +11,6 @@ class NotificationService
     public function send(Notification $notification)
     {
         $results = [];
-
         foreach ($notification->channels as $channel) {
             if (isset($this->service[$channel])) {
                 try {

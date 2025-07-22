@@ -103,8 +103,8 @@ $config = [
                 ],
             ],
             'fcmConfig' => [
-                'apiKey' => '',
-                'senderId' => ''
+                'apiKey' => '1:523783308536:android:bf22707b654015434aa70d',
+                'senderId' => '523783308536'
             ],
             'apnConfig' => [
                 'passphrase' => '',
