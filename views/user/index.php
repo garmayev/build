@@ -35,11 +35,11 @@ echo GridView::widget([
             'label' => \Yii::t('app', 'Email'),
         ],
         [
-            'attribute' => 'name',
+            'attribute' => 'fullName',
             'headerOptions' => ['class' => 'text-center col-1'],
             'label' => \Yii::t('app', 'Name'),
             'value' => function (\app\models\User $model) {
-                return !empty($model->profile->fullName) ? $model->profile->fullName : null;
+                return !empty($model->profile->fullName) ? $model->profile->fullName : $model->username;
             }
         ],
         [

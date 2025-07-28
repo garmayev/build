@@ -3,6 +3,7 @@
 namespace app\models;
 
 use floor12\phone\PhoneValidator;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
 /**
@@ -15,6 +16,7 @@ use yii\db\ActiveRecord;
  * @property string $device_id
  *
  * @property string $fullName
+ * @property User $user
  */
 class Profile extends ActiveRecord
 {
@@ -48,5 +50,10 @@ class Profile extends ActiveRecord
     public function getFullName(): string
     {
         return trim("$this->name $this->surname");
+    }
+
+    public function getUser(): ActiveQuery
+    {
+        return $this->hasOne(User::class, ['id' => 'id']);
     }
 }

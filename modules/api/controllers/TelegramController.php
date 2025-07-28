@@ -4,6 +4,7 @@ namespace app\modules\api\controllers;
 
 use app\components\Command;
 use app\components\Helper;
+use app\models\forms\UserRegisterForm;
 use app\models\Profile;
 use app\models\telegram\TelegramMessage;
 use app\models\User;
@@ -27,25 +28,58 @@ class TelegramController extends \yii\web\Controller
         if (isset($telegram->input->message)) {
             if (isset($telegram->input->message->contact)) {
                 $contact = $telegram->input->message->contact;
-                $profile = $this->getProfile($contact);
-                if ($profile) {
-                    $profile->chat_id = $contact["user_id"];
-                    $profile->save();
+                $phone = preg_replace("/[\(\)\+\ \-]/", "", $contact["phone_number"]);
+                $profile = Profile::findOne(['phone' => $phone]);
+                if (empty($profile)) {
+                    $model = User::findOne(['username' => $phone]);
                 } else {
-                    $form = new \app\models\forms\UserRegisterForm();
-                    $phone = preg_replace("/[\(\)\+\ \-]/", "", $contact["phone_number"]);
-                    if ($form->load(["UserRegisterForm" => ["username" => $phone, "email" => $phone."@t.me", "phone" => $phone]]) && $form->register()) {
-                        $user = \app\models\User::findOne(["username" => $phone]);
-                        if ($user->profile->load(["Profile" => ["name" => $contact["first_name"], "family" => $contact["last_name"], "phone" => $phone, "chat_id" => $contact["user_id"]]]) && $user->profile->save()) {
-
-                        } else {
+                    $model = $profile->user;
+                }
+                if ($model) {
+                    $model->profile->chat_id = "{$contact["user_id"]}";
+                    if (!$model->profile->save()) {
+                        \Yii::error($model->profile->errors);
+                    }
+                } else {
+                    $model = new UserRegisterForm([
+                        "username" => $phone,
+                        "email" => "{$phone}@t.me",
+                        "new_password" => $phone,
+                        "level" => User::PRIORITY_LOW,
+                    ]);
+                    if ($model->validate() && $model->register()) {
+                        $user = User::findOne(['username' => $phone]);
+                        $user->profile->load(['Profile' => [
+                            'family' => $contact['last_name'],
+                            'name' => $contact["first_name"],
+                            'phone' => $phone,
+                            'chat_id' => "{$contact['user_id']}",
+                        ]]);
+                        if (!$user->profile->save()) {
                             \Yii::error($user->profile->getErrors());
                         }
                     } else {
-                        \Yii::error($form->getErrors());
+                        \Yii::error($model->getErrors());
                     }
+                    $model = $user;
                 }
-                return $profile;
+                \Yii::$app->authManager->assign(\Yii::$app->authManager->getRole("employee"), $model->id);
+//                if ($profile || $user) {
+//
+//                } else {
+//                    $form = new \app\models\forms\UserRegisterForm();
+//                    if ($form->load(["UserRegisterForm" => ["username" => $phone, "email" => $phone."@t.me", "phone" => $phone]]) && $form->register()) {
+//                        $user = \app\models\User::findOne(["username" => $phone]);
+//                        if ($user->profile->load(["Profile" => ["name" => $contact["first_name"], "family" => $contact["last_name"], "phone" => $phone, "chat_id" => $contact["user_id"]]]) && $user->profile->save()) {
+//
+//                        } else {
+//                            \Yii::error($user->profile->getErrors());
+//                        }
+//                    } else {
+//                        \Yii::error($form->getErrors());
+//                    }
+//                }
+                return $model;
             }
 
             // Handle /start command
@@ -188,6 +222,22 @@ class TelegramController extends \yii\web\Controller
                 if ($message) {
                     $message->remove();
                 }
+            });
+
+            Command::run("/start_day", function ($telegram) {
+                $telegram->sendMessage([
+                    'chat_id' => $telegram->input->message->from["id"],
+                    'text' => \Yii::t('app', 'start_day_message'),
+                    'parse_mode' => 'HTML',
+                    'disable_web_page_preview' => true,
+                    'reply_markup' => json_encode([
+                        'keyboard' => [
+                            [
+                                ['text' => 'Hello', 'request_location' => true],
+                            ]
+                        ]
+                    ])
+                ]);
             });
         }
         if (isset($telegram->input->callback_query)) {

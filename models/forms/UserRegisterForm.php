@@ -11,6 +11,7 @@ class UserRegisterForm extends Model
     public $email;
     public $new_password;
     public $current_password;
+    public $level = User::PRIORITY_HIGH;
 
     private $_user;
     public $is_mail = false;
