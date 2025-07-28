@@ -55,4 +55,22 @@ class Helper extends Component
         $message .= "\n" . \Yii::t("app", "<b>Requirements</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
         return $message;
     }
+
+    public static function orderDetails(Order $order) {
+        $building = $order->building;
+        $text = "<b>" . \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "</b>\n";
+        $text .= \Yii::t("app", "<b>Building</b>: <i>{building}</i>", ['building' => $building->title]) . "\n";
+        $text .= \Yii::t("app", "<b>Address</b>: <i>{address}</i>", ['address' => $building->location->link]) . "\n";
+        $text .= \Yii::t("app", "<b>Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->date)]) . "\n";
+        if ($order->comment) {
+            $text .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
+        }
+        if ($order->attachments) {
+            $text .= \Yii::t("app", "<b>Attachments</b>")."\n";
+            foreach ($order->attachments as $attachment) {
+                $text .= \Yii::t("app", "--- {$attachment->getLink(true)}") . "\n";
+            }
+        }
+        return $text;
+    }
 }

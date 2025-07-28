@@ -120,6 +120,18 @@ class User extends ActiveRecord implements IdentityInterface
         parent::afterSave($insert, $changedAttributes);
     }
 
+    public function can($roleName)
+    {
+        $auth = Yii::$app->authManager;
+        $roles = $auth->getRolesByUser($this->getId());
+        foreach ($roles as $role) {
+            if ($roleName == $role->name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -145,6 +157,12 @@ class User extends ActiveRecord implements IdentityInterface
     public static function findByUsername($username): ?User
     {
         return self::findOne(['username' => $username]);
+    }
+
+    public static function findByChatId($chat_id): ?User
+    {
+        \Yii::error($chat_id);
+        return self::find()->joinWith('profile')->where(['profile.chat_id' => $chat_id])->one();
     }
 
     /**
