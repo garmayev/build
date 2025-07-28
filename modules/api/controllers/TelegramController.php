@@ -24,16 +24,38 @@ class TelegramController extends \yii\web\Controller
     public function actionCallback()
     {
         $telegram = \Yii::$app->telegram;
-
         if (isset($telegram->input->message)) {
+            if (isset($telegram->input->message->contact)) {
+                $contact = $telegram->input->message->contact;
+                $profile = $this->getProfile($contact);
+                if ($profile) {
+                    $profile->chat_id = $contact["user_id"];
+                    $profile->save();
+                } else {
+                    $form = new \app\models\forms\UserRegisterForm();
+                    $phone = preg_replace("/[\(\)\+\ \-]/", "", $contact["phone_number"]);
+                    if ($form->load(["UserRegisterForm" => ["username" => $phone, "email" => $phone."@t.me", "phone" => $phone]]) && $form->register()) {
+                        $user = \app\models\User::findOne(["username" => $phone]);
+                        if ($user->profile->load(["Profile" => ["name" => $contact["first_name"], "family" => $contact["last_name"], "phone" => $phone, "chat_id" => $contact["user_id"]]]) && $user->profile->save()) {
+
+                        } else {
+                            \Yii::error($user->profile->getErrors());
+                        }
+                    } else {
+                        \Yii::error($form->getErrors());
+                    }
+                }
+                return $profile;
+            }
+
             // Handle /start command
-            Command::run("/start", function ($telegram, $args) {
+            Command::run("/start", function ($telegram) {
                 $chatId = $telegram->input->message ? $telegram->input->message->from->id : null;
                 if (!$chatId) {
                     return;
                 }
 
-                if ($args[0]) {
+                if (isset($args) && isset($args[0])) {
                     $coworker = Profile::findOne($args[0]);
                 } else {
                     // Find coworker without chat_id or with this chat_id
@@ -84,7 +106,7 @@ class TelegramController extends \yii\web\Controller
                 }
 
                 // Add coworker to order
-                \Yii::error($order->isFull());
+//                \Yii::error($order->isFull());
                 if (!$order->isFull()) {
                     if (!$order->assignCoworker($coworker)) {
                         \Yii::error(["ok" => false, "message" => "Coworker {$coworker->name} is already agreed to order #{$order->id}"]);
@@ -173,16 +195,13 @@ class TelegramController extends \yii\web\Controller
 
             });
         }
-        if (isset($telegram->input->contact)) {
-            \Yii::error($telegram->input->contact);
-            return $this->getContact($telegram->input->contact);
-        }
         return [];
     }
 
-    private function getContact($data)
+    private function getProfile($data)
     {
         $phone = preg_replace("/[\(\)\+\ \-]/", "", $data["phone_number"]);
-        echo ["result" => $phone];
+        $profile = \app\models\Profile::findOne(["phone" => $phone]);
+        return $profile;
     }
 }

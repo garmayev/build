@@ -19,11 +19,19 @@ class Command extends Component{
      */
     public static function run($command, callable $fun){
         $telegram = Yii::$app->telegram;
-        $text = $telegram->input->message->text ?? $telegram->input->callback_query->data;
-        $args = explode(' ', $text);
-        $inputCommand = array_shift($args);
-        if($inputCommand === $command){
-            return call_user_func_array($fun, [$telegram, $args]);
+        $text = "";
+        if (isset($telegram->input->message)) {
+            $text = $telegram->input->message->text;
+        }
+        if (isset($telegram->input->callback_query)) {
+            $text = $telegram->input->callback_query->data;
+        }
+        if (!empty($text)) {
+            $args = explode(' ', $text);
+            $inputCommand = array_shift($args);
+            if($inputCommand === $command){
+                return call_user_func_array($fun, [$telegram, $args]);
+            }
         }
     }
 }
