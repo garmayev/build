@@ -94,6 +94,7 @@ class User extends ActiveRecord implements IdentityInterface
             'userProperties' => function (User $model) {
                 return $model->userProperties;
             },
+            'hours',
             'roles'
         ];
     }

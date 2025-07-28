@@ -102,16 +102,16 @@ class OrderController extends \yii\rest\ActiveController
         ]);
     }
 
-    public function actionByCoworker($id)
+    public function actionByCoworker($id = null)
     {
-//        $coworker = \app\models\User::findOne(['id' => $id]);
+        $coworker = \app\models\User::findOne(['id' => \Yii::$app->user->getId()]);
 //        $orderCoworkers = \app\models\OrderUser::findAll(['user_id' => $coworker->id]);
 //        $result = [];
 //        foreach ($orderCoworkers as $oc) {
 //            $result[] = $oc->order;
 //        }
 //        return ['data' => $result];
-//        return ['data' => $coworker->orders];
+        return ['data' => $coworker->orders];
     }
 
     public function actionSetHours()

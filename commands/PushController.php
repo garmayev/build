@@ -6,8 +6,9 @@ use ExpoSDK\Expo;
 use ExpoSDK\ExpoMessage;
 
 class PushController extends \yii\console\Controller {
-    public function actionSend($user_id, $text) {
+    public function actionSend($user_id) {
         $user = User::findOne($user_id);
+        echo $user->profile->device_id . "\n";
         $message = (new ExpoMessage([
             'title' => 'initial title',
             'body' => 'initial body',
@@ -15,8 +16,9 @@ class PushController extends \yii\console\Controller {
             ->setTitle('This title overrides initial title')
             ->setBody('This notification body overrides initial body')
             ->setTo($user->profile->device_id)
-            ->setData(['id' => 1])
-            ->setChannelId('default')
+            ->setData(['url' => 'exp://192.168.0.107:8081/--/order/1', 'id' => 1])
+            ->setChannelId('new-order')
+            ->setCategoryId('new-order')
             ->setBadge(0)
             ->playSound();
         (new Expo)->send($message)->push();

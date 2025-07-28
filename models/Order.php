@@ -516,15 +516,19 @@ class Order extends \yii\db\ActiveRecord
 
             foreach ($this->suitableCoworkers as $coworker) {
                 if ($coworker->status === User::STATUS_ACTIVE) {
-                    $telegramMessages = $this->telegramMessages;
-                    if (count($telegramMessages)) {
-                        foreach ($telegramMessages as $telegramMessage) {
-                            $telegramMessage->editMessageText($message, $keyboard);
+                    if ($coworker->chat_id) {
+                        $telegramMessages = $this->telegramMessages;
+                        if (count($telegramMessages)) {
+                            foreach ($telegramMessages as $telegramMessage) {
+                                $telegramMessage->editMessageText($message, $keyboard);
+                            }
+                        } else {
+                            if ($coworker->profile->chat_id) {
+                                $notificationService->sendTelegramMessage($coworker->profile->chat_id, "<b>".\Yii::t("app", "Order #{id}", ["id" => $this->id])."</b>\n".$message, $keyboard, $this->id);
+                            }
                         }
                     } else {
-                        if ($coworker->profile->chat_id) {
-                            $notificationService->sendTelegramMessage($coworker->profile->chat_id, "<b>".\Yii::t("app", "Order #{id}", ["id" => $this->id])."</b>\n".$message, $keyboard, $this->id);
-                        }
+
                     }
                 }
             }
