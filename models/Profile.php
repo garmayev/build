@@ -49,7 +49,7 @@ class Profile extends ActiveRecord
 
     public function getFullName(): string
     {
-        return trim("$this->name $this->surname");
+        return trim("$this->family $this->name $this->surname");
     }
 
     public function getUser(): ActiveQuery

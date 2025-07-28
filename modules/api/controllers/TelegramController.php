@@ -254,7 +254,8 @@ class TelegramController extends \yii\web\Controller
 
             // Handle /decline command
             Command::run("/decline", function ($telegram, $args) {
-
+                parse_str($args[0] ?? '', $data);
+                $orderId = $data["order_id"] ?? null;
 
                 if (!$orderId) {
                     \Yii::error([
@@ -285,21 +286,39 @@ class TelegramController extends \yii\web\Controller
                 parse_str($args[0] ?? '', $data);
                 $id = $data['id'] ?? null;
                 if (empty($id)) { return null; }
-                $order = \app\models\Order::findOne($id);
-                $telegram->sendMessage([
-                    'chat_id' => $telegram->input->callback_query->from['id'],
-                    'text' => Helper::orderDetails($order),
-                    'parse_mode' => 'html',
-                    'reply_markup' => json_encode([
+
+                $order = Order::findOne($id);
+                $user = User::find()->joinWith('profile')->where(['profile.chat_id' => $telegram->input->callback_query->from->id]);
+                Helper::notify(
+                    $user->id,
+                    $order->id,
+                    null,
+                    [
                         'inline_keyboard' => [
                             [
-                                ['text' => \Yii::t('app', 'Accept'), 'callback_data' => '/accept order_id=' . $order->id],
+                                ['text' => \Yii::t('app', 'Accept'), 'callback_data' => '/accept order_id='.$order->id]
                             ], [
-                                ['text' => \Yii::t('app', 'Decline'), 'callback_data' => '/decline order_id=' . $order->id],
+                                ['text' => \Yii::t('app', 'Decline'), 'callback_data' => '/decline order_id='.$order->id]
                             ]
                         ]
-                    ]),
-                ]);
+                    ]
+                );
+//                    new TelegramMessage([
+//                    'chat_id' => $telegram->input->callback_query->from['id'],
+//                    'text' => Helper::orderDetails($order),
+//                    'parse_mode' => 'html',
+//                    'reply_markup' => json_encode([
+//                        'inline_keyboard' => [
+//                            [
+//                                ['text' => \Yii::t('app', 'Accept'), 'callback_data' => '/accept order_id=' . $order->id],
+//                            ], [
+//                                ['text' => \Yii::t('app', 'Decline'), 'callback_data' => '/decline order_id=' . $order->id],
+//                            ]
+//                        ]
+//                    ]),
+//                ]);
+//                $telegram->sendMessage([
+//                ]);
             });
             Command::run("/start", function ($telegram, $args) {
 

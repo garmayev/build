@@ -2,6 +2,7 @@
 
 namespace app\commands;
 
+use app\components\Helper;
 use app\models\Coworker;
 use app\models\Order;
 use app\models\OrderCoworker;
@@ -63,5 +64,25 @@ class OrderController extends Controller
             }
         }
         return false;
+    }
+
+    public function actionSuitableCoworkers($id)
+    {
+        $order = Order::findOne($id);
+        $coworkers = $order->getSuitableCoworkers();
+        if (count($coworkers) === 0) {
+            echo "Empty\n";
+        }
+        /**
+         * @var $coworker User
+         */
+        foreach ( $coworkers as $coworker ) {
+            echo $coworker->name . "\n";
+        }
+    }
+
+    public function actionCheck()
+    {
+        echo Helper::checkService();
     }
 }

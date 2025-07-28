@@ -3,6 +3,7 @@
 namespace app\components;
 
 use app\models\Order;
+use app\models\telegram\TelegramMessage;
 use app\models\User;
 use yii\base\Component;
 
@@ -56,7 +57,8 @@ class Helper extends Component
         return $message;
     }
 
-    public static function orderDetails(Order $order) {
+    public static function orderDetails(Order $order)
+    {
         $building = $order->building;
         $text = "<b>" . \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "</b>\n";
         $text .= \Yii::t("app", "<b>Building</b>: <i>{building}</i>", ['building' => $building->title]) . "\n";
@@ -72,5 +74,25 @@ class Helper extends Component
             }
         }
         return $text;
+    }
+
+    public static function notify(int $user_id, int $order_id, string $text = null, array $keyboard = null)
+    {
+        $user = User::findOne($user_id);
+        $order = Order::findOne($order_id);
+        $message = TelegramMessage::findOne(['and', ['chat_id' => $user->profile->chat_id], ['order_id' => $order->id]]);
+        if (empty($message)) {
+            $message = new TelegramMessage([
+                'chat_id' => $user->profile->chat_id,
+                'order_id' => $order->id,
+            ]);
+        }
+        if ($text) {
+            $message->text = $text;
+        } else {
+            $message->text = self::generateTelegramMessage($order->id);
+        }
+        $message->reply_markup = json_encode($keyboard);
+        $message->send();
     }
 }

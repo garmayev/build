@@ -468,8 +468,7 @@ class Order extends \yii\db\ActiveRecord
                     ['and', ['r.type' => 'equal'], ['=', 'up.value', new \yii\db\Expression('r.value')]],
                     ['and', ['r.type' => 'not-equal'], ['!=', 'up.value', new \yii\db\Expression('r.value')]]
                 ])
-            ])
-            ->all();
+            ])->all();
     }
 
     public function getOwner()
@@ -524,7 +523,7 @@ class Order extends \yii\db\ActiveRecord
                             }
                         } else {
                             if ($coworker->profile->chat_id) {
-                                $notificationService->sendTelegramMessage($coworker->profile->chat_id, "<b>".\Yii::t("app", "Order #{id}", ["id" => $this->id])."</b>\n".$message, $keyboard, $this->id);
+                                $notificationService->sendTelegramMessage($coworker->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, $keyboard, $this->id);
                             }
                         }
                     } else {
