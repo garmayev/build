@@ -19,19 +19,21 @@ use yii\web\IdentityInterface;
  * @property int $status
  * @property int $referrer_id
  *
- * @property User $referrer
- * @property User[] $referrals
- * @property Profile $profile
- * @property array $statusList
- * @property string $statusName
- * @property string $name
  * @property UserProperty[] $userProperties
  * @property Property[] $properties
  * @property Order[] $suitableOrders
+ * @property Order[] $orders
  * @property Price[] $prices
  * @property Hours[] $hours
+ * @property User[] $referrals
+ * @property Profile $profile
+ * @property string $statusName
+ * @property string $name
+ * @property array $statusList
+ * @property Price $price
  * @property float $debitAmount
  * @property float $creditAmount
+ * @property User $referrer
  */
 class User extends ActiveRecord implements IdentityInterface
 {
@@ -161,7 +163,6 @@ class User extends ActiveRecord implements IdentityInterface
 
     public static function findByChatId($chat_id): ?User
     {
-        \Yii::error($chat_id);
         return self::find()->joinWith('profile')->where(['profile.chat_id' => $chat_id])->one();
     }
 

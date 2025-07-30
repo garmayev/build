@@ -13,7 +13,7 @@ use yii\rest\ActiveController;
 
 class CoworkerController extends ActiveController
 {
-    public $modelClass = Coworker::class;
+    public $modelClass = User::class;
 
     public $serializer = [
         'class' => 'yii\rest\Serializer',
@@ -83,13 +83,13 @@ class CoworkerController extends ActiveController
     public function prepareDataProvider()
     {
         return new \yii\data\ActiveDataProvider([
-            'query' => \app\models\Coworker::find()->where(['created_by' => \Yii::$app->user->getId()])
+            'query' => \app\models\User::find()->where(['created_by' => \Yii::$app->user->getId()])
         ]);
     }
 
     public function actionDetails($id)
     {
-        $model = Coworker::findOne($id);
+        $model = User::findOne($id);
         return ["ok" => true, "data" => $model];
     }
 
@@ -141,7 +141,6 @@ class CoworkerController extends ActiveController
         $referrals = $user->referrals;
         $result = [];
 
-        \Yii::error(count($referrals));
         foreach ($referrals as $referral) {
             $result[] = [
                 'user' => $referral,

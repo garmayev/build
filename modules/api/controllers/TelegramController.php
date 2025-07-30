@@ -125,7 +125,7 @@ class TelegramController extends \yii\web\Controller
                 $profile = \app\models\Profile::findOne(['chat_id' => $telegram->input->message->from->id]);
                 $user = $profile->user;
                 $keyboard = [];
-                foreach ($user->getSuitableOrders() as $order) {
+                foreach ($user->orders as $order) {
                     $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id='.$order->id]];
                 }
 //                \Yii::error($keyboard);

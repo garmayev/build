@@ -11,6 +11,10 @@ class CoworkerController extends \yii\console\Controller
             echo \Yii::t("app", "Coworker not found");
         }
 
-        echo "Count: ".count($coworker->suitableOrders);
+        $suitableOrders = $coworker->suitableOrders;
+        foreach ($suitableOrders as $order) {
+            echo \Yii::t("app", "Order #{id}", ['id' => $order->id])."\n";
+        }
+        echo "Count: ".count($suitableOrders);
     }
 }

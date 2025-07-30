@@ -6,6 +6,7 @@ use app\models\Coworker;
 use app\models\Hours;
 use app\models\Order;
 use app\models\telegram\TelegramMessage;
+use app\models\User;
 use yii\helpers\ArrayHelper;
 
 class OrderController extends \yii\rest\ActiveController
@@ -41,6 +42,7 @@ class OrderController extends \yii\rest\ActiveController
                         'update',
                         'create',
                         'delete',
+                        'my',
                         'close',
                         'detail',
                         'by-coworker',
@@ -74,6 +76,7 @@ class OrderController extends \yii\rest\ActiveController
             'get-list' => ['GET', 'OPTIONS'],
             'set-hours' => ['POST', 'PUT', 'OPTIONS'],
             'by-coworker' => ['GET', 'POST', 'OPTIONS'],
+            'my' => ['GET', 'POST', 'OPTIONS'],
         ];
     }
 
@@ -102,16 +105,22 @@ class OrderController extends \yii\rest\ActiveController
         ]);
     }
 
+    public function actionMy($user_id)
+    {
+        $user = User::findOne($user_id);
+        return ['data' => $user->orders];
+    }
+
     public function actionByCoworker($id = null)
     {
-        $coworker = \app\models\User::findOne(['id' => \Yii::$app->user->getId()]);
+        $coworker = \app\models\User::findOne(['id' => $id]);
 //        $orderCoworkers = \app\models\OrderUser::findAll(['user_id' => $coworker->id]);
 //        $result = [];
 //        foreach ($orderCoworkers as $oc) {
 //            $result[] = $oc->order;
 //        }
 //        return ['data' => $result];
-        return ['data' => $coworker->orders];
+        return ['data' => $coworker->suitableOrders];
     }
 
     public function actionSetHours()

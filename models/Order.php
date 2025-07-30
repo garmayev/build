@@ -4,6 +4,8 @@ namespace app\models;
 
 use app\components\Helper;
 use app\models\telegram\TelegramMessage;
+use ExpoSDK\Expo;
+use ExpoSDK\ExpoMessage;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\behaviors\TimestampBehavior;
@@ -515,7 +517,7 @@ class Order extends \yii\db\ActiveRecord
 
             foreach ($this->suitableCoworkers as $coworker) {
                 if ($coworker->status === User::STATUS_ACTIVE) {
-                    if ($coworker->chat_id) {
+                    if ($coworker->profile->chat_id) {
                         $telegramMessages = $this->telegramMessages;
                         if (count($telegramMessages)) {
                             foreach ($telegramMessages as $telegramMessage) {
@@ -526,8 +528,16 @@ class Order extends \yii\db\ActiveRecord
                                 $notificationService->sendTelegramMessage($coworker->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, $keyboard, $this->id);
                             }
                         }
-                    } else {
-
+                    } else if ($coworker->profile->device_id) {
+                        $message = (new ExpoMessage())
+                            ->setTitle(\Yii::t('app', 'New Order').' #'.$this->id)
+                            ->setBody(Helper::orderDetails($this))
+                            ->setTo($coworker->profile->device_id)
+                            ->setData(['url' => 'build://amgcompany.ru/--/order/'.$this->id, 'id' => 1])
+                            ->setChannelId('new-order')
+                            ->setCategoryId('new-order')
+                            ->playSound();
+                        (new Expo)->send($message)->push();
                     }
                 }
             }
@@ -545,8 +555,9 @@ class Order extends \yii\db\ActiveRecord
      * Formats the notification message for the order
      *
      * @return string Formatted message
+     * @throws InvalidConfigException
      */
-    protected function formatNotificationMessage()
+    protected function formatNotificationMessage(): string
     {
         $message = Yii::t('app', 'Order #{id}', ['id' => $this->id]) . "\n\n";
 

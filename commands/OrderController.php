@@ -80,9 +80,4 @@ class OrderController extends Controller
             echo $coworker->name . "\n";
         }
     }
-
-    public function actionCheck()
-    {
-        echo Helper::checkService();
-    }
 }
