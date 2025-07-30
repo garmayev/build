@@ -9,6 +9,12 @@ use yii\base\Component;
 
 class Helper extends Component
 {
+    const equals = [
+        'less' => 'меньше',
+        'more' => 'больше',
+        'equals' => 'рано',
+        'not-equals' => 'не равно',
+    ];
     public static function generateTelegramMessage($order_id)
     {
         $order = Order::findOne($order_id);
@@ -29,13 +35,10 @@ class Helper extends Component
         $currentCount = $order->issetCoworkers;
         $totalRequired = $order->requiredCoworkers;
         $message .= "\n" . \Yii::t("app", "<b>Requirements</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
-//        $message .= \Yii::t("app", "Requirements:") . "\n";
-//        foreach ($order->filters as $filter) {
-//            $message .= "- {$filter->category->title}\n";
-            foreach ($order->requirements as $requirement) {
-                $message .= "--- {$requirement->property->title} {$requirement->type} {$requirement->value} {$requirement->dimension->title}\n";
-            }
-//        }
+        foreach ($order->requirements as $requirement) {
+            $eq = Helper::equals[$requirement->type];
+            $message .= "--- {$requirement->property->title} {$eq} {$requirement->value} {$requirement->dimension->title}\n";
+        }
         return $message;
     }
 
@@ -69,6 +72,25 @@ class Helper extends Component
         }
         if ($order->attachments) {
             $text .= \Yii::t("app", "<b>Attachments</b>")."\n";
+            foreach ($order->attachments as $attachment) {
+                $text .= \Yii::t("app", "--- {$attachment->getLink(true)}") . "\n";
+            }
+        }
+        return $text;
+    }
+
+    public static function orderDetailsPlain(Order $order)
+    {
+        $building = $order->building;
+        $text = "<b>" . \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "</b>\n";
+        $text .= \Yii::t("app", "Building: {building}", ['building' => $building->title]) . "\n";
+        $text .= \Yii::t("app", "Address: {address}", ['address' => $building->location->link]) . "\n";
+        $text .= \Yii::t("app", "Date: {date}", ['date' => \Yii::$app->formatter->asDate($order->date)]) . "\n";
+        if ($order->comment) {
+            $text .= \Yii::t("app", "Comment: {comment}", ['comment' => $order->comment]) . "\n";
+        }
+        if ($order->attachments) {
+            $text .= \Yii::t("app", "Attachments")."\n";
             foreach ($order->attachments as $attachment) {
                 $text .= \Yii::t("app", "--- {$attachment->getLink(true)}") . "\n";
             }

@@ -79,5 +79,6 @@ class OrderController extends Controller
         foreach ( $coworkers as $coworker ) {
             echo $coworker->name . "\n";
         }
+        echo "Total: " . count($coworkers) . "\n\n";
     }
 }

@@ -113,7 +113,7 @@ class OrderController extends \yii\rest\ActiveController
         return $user->orders;
     }
 
-    public function actionByCoworker($id = null)
+    public function actionByCoworker()
     {
         $coworker = \app\models\User::findOne(['id' => \Yii::$app->user->getId()]);
 //        $orderCoworkers = \app\models\OrderUser::findAll(['user_id' => $coworker->id]);

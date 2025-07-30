@@ -465,8 +465,8 @@ class Order extends \yii\db\ActiveRecord
                 ->where('up.user_id = user.id')
                 ->andWhere([
                     'or',
-                    ['and', ['r.type' => 'less'], ['<=', 'up.value', new \yii\db\Expression('r.value')]],
-                    ['and', ['r.type' => 'more'], ['>=', 'up.value', new \yii\db\Expression('r.value')]],
+                    ['and', ['r.type' => 'less'], ['<', 'up.value', new \yii\db\Expression('r.value')]],
+                    ['and', ['r.type' => 'more'], ['>', 'up.value', new \yii\db\Expression('r.value')]],
                     ['and', ['r.type' => 'equal'], ['=', 'up.value', new \yii\db\Expression('r.value')]],
                     ['and', ['r.type' => 'not-equal'], ['!=', 'up.value', new \yii\db\Expression('r.value')]]
                 ])
@@ -485,10 +485,25 @@ class Order extends \yii\db\ActiveRecord
      */
     public function assignCoworker($coworker)
     {
-        $coworkersIds = ArrayHelper::getColumn($this->coworkers, 'id');
+        $coworkersIds = \yii\helpers\ArrayHelper::getColumn($this->coworkers, 'id');
         if (!in_array($coworker->id, $coworkersIds)) {
             $this->link('coworkers', $coworker);
-            return true;
+            return $this->save();
+        }
+        return false;
+    }
+
+    /**
+     * Assigns a coworker to the order
+     * 
+     * @param User $coworker The coworker to assign
+     */
+    public function revokeCoworker(User $coworker)
+    {
+        $coworkersIds = \yii\helpers\ArrayHelper::getColumn($this->coworkers, 'id');
+        if (in_array($coworker->id, $coworkersIds)) {
+            $this->unlink('coworkers', $coworker, true);
+            return $this->save();
         }
         return false;
     }
@@ -517,7 +532,7 @@ class Order extends \yii\db\ActiveRecord
 
             foreach ($this->suitableCoworkers as $coworker) {
                 if ($coworker->status === User::STATUS_ACTIVE) {
-                    if ($coworker->profile->chat_id) {
+                    if (isset($coworker->profile->chat_id)) {
                         $telegramMessages = $this->telegramMessages;
                         if (count($telegramMessages)) {
                             foreach ($telegramMessages as $telegramMessage) {
@@ -525,25 +540,36 @@ class Order extends \yii\db\ActiveRecord
                             }
                         } else {
                             if ($coworker->profile->chat_id) {
-                                $notificationService->sendTelegramMessage($coworker->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, $keyboard, $this->id);
+                                $telegramMsg = new \app\models\telegram\TelegramMessage([
+                                    'chat_id' => $coworker->profile->chat_id,
+                                    'order_id' => $this->id,
+                                    'created_at' => time(),
+                                    'updated_at' => time(),
+                                    'text' => $message,
+                                    'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
+                                ]);
+                                $telegramMsg->send();
+                                // Helper::notify($coworker->profile->chat_id, $this->id, null, $keyboard);
+                                // $notificationService->sendTelegramMessage($coworker->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, $keyboard, $this->id);
                             }
                         }
-                    } else if ($coworker->profile->device_id) {
-                        $message = (new ExpoMessage())
+                    } else if (isset($coworker->profile->device_id)) {
+                        $expoMessage = (new ExpoMessage())
                             ->setTitle(\Yii::t('app', 'New Order').' #'.$this->id)
-                            ->setBody(Helper::orderDetails($this))
+                            ->setBody(Helper::orderDetailsPlain($this))
                             ->setTo($coworker->profile->device_id)
-                            ->setData(['url' => 'build://amgcompany.ru/--/order/'.$this->id, 'id' => 1])
+                            ->setData(['url' => 'build://amgcompany.ru/--/order/'.$this->id, 'id' => $this->id])
                             ->setChannelId('new-order')
                             ->setCategoryId('new-order')
                             ->playSound();
-                        (new Expo)->send($message)->push();
+                        (new Expo)->send($expoMessage)->push();
                     }
                 }
             }
-            if ($this->owner->profile->chat_id) {
-                $notificationService->sendTelegramMessage($this->owner->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, null, $this->id);
-            }
+//            if (isset($this->owner->profile->chat_id)) {
+//                Helper::notify($this->owner->profile->chat_id, $this->id);
+//                $notificationService->sendTelegramMessage($this->owner->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, null, $this->id);
+//            }
         } catch (\Exception $e) {
             Yii::error('Error in sendAndUpdateTelegramNotifications: ' . $e->getMessage());
             $results['errors'][] = $e->getMessage();

@@ -80,9 +80,6 @@ class Hours extends ActiveRecord
             ->andWhere(['<=', 'date', $this->date])
             ->orderBy(['date' => SORT_DESC])
             ->one();
-        \Yii::error($this->attributes);
-        \Yii::error($priceModel ? $priceModel->attributes : "");
-//        $priceModel = $priceModel->one();
         return $priceModel ? $priceModel->price : 0;
     }
 

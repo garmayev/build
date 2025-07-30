@@ -222,7 +222,7 @@ class TelegramController extends \yii\web\Controller
                 }
 
                 // Add coworker to order
-//                \Yii::error($order->isFull());
+                // \Yii::error($order->isFull());
                 if (!$order->isFull()) {
                     if (!$order->assignCoworker($coworker)) {
                         \Yii::error(["ok" => false, "message" => "Coworker {$coworker->name} is already agreed to order #{$order->id}"]);
@@ -250,7 +250,7 @@ class TelegramController extends \yii\web\Controller
                                 return $messages;
                             }
                         } else {
-                            foreach ($messages->all() as $message) {
+                            foreach ($messages as $message) {
                                 $header = $message->chat_id == $coworker->profile->chat_id ?
                                     \Yii::t('app', 'You have agreed to complete the order') . " #{$order->id}\n" :
                                     \Yii::t('app', 'New Order') . " #{$order->id}\n";
@@ -272,7 +272,7 @@ class TelegramController extends \yii\web\Controller
                         }
                     } else {
                         $telegram->editMessageText([
-                            'message_id' => $telegram->input->message->id,
+                            'message_id' => $telegram->input->callback_query->message['message_id'],
                             'text' => Helper::orderDetails(),
                             'reply_markup' => null,
                         ]);
@@ -285,6 +285,7 @@ class TelegramController extends \yii\web\Controller
             Command::run("/decline", function ($telegram, $args) {
                 parse_str($args[0] ?? '', $data);
                 $orderId = $data["order_id"] ?? null;
+                $user = \app\models\User::find()->joinWith('profile')->where(['profile.chat_id' => $telegram->input->callback_query->from['id']])->one();
 
                 if (!$orderId) {
                     \Yii::error([
@@ -294,12 +295,19 @@ class TelegramController extends \yii\web\Controller
                 }
 
                 $order = Order::findOne($orderId ?? null);
+
                 if (!$telegram->input->callback_query) {
                     return;
                 }
 
-                $messageId = $telegram->input->callback_query->message->message_id;
-                $chatId = $telegram->input->callback_query->from->id;
+                $messageId = $telegram->input->callback_query->message['message_id'];
+                $chatId = $telegram->input->callback_query->from['id'];
+
+                if ( $order->revokeCoworker($user) ) {
+                    \Yii::error("Coworker is revoked {$chatId} successfully");
+                } else {
+                    \Yii::error("Coworker is already removed {$chatId}");
+                }
 
                 $message = TelegramMessage::findOne([
                     'message_id' => $messageId,
@@ -307,8 +315,17 @@ class TelegramController extends \yii\web\Controller
                     'order_id' => $order->id
                 ]);
 
+//                \Yii::error($messageId);
+//                \Yii::error($chatId);
+
                 if ($message) {
                     $message->remove();
+                } else {
+                    \Yii::error( $messageId );
+                    $telegram->deleteMessage([
+                        'chat_id' => $chatId,
+                        'message_id' => $messageId,
+                    ]);
                 }
             });
             Command::run("/order_detail", function ($telegram, $args) {

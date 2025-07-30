@@ -9,9 +9,9 @@ use app\models\OrderCoworker;
 use app\models\OrderUser;
 use app\models\User;
 use yii\helpers\ArrayHelper;
-use yii\rest\ActiveController;
+use yii\rest\Controller;
 
-class CoworkerController extends ActiveController
+class CoworkerController extends Controller
 {
     public $modelClass = User::class;
 
@@ -39,9 +39,9 @@ class CoworkerController extends ActiveController
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    ['allow' => true, 'roles' => ['?'], 'actions' => ['calendar']],
+                    ['allow' => true, 'roles' => ['?'], 'actions' => ['calendar', 'advanced']],
                     // Users
-                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders', 'calendar-month', 'calendar']],
+                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitable-orders', 'calendar-month', 'calendar', 'advanced']],
                 ],
             ],
             'authenticator' => [
@@ -61,6 +61,7 @@ class CoworkerController extends ActiveController
             'calendar' => ['GET', 'POST', 'OPTIONS'],
             'calendar-month' => ['GET', 'OPTIONS'],
             'advanced' => ['POST', 'OPTIONS'],
+            'suitable-orders' => ['POST', 'GET', 'OPTIONS']
         ];
     }
 
@@ -123,6 +124,7 @@ class CoworkerController extends ActiveController
 
     public function actionSuitableOrders()
     {
+        \Yii::error( \Yii::$app->user->getId() );
         $coworker = User::findOne(\Yii::$app->user->getId());
         if ($coworker) {
             return ["ok" => true, "data" => $coworker->getSuitableOrders()];

@@ -134,4 +134,11 @@ class OrderController extends BaseController
 //        \Yii::error( $result );
         return $this->redirect(['view', 'id' => $id]);
     }
+
+    public function actionResendNotify($id)
+    {
+        $model = Order::findOne($id);
+        $result = $model->sendAndUpdateTelegramNotifications();
+        return $this->redirect(['view', 'id' => $id]);
+    }
 }
