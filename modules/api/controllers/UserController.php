@@ -108,7 +108,7 @@ class UserController extends \yii\rest\Controller
 
     public function actionCheck()
     {
-        return ["ok" => !\Yii::$app->user->isGuest, 'model' => \Yii::$app->user->identity];
+        return ["ok" => !\Yii::$app->user->isGuest, 'model' => User::findOne(\Yii::$app->user->getId())];
     }
 
     public function actionList()

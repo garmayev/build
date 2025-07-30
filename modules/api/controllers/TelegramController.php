@@ -26,6 +26,7 @@ class TelegramController extends \yii\web\Controller
     {
         $telegram = \Yii::$app->telegram;
         if (isset($telegram->input->message)) {
+            session_id( $telegram->input->message->from->id );
             if (isset($telegram->input->message->contact)) {
                 $contact = $telegram->input->message->contact;
                 $phone = preg_replace("/[\(\)\+\ \-]/", "", $contact["phone_number"]);
@@ -70,7 +71,25 @@ class TelegramController extends \yii\web\Controller
             }
 
             if ($telegram->input->message->location) {
-                \Yii::error($telegram->input->message->location);
+                $order = Order::findOne(\Yii::$app->session->get('order_id'));
+                $user = \app\models\User::findByChatId( $telegram->input->message->from->id );
+                if (isset($order)) {
+                    if ( Helper::isPointInCircle( $order->building->location->attributes, $telegram->input->message->location, $order->building->radius ) ) {
+                        $hours = new \app\models\Hours(['order_id' => $order->id, 'user_id' => $user->id, 'is_payed' => 0, 'count' => 0, 'date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d') ]);
+                        if ($hours->save()) {
+                            \Yii::$app->session->remove('order_id');
+                            $telegram->sendMessage([
+                                'chat_id' => $telegram->input->message->from->id,
+                                'text' => \Yii::t('app', 'command_hours_created'),
+                                'keyboard' => json_encode([
+                                    'keyboard' => []
+                                ]),
+                            ]);
+                        } else {
+                            \Yii::error($hours->errors);
+                        }
+                    }
+                }
             }
 
             // Handle /start command
@@ -141,6 +160,7 @@ class TelegramController extends \yii\web\Controller
             });
         }
         if (isset($telegram->input->callback_query)) {
+            session_id( $telegram->input->callback_query->from['id'] );
             Command::run("/order", function ($telegram, $args) {
                 parse_str($args[0] ?? '', $data);
                 $id = $data["id"] ?? null;
@@ -148,6 +168,15 @@ class TelegramController extends \yii\web\Controller
                     return null;
                 }
                 $order = \app\models\Order::findOne($id);
+                \Yii::$app->session->set('order_id', $id);
+/*                $telegram->answerCallbackQuery([
+                    'callback_query_id' => $telegram->input->callback_query->id,
+                ]);
+                \Yii::error(  );
+                $telegram->deleteMessage([
+                    'chat_id' => $telegram->input->callback_query->from['id'],
+                    'message_id' => $telegram->input->callback_query->message['message_id'],
+                ]); */
                 $telegram->sendMessage([
                     'chat_id' => $telegram->input->callback_query->from['id'],
                     'text' => \Yii::t('app', 'command_location'),
@@ -161,7 +190,7 @@ class TelegramController extends \yii\web\Controller
                         'resize_keyboard' => true,
                     ])
                 ]);
-                \Yii::error( $order->attributes );
+//                \Yii::error( $order->attributes );
                 return null;
             });
             // Handle /agree command
@@ -193,21 +222,21 @@ class TelegramController extends \yii\web\Controller
                 }
 
                 // Add coworker to order
-                \Yii::error($order->isFull());
+//                \Yii::error($order->isFull());
                 if (!$order->isFull()) {
                     if (!$order->assignCoworker($coworker)) {
                         \Yii::error(["ok" => false, "message" => "Coworker {$coworker->name} is already agreed to order #{$order->id}"]);
                         return null;
                     }
 
-                    $messages = TelegramMessage::find()->where(['order_id' => $order->id]);
+                    $messages = TelegramMessage::find()->where(['order_id' => $order->id])->all();
                     if (count($messages)) {
                         // If order is now complete, update status
                         if ($order->isFull()) {
                             $order->status = Order::STATUS_PROCESS;
                             $order->save();
                             if (YII_ENV === 'prod') {
-                                foreach ($messages->all() as $message) {
+                                foreach ($messages as $message) {
                                     if (in_array($message->chat_id, array_merge(\yii\helpers\ArrayHelper::map($order->coworkers, 'profile.chat_id', 'profile.chat_id'), [$order->owner->profile->chat_id => $order->owner->profile->chat_id]))) {
                                         $message->editMessageText(Helper::generateTelegramHiddenMessage($order->id), null);
                                     } else {
@@ -288,7 +317,7 @@ class TelegramController extends \yii\web\Controller
                 if (empty($id)) { return null; }
 
                 $order = Order::findOne($id);
-                $user = User::find()->joinWith('profile')->where(['profile.chat_id' => $telegram->input->callback_query->from->id]);
+                $user = User::findByChatId($telegram->input->callback_query->from['id']);
                 Helper::notify(
                     $user->id,
                     $order->id,

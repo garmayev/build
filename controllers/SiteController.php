@@ -11,7 +11,7 @@ class SiteController extends BaseController
         return array_merge(parent::behaviors(), [
             'access' => [
                 'class' => AccessControl::class,
-                'only' => ['login', 'logout', 'index'],
+                'only' => ['login', 'logout', 'index', 'calendar'],
                 'rules' => [
                     [
                         'allow' => true,
@@ -20,7 +20,7 @@ class SiteController extends BaseController
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['logout', 'index', 'calendar-month'],
+                        'actions' => ['logout', 'index', 'calendar-month', 'calendar'],
                         'roles' => ['@'],
                     ],
                 ],

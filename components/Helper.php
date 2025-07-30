@@ -90,9 +90,38 @@ class Helper extends Component
         if ($text) {
             $message->text = $text;
         } else {
-            $message->text = self::generateTelegramMessage($order->id);
+            $message->text = self::orderDetails($order);
         }
         $message->reply_markup = json_encode($keyboard);
         $message->send();
+    }
+
+    public static function isPointInCircle($point1, $point2, $radius) 
+    {
+        // Земной радиус в километрах
+        $earthRadius = 6371;
+        $radiusKm = $radius / 1000;
+
+        // Переводим градусы в радианы
+        $latFrom = deg2rad($point1['latitude']);
+        $lonFrom = deg2rad($point1['longitude']);
+        $latTo = deg2rad($point2['latitude']);
+        $lonTo = deg2rad($point2['longitude']);
+
+        // Разница между координатами
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        // Формула гаверсинусов для расчета расстояния
+        $angle = 2 * asin(sqrt(
+            pow(sin($latDelta / 2), 2) +
+            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)
+        ));
+
+        // Расстояние в километрах
+        $distance = $angle * $earthRadius;
+
+        // Проверяем, находится ли точка в пределах радиуса
+        return $distance <= $radiusKm;
     }
 }

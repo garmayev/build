@@ -51,7 +51,8 @@ class OrderController extends \yii\rest\ActiveController
                         'reject',
                         'set-status',
                         'get-list',
-                        'set-hours'
+                        'set-hours',
+                        'my'
                     ]],
                 ],
             ],
@@ -65,6 +66,7 @@ class OrderController extends \yii\rest\ActiveController
     protected function verbs()
     {
         return [
+            'apply' => ['GET', 'OPTIONS'],
             'detail' => ['GET', 'OPTIONS'],
             'view' => ['GET', 'OPTIONS'],
             'status' => ['GET', 'OPTIONS'],
@@ -76,7 +78,7 @@ class OrderController extends \yii\rest\ActiveController
             'get-list' => ['GET', 'OPTIONS'],
             'set-hours' => ['POST', 'PUT', 'OPTIONS'],
             'by-coworker' => ['GET', 'POST', 'OPTIONS'],
-            'my' => ['GET', 'POST', 'OPTIONS'],
+            'my' => ['GET', 'POST', 'OPTIONS']
         ];
     }
 
@@ -107,13 +109,13 @@ class OrderController extends \yii\rest\ActiveController
 
     public function actionMy($user_id)
     {
-        $user = User::findOne($user_id);
-        return ['data' => $user->orders];
+        $user = \app\models\User::findOne($user_id);
+        return $user->orders;
     }
 
     public function actionByCoworker($id = null)
     {
-        $coworker = \app\models\User::findOne(['id' => $id]);
+        $coworker = \app\models\User::findOne(['id' => \Yii::$app->user->getId()]);
 //        $orderCoworkers = \app\models\OrderUser::findAll(['user_id' => $coworker->id]);
 //        $result = [];
 //        foreach ($orderCoworkers as $oc) {
@@ -215,7 +217,7 @@ class OrderController extends \yii\rest\ActiveController
             ->one();
         $model = \app\models\Order::findOne($id);
 
-        if (!$model->isFull()) {
+        if (!$model->isFull() && !in_array( \Yii::$app->user->getId(), \yii\helpers\ArrayHelper::map($model->coworkers, 'id', 'id') )) {
             $model->link('coworkers', $coworker);
             if ($model->isFull()) {
                 $model->status = \app\models\Order::STATUS_PROCESS;
@@ -240,7 +242,7 @@ class OrderController extends \yii\rest\ActiveController
     {
         $order = \app\models\Order::findOne($id);
         $coworker = \app\models\User::findOne(['id' => \Yii::$app->user->getId()]);
-        if (isset($order)) {
+        if (isset($order) && in_array( \Yii::$app->user->getId(), \yii\helpers\ArrayHelper::map($order->coworkers, 'id', 'id') )) {
             $order->unlink('coworkers', $coworker, true);
             $order->status = \app\models\Order::STATUS_NEW;
             $order->save();

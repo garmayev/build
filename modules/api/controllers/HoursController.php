@@ -50,6 +50,7 @@ class HoursController extends \yii\rest\Controller {
             'delete' => ['DELETE', 'OPTIONS'],
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
+            'check-today' => ['GET', 'OPTIONS'],
         ];
     }
 
@@ -100,7 +101,7 @@ class HoursController extends \yii\rest\Controller {
 
     public function actionCheckToday()
     {
-        $hours = \app\models\Hours::find()->where(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->one();
+        $hours = \app\models\Hours::find()->where(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->andWhere(['user_id' => \Yii::$app->user->getId()])->one();
         return $hours;
     }
 }

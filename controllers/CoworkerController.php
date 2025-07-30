@@ -28,11 +28,11 @@ class CoworkerController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::class,
-                'only' => ['index', 'view', 'create', 'update', 'delete'],
+                'only' => ['index', 'view', 'create', 'update', 'delete', 'calendar'],
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index', 'view', 'create', 'update', 'delete'],
+                        'actions' => ['index', 'view', 'create', 'update', 'delete', 'calendar'],
                         'roles' => ['director'],
                     ],
                 ],
@@ -43,6 +43,7 @@ class CoworkerController extends Controller
                     'delete' => ['POST'],
                     'create' => ['GET', 'POST'],
                     'update' => ['GET', 'POST'],
+                    'calendar' => ['GET', 'POST'],
                 ],
             ],
         ];

@@ -39,9 +39,9 @@ class CoworkerController extends ActiveController
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    ['allow' => true, 'roles' => ['?'], 'actions' => []],
+                    ['allow' => true, 'roles' => ['?'], 'actions' => ['calendar']],
                     // Users
-                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders', 'calendar-month']],
+                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitableOrders', 'calendar-month', 'calendar']],
                 ],
             ],
             'authenticator' => [
@@ -58,6 +58,7 @@ class CoworkerController extends ActiveController
             'create' => ['POST', 'OPTIONS'],
             'update' => ['POST', 'PUT', 'OPTIONS'],
             'delete' => ['DELETE', 'OPTIONS'],
+            'calendar' => ['GET', 'POST', 'OPTIONS'],
             'calendar-month' => ['GET', 'OPTIONS'],
             'advanced' => ['POST', 'OPTIONS'],
         ];
@@ -95,7 +96,7 @@ class CoworkerController extends ActiveController
 
     public function actionImages()
     {
-        \Yii::error("check?");
+//        \Yii::error("check?");
         $files = $_FILES;
         $target_path = "/upload/" . basename($files['file']['name']);
 
