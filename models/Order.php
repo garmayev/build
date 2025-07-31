@@ -11,6 +11,8 @@ use yii\base\InvalidConfigException;
 use yii\behaviors\TimestampBehavior;
 use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveQuery;
+use yii\db\Exception;
+use yii\db\StaleObjectException;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -473,7 +475,10 @@ class Order extends \yii\db\ActiveRecord
             ])->all();
     }
 
-    public function getOwner()
+    /**
+     * @return ActiveQuery
+     */
+    public function getOwner(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'created_by']);
     }
@@ -482,6 +487,7 @@ class Order extends \yii\db\ActiveRecord
      * Assigns a coworker to the order
      *
      * @param User $coworker The coworker to assign
+     * @throws Exception
      */
     public function assignCoworker($coworker)
     {
@@ -495,8 +501,10 @@ class Order extends \yii\db\ActiveRecord
 
     /**
      * Assigns a coworker to the order
-     * 
+     *
      * @param User $coworker The coworker to assign
+     * @return bool
+     * @throws Exception
      */
     public function revokeCoworker(User $coworker)
     {
@@ -516,8 +524,6 @@ class Order extends \yii\db\ActiveRecord
      */
     public function sendAndUpdateTelegramNotifications()
     {
-        $notificationService = new NotificationService();
-
         try {
             // Prepare the message
             $message = Helper::generateTelegramMessage($this->id);
@@ -575,38 +581,5 @@ class Order extends \yii\db\ActiveRecord
             $results['errors'][] = $e->getMessage();
             return $results;
         }
-    }
-
-    /**
-     * Formats the notification message for the order
-     *
-     * @return string Formatted message
-     * @throws InvalidConfigException
-     */
-    protected function formatNotificationMessage(): string
-    {
-        $message = Yii::t('app', 'Order #{id}', ['id' => $this->id]) . "\n\n";
-
-        if ($this->building) {
-            $message .= Yii::t('app', 'Building: {building}', ['building' => $this->building->title]) . "\n";
-        }
-
-        $message .= Yii::t('app', 'Status: {status}', ['status' => $this->statusTitle]) . "\n";
-        $message .= Yii::t('app', 'Type: {type}', ['type' => $this->typeName]) . "\n";
-        $message .= Yii::t('app', 'Date: {date}', ['date' => Yii::$app->formatter->asDate($this->date)]) . "\n";
-
-        if ($this->comment) {
-            $message .= "\n" . Yii::t('app', 'Comment: {comment}', ['comment' => $this->comment]) . "\n";
-        }
-
-        // Add filter requirements
-        if ($this->filters) {
-            $message .= "\n" . Yii::t('app', 'Requirements:') . "\n";
-            foreach ($this->filters as $filter) {
-                $message .= "- " . $filter->category->title . ": " . $filter->count . "\n";
-            }
-        }
-
-        return $message;
     }
 }
