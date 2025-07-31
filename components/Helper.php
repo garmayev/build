@@ -82,19 +82,10 @@ class Helper extends Component
     public static function orderDetailsPlain(Order $order)
     {
         $building = $order->building;
-        $text = "<b>" . \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "</b>\n";
+        $text = \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "\n";
         $text .= \Yii::t("app", "Building: {building}", ['building' => $building->title]) . "\n";
-        $text .= \Yii::t("app", "Address: {address}", ['address' => $building->location->link]) . "\n";
+        $text .= \Yii::t("app", "Address: {address}", ['address' => $building->location->address]) . "\n";
         $text .= \Yii::t("app", "Date: {date}", ['date' => \Yii::$app->formatter->asDate($order->date)]) . "\n";
-        if ($order->comment) {
-            $text .= \Yii::t("app", "Comment: {comment}", ['comment' => $order->comment]) . "\n";
-        }
-        if ($order->attachments) {
-            $text .= \Yii::t("app", "Attachments")."\n";
-            foreach ($order->attachments as $attachment) {
-                $text .= \Yii::t("app", "--- {$attachment->getLink(true)}") . "\n";
-            }
-        }
         return $text;
     }
 

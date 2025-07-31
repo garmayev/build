@@ -23,6 +23,14 @@ class PushController extends \yii\console\Controller {
             ->playSound();
         (new Expo)->send($message)->push();
     }
+
+    public function actionInfo($ticketId)
+    {
+        $expo = new Expo();
+        $response = $expo->getReceipt($ticketId);
+        $data = $response->getData();
+        \Yii::error($data);
+    }
 }
 
 ?>

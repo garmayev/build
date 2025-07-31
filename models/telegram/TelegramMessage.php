@@ -50,19 +50,23 @@ class TelegramMessage extends ActiveRecord
         return $this->hasOne(Coworker::class , ['chat_id' => 'chat_id']);
     }
 
-    public function editMessageText($text, $keyboard = [])
+    public function editMessageText($text, $keyboard = "")
     {
-        $response = \Yii::$app->telegram->editMessageText([
-            "chat_id" => $this->chat_id,
-            "text" => $text,
-            "reply_markup" => !empty($keyboard) ? json_encode($keyboard) : null,
-            "parse_mode" => "html",
-            "message_id" => $this->message_id,
-        ]);
-        if ($response->ok) {
-            $this->text = $text;
-            $this->reply_markup = json_encode($keyboard);
-            $this->save();
+//        \Yii::error($text);
+//        \Yii::error($this->text);
+        if ($text !== $this->text) {
+            $response = \Yii::$app->telegram->editMessageText([
+                "chat_id" => $this->chat_id,
+                "text" => $text,
+                "reply_markup" => !empty($keyboard) ? $keyboard : null,
+                "parse_mode" => "html",
+                "message_id" => $this->message_id,
+            ]);
+            if ($response->ok) {
+                $this->text = $text;
+                $this->reply_markup = json_encode($keyboard);
+                $this->save();
+            }
         }
     }
 

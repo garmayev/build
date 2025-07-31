@@ -438,7 +438,7 @@ class Order extends \yii\db\ActiveRecord
      */
     public function isFull(): bool
     {
-        return $this->issetCoworkers >= $this->requiredCoworkers;
+        return $this->issetCoworkers === $this->requiredCoworkers;
     }
 
     /**
@@ -537,38 +537,44 @@ class Order extends \yii\db\ActiveRecord
             ];
 
             foreach ($this->suitableCoworkers as $coworker) {
+//                \Yii::error($coworker->id);
                 if ($coworker->status === User::STATUS_ACTIVE) {
-                    if (isset($coworker->profile->chat_id)) {
-                        $telegramMessages = $this->telegramMessages;
-                        if (count($telegramMessages)) {
-                            foreach ($telegramMessages as $telegramMessage) {
-                                $telegramMessage->editMessageText($message, $keyboard);
+                    if (!in_array($coworker->id, \yii\helpers\ArrayHelper::getColumn($this->coworkers, 'id'))) {
+                        if (isset($coworker->profile->chat_id)) {
+                            $telegramMessages = $this->telegramMessages;
+                            if (count($telegramMessages)) {
+                                foreach ($telegramMessages as $telegramMessage) {
+                                    $telegramMessage->editMessageText('<b>'.\Yii::t('app', 'Order #{id}', ['id' => $this->id])."</b>\n".$message, json_encode(['inline_keyboard' => $keyboard]));
+                                }
+                            } else {
+                                if ($coworker->profile->chat_id) {
+                                    $telegramMsg = new \app\models\telegram\TelegramMessage([
+                                        'chat_id' => $coworker->profile->chat_id,
+                                        'order_id' => $this->id,
+                                        'created_at' => time(),
+                                        'updated_at' => time(),
+                                        'text' => \Yii::t('app', 'Order #{id}', ['id' => $this->id])."\n".$message,
+                                        'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
+                                    ]);
+                                    $telegramMsg->send();
+                                    // Helper::notify($coworker->profile->chat_id, $this->id, null, $keyboard);
+                                    // $notificationService->sendTelegramMessage($coworker->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, $keyboard, $this->id);
+                                }
                             }
-                        } else {
-                            if ($coworker->profile->chat_id) {
-                                $telegramMsg = new \app\models\telegram\TelegramMessage([
-                                    'chat_id' => $coworker->profile->chat_id,
-                                    'order_id' => $this->id,
-                                    'created_at' => time(),
-                                    'updated_at' => time(),
-                                    'text' => $message,
-                                    'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
-                                ]);
-                                $telegramMsg->send();
-                                // Helper::notify($coworker->profile->chat_id, $this->id, null, $keyboard);
-                                // $notificationService->sendTelegramMessage($coworker->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, $keyboard, $this->id);
-                            }
+                        } else if (isset($coworker->profile->device_id)) {
+//                            \Yii::error($coworker->id);
+                            $expoMessage = (new ExpoMessage())
+                                ->setTitle(\Yii::t('app', 'New Order').' #'.$this->id)
+                                ->setBody(Helper::orderDetailsPlain($this))
+                                ->setTo($coworker->profile->device_id)
+                                ->setData(['url' => 'build://amgcompany.ru/--/order/'.$this->id, 'id' => $this->id])
+                                ->setChannelId('new-order')
+                                ->setCategoryId('new-order')
+                                ->playSound();
+                            $expo = new Expo();
+                            $ticket = $expo->send($expoMessage)->push();
+                            \Yii::error($ticket->getData());
                         }
-                    } else if (isset($coworker->profile->device_id)) {
-                        $expoMessage = (new ExpoMessage())
-                            ->setTitle(\Yii::t('app', 'New Order').' #'.$this->id)
-                            ->setBody(Helper::orderDetailsPlain($this))
-                            ->setTo($coworker->profile->device_id)
-                            ->setData(['url' => 'build://amgcompany.ru/--/order/'.$this->id, 'id' => $this->id])
-                            ->setChannelId('new-order')
-                            ->setCategoryId('new-order')
-                            ->playSound();
-                        (new Expo)->send($expoMessage)->push();
                     }
                 }
             }
