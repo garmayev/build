@@ -14,6 +14,5 @@ return [
     'command_hours_isset' => 'Вы уже начали рабочий день',
     'command_contact_complete' => 'Спасибо, авторизация прошла успешно',
     'command_already_registered' => 'Вы уже успешно авторизовались в нашей системе',
+    'answer_order_detail_{id}' => 'Вы выбрали заказ #{id}'
 ];
-
-?>
