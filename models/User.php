@@ -288,7 +288,7 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function getOrders()
     {
-        return $this->hasMany(Order::class, ['id' => 'order_id'])->viaTable('order_user', ['user_id' => 'id']);
+        return $this->hasMany(Order::class, ['id' => 'order_id'])->viaTable('order_user', ['user_id' => 'id'])->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]]);
     }
 
     public function setUserProperties($data)

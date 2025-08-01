@@ -50,7 +50,7 @@ class TelegramController extends \yii\web\Controller
                         \Yii::error($profile->attributes);
                         $telegram->sendMessage([
                             'chat_id' => $telegram->input->message->from->id,
-                            'text' => \Yii::t('app', 'command_contact_complete'),
+                            'text' => \Yii::t('telegram', 'command_contact_complete'),
                             'reply_markup' => json_encode([
                                 'keyboard' => []
                             ])
@@ -77,7 +77,7 @@ class TelegramController extends \yii\web\Controller
                         } else {
                             $telegram->sendMessage([
                                 'chat_id' => $telegram->input->message->from->id,
-                                'text' => \Yii::t('app', 'command_contact_complete'),
+                                'text' => \Yii::t('telegram', 'command_contact_complete'),
                                 'reply_markup' => json_encode([
                                     'keyboard' => null
                                 ])
@@ -102,7 +102,7 @@ class TelegramController extends \yii\web\Controller
                     if ($hour) {
                         $telegram->sendMessage([
                             'chat_id' => $telegram->input->message->from->id,
-                            'text' => \Yii::t('app', 'command_hours_isset'),
+                            'text' => \Yii::t('telegram', 'command_hours_isset'),
                             'keyboard' => null
                         ]);
                         return ;
@@ -113,7 +113,7 @@ class TelegramController extends \yii\web\Controller
                             \Yii::$app->session->remove('order_id');
                             $telegram->sendMessage([
                                 'chat_id' => $telegram->input->message->from->id,
-                                'text' => \Yii::t('app', 'command_hours_created'),
+                                'text' => \Yii::t('telegram', 'command_hours_created'),
                                 'reply_markup' => [
                                     'keyboard' => null,
                                 ],
@@ -122,7 +122,7 @@ class TelegramController extends \yii\web\Controller
                         } else {
                             $telegram->sendMessage([
                                 'chat_id' => $telegram->input->message->from->id,
-                                'text' => \Yii::t('app', 'command_location_missing'),
+                                'text' => \Yii::t('telegram', 'command_location_missing'),
                             ]);
                             \Yii::error($hours->errors);
                         }
@@ -137,32 +137,20 @@ class TelegramController extends \yii\web\Controller
                     return;
                 }
 
-                if (isset($args) && isset($args[0])) {
-                    $coworker = Profile::findOne($args[0]);
-                } else {
-                    // Find coworker without chat_id or with this chat_id
-                    $coworker = Profile::find()
-                        ->where(['chat_id' => $chatId])
-                        ->one();
-                }
+                $profile = \app\models\User::find()->joinWith('profile')->where(['profile.chat_id' => $chatId])->one();
 
-                if ($coworker) {
-                    $coworker->chat_id = "$chatId";
-                    if ($coworker->save()) {
-                        $telegram->sendMessage([
-                            'chat_id' => $chatId,
-                            'text' => 'Вы успешно подключены к системе уведомлений!'
-                        ]);
-                    } else {
-                        \Yii::error($coworker->errors);
-                    }
+                if ($profile) {
+                    $telegram->sendMessage([
+                        'chat_id' => $chatId,
+                        'text' => \Yii::t('telegram', 'command_already_registered')
+                    ]);
                 } else {
                     $telegram->sendMessage([
                         'chat_id' => $telegram->input->message->from->id,
-                        'text' => \Yii::t('app', 'command_start'),
+                        'text' => \Yii::t('telegram', 'command_start'),
                         'reply_markup' => json_encode([
                             'keyboard' => [
-                                [['text' => \Yii::t('app', 'command_contact'), 'request_contact' => true]],
+                                [['text' => \Yii::t('telegram', 'command_contact'), 'request_contact' => true]],
                             ],
                             'one_time_keyboard' => true,
                             'resize_keyboard' => true,
@@ -170,7 +158,19 @@ class TelegramController extends \yii\web\Controller
                     ]);
                 }
             });
-
+            Command::run("/menu", function ($telegram) {
+                $telegram->sendMessage([
+                    'chat_id' => $telegram->input->message->from->id,
+                    'text' => \Yii::t('app', 'command_menu'),
+                    'reply_markup' => json_encode([
+                        'inline_keyboard' => [
+                            [['text' => \Yii::t('app', 'command_start_day'), 'callback_data' => '/start_day']],
+                            [['text' => \Yii::t('app', 'command_orders_list'), 'callback_data' => '/order_list']],
+                            [['text' => \Yii::t('app', 'command_orders_my'), 'callback_data' => '/my']]
+                        ]
+                    ])
+                ]);
+            });
             Command::run("/order_list", function ($telegram) {
                 $user = User::findByChatId($telegram->input->message->from->id);
                 if ( empty($user) ) {
@@ -185,7 +185,7 @@ class TelegramController extends \yii\web\Controller
                 }
                 $telegram->sendMessage([
                     'chat_id' => $telegram->input->message->from->id,
-                    'text' => count($orders) ? \Yii::t('app', 'command_order_list') : \Yii::t('app', 'command_empty'),
+                    'text' => count($orders) ? \Yii::t('telegram', 'command_order_list') : \Yii::t('telegram', 'command_empty'),
                     'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
                 ]);
             });
@@ -219,9 +219,75 @@ class TelegramController extends \yii\web\Controller
                     ]);
                 }
             });
+            Command::run("/accept", function ($telegram) {
+                $user = \app\models\User::find()->joinWith('profile')->where(['profile.chat_id' => $telegram->input->message->from->id])->one();
+                $keyboard = [];
+                foreach ($user->suitableOrders as $order) {
+                    $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/view_order id='.$order->id]];
+                }
+                $telegram->sendMessage([
+                    'chat_id' => $telegram->input->message->from->id,
+                    'text' => (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list'),
+                    'reply_markup' => json_encode([
+                        'inline_keyboard' => $keyboard
+                    ])
+                ]);
+            });
+            Command::run("/my", function ($telegram) {
+                $user = \app\models\User::find()->joinWith('profile')->where(['profile.chat_id' => $telegram->input->message->from->id])->one();
+                $keyboard = [];
+                foreach ( $user->orders as $order ) {
+                    $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/view_order id='.$order->id]];
+                }
+                $telegram->sendMessage([
+                    'chat_id' => $telegram->input->message->from->id,
+                    'text' => (empty($keyboard)) ? \Yii::t('telegram', 'command_empty') : \Yii::t('telegram', 'command_order_list'),
+                    'reply_markup' => json_encode([
+                        'inline_keyboard' => $keyboard
+                    ])
+                ]);
+            });
         }
         if (isset($telegram->input->callback_query)) {
             session_id( $telegram->input->callback_query->from['id'] );
+            Command::run("/view_order", function ($telegram, $args) {
+                parse_str($args[0] ?? '', $data);
+                $id = $data["id"] ?? null;
+                \Yii::error($id);
+
+                if (empty($id)) {
+                    return null;
+                }
+
+                $telegram->editMessageText([
+                    'chat_id' => $telegram->input->callback_query->from['id'],
+                    'parse_mode' => 'html',
+                    'message_id' => $telegram->input->callback_query->message['message_id'],
+                    'text' => "<b>".\Yii::t("app", "Order #{id}", ['id' => $id])."</b>\n".\app\components\Helper::generateTelegramMessage($id),
+                    'reply_markup' => json_encode([
+                        'inline_keyboard' => [
+                            [['text' => \Yii::t('telegram', 'command_decline'), 'callback_data' => '/decline order_id='.$id]],
+                            [['text' => \Yii::t('telegram', 'command_back'), 'callback_data' => '/my']],
+                        ]
+                    ])
+                ]);
+            });
+            Command::run("/my", function ($telegram) {
+                $user = \app\models\User::find()->joinWith('profile')->where(['profile.chat_id' => $telegram->input->callback_query->from['id']])->one();
+                $keyboard = [];
+                foreach ( $user->orders as $order ) {
+                    $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/view_order id='.$order->id]];
+                }
+                $telegram->editMessageText([
+                    'chat_id' => $telegram->input->callback_query->from['id'],
+                    'message_id' => $telegram->input->callback_query->message['message_id'],
+                    'text' => (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list'),
+                    'reply_markup' => json_encode([
+                        'inline_keyboard' => $keyboard
+                    ])
+                ]);
+
+            });
             Command::run("/order", function ($telegram, $args) {
                 parse_str($args[0] ?? '', $data);
                 $id = $data["id"] ?? null;
@@ -405,29 +471,16 @@ class TelegramController extends \yii\web\Controller
                     [
                         'inline_keyboard' => [
                             [
-                                ['text' => \Yii::t('app', 'Accept'), 'callback_data' => '/accept order_id='.$order->id]
+                                ['text' => \Yii::t('app', 'Accept'), 'callback_data' => '/menu_accept order_id='.$order->id]
                             ], [
-                                ['text' => \Yii::t('app', 'Decline'), 'callback_data' => '/decline order_id='.$order->id]
+                                ['text' => \Yii::t('app', 'Decline'), 'callback_data' => '/menu_decline order_id='.$order->id]
                             ]
                         ]
                     ]
                 );
-//                    new TelegramMessage([
-//                    'chat_id' => $telegram->input->callback_query->from['id'],
-//                    'text' => Helper::orderDetails($order),
-//                    'parse_mode' => 'html',
-//                    'reply_markup' => json_encode([
-//                        'inline_keyboard' => [
-//                            [
-//                                ['text' => \Yii::t('app', 'Accept'), 'callback_data' => '/accept order_id=' . $order->id],
-//                            ], [
-//                                ['text' => \Yii::t('app', 'Decline'), 'callback_data' => '/decline order_id=' . $order->id],
-//                            ]
-//                        ]
-//                    ]),
-//                ]);
-//                $telegram->sendMessage([
-//                ]);
+            });
+            Command::run("/menu_accept", function ($telegram) {
+
             });
         }
         return [];

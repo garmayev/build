@@ -77,6 +77,12 @@ $config = [
                         'app/error' => 'error.php',
                     ],
                 ],
+                'telegram*' => [
+                    'class' => 'yii\i18n\PhpMessageSource',
+                    'fileMap' => [
+                        'telegram' => 'telegram.php'
+                    ]
+                ]
             ],
         ],
         'telegram' => [
