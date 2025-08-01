@@ -16,16 +16,17 @@ class OrderViewCallback extends BaseCallback implements CommandInterface
 
         $keyboard = [];
         if ($mode === "my") {
-            $keyboard = [
-                [['text' => \Yii::t('telegram', 'command_decline'), 'callback_data' => '/single_decline mode='.$mode.'&order_id=' . $id]],
-                [['text' => \Yii::t('telegram', 'command_back'), 'callback_data' => '/my']],
-            ];
+            $button = \Yii::t('telegram', 'command_decline');
+            $command = "/single_decline";
         } else {
-            $keyboard = [
-                [['text' => \Yii::t('telegram', 'command_decline'), 'callback_data' => '/single_accept mode='.$mode.'&order_id=' . $id]],
-                [['text' => \Yii::t('telegram', 'command_back'), 'callback_data' => '/my']],
-            ];
+            $button = \Yii::t('telegram', 'command_accept');
+            $command = "/single_accept";
         }
+
+        $keyboard = [
+            [['text' => $button, 'callback_data' => $command.'&order_id=' . $id]],
+            [['text' => \Yii::t('telegram', 'command_back'), 'callback_data' => '/my']],
+        ];
 
         $telegram->editMessageText([
             'chat_id' => $query->from['id'],

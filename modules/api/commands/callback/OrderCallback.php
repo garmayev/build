@@ -16,13 +16,17 @@ class OrderCallback extends BaseCallback implements CommandInterface
 //            ]);
         }
         \Yii::$app->session->set('order_id', $id);
+        \Yii::error($id);
         $telegram->answerCallbackQuery([
             'chat_id' => $telegram->input->callback_query->from['id'],
             'text' => \Yii::t('app', 'command_location'),
             'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/inline_start_day']],
+                ],
                 'keyboard' => [
                     [
-                        ['text' => \Yii::t('app', 'command_send_location'), 'request_location' => true]
+                        ['text' => \Yii::t('app', 'command_send_location'), 'request_location' => true],
                     ]
                 ],
                 'one_time_keyboard' => true,

@@ -21,8 +21,10 @@ class StartDayCallback extends BaseCallback implements CommandInterface
             foreach ($user->orders as $order) {
                 $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id=' . $order->id]];
             }
-            $telegram->sendMessage([
+            $keyboard[] = [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']];
+            $telegram->editMessageText([
                 'chat_id' => $query->from['id'],
+                'message_id' => $query->message['message_id'],
                 'text' => (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list'),
                 'reply_markup' => json_encode([
                     'inline_keyboard' => $keyboard,
@@ -31,8 +33,9 @@ class StartDayCallback extends BaseCallback implements CommandInterface
                 ])
             ]);
         } else {
-            $telegram->sendMessage([
+            $telegram->editMessageText([
                 'chat_id' => $query->from['id'],
+                'message_id' => $query->message['message_id'],
                 'text' => \Yii::t('app', 'command_hours_isset')
             ]);
         }

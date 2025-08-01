@@ -14,14 +14,11 @@ class MyCallback extends BaseCallback implements CommandInterface
         $user = \app\models\User::findByChatId($query->from["id"]);
         $keyboard = [];
         foreach ($user->orders as $order) {
-            $keyboard[] = [
-                [
-                    'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]),
-                    'callback_data' => '/order_view mode=my&id=' . $order->id
-                ]
-            ];
+            $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_view mode=my&id=' . $order->id ]];
         }
-        $text = (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list');
+        $keyboard[] = [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']];
+        \Yii::error($keyboard);
+        $text = (empty($keyboard)) ? \Yii::t('telegram', 'command_empty') : \Yii::t('telegram', 'command_order_list');
         $telegram->editMessageText([
             'chat_id' => $query->from['id'],
             'message_id' => $query->message['message_id'],

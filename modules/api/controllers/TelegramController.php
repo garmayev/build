@@ -6,6 +6,7 @@ use app\modules\api\commands\callback\AcceptCallback;
 use app\modules\api\commands\callback\DeclineCallback;
 use app\modules\api\commands\callback\OrderDetailCallback;
 use app\modules\api\commands\callback\OrderViewCallback;
+use app\modules\api\commands\callback\OrderListCallback;
 use app\modules\api\commands\callback\StartDayCallback;
 use app\modules\api\commands\Command;
 use app\modules\api\commands\command\MyCommand;
@@ -17,6 +18,7 @@ use app\modules\api\commands\command\MenuCommand;
 use app\modules\api\commands\command\StartCommand;
 use app\modules\api\commands\callback\OrderCallback;
 use app\modules\api\commands\callback\MyCallback;
+use app\modules\api\commands\callback\MenuCallback;
 use yii\base\InvalidConfigException;
 
 class TelegramController extends \yii\web\Controller
@@ -47,10 +49,11 @@ class TelegramController extends \yii\web\Controller
         Command::onCallback('/my', MyCallback::class);
         Command::onCallback('/order_detail', OrderDetailCallback::class);
         Command::onCallback('/order_view', OrderViewCallback::class);
-        Command::onCallback('/order_list', OrderListCommand::class);
+        Command::onCallback('/order_list', OrderListCallback::class);
         Command::onCallback('/accept', AcceptCallback::class);
         Command::onCallback('/decline', DeclineCallback::class);
-        Command::onCallback('/start_day', StartDayCallback::class);
+        Command::onCallback('/inline_start_day', StartDayCallback::class);
+        Command::onCallback('/menu', MenuCallback::class);
     }
 
     private function getProfile($data)

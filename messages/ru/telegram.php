@@ -17,10 +17,10 @@
  * NOTE: this file must be saved in UTF-8 encoding.
  */
 return [
-    '' => '',
+    '' => '@@@@',
     'answer_order_detail_{id}' => 'Вы выбрали заказ #{id}',
-    'button_back' => '',
-    'button_reject' => '',
+    'button_back' => 'Назад',
+    'button_reject' => 'Отказаться',
     'command_already_registered' => 'Вы уже успешно авторизовались в нашей системе',
     'command_back' => 'Назад',
     'command_contact' => 'Отправить контакт',
@@ -34,7 +34,11 @@ return [
     'command_location_missing' => '@@Вы находитесь слишком далеко от объекта@@',
     'command_order_is_decline' => '',
     'command_order_list' => 'Список доступных заказов, подходящих для вас',
+    'command_orders_list' => 'Доступные заказы',
+    'command_orders_my' => 'Ваши заказы',
     'command_send_location' => '@@Отправить местоположение@@',
     'command_start' => 'Для продолжения авторизации отправьте свой контакт, пожалуйста',
+    'command_start_day' => 'Начать рабочий день',
+    'message_menu' => "Здравствуйте!\nЭто основное меню телеграм бота",
     'start_day_message' => '@@Внимание! Для того, чтобы отметка о начале рабочего дня появилась в нашей системе, вам необходимо выбрать заказ, к которому собираетесь приступить@@',
 ];
