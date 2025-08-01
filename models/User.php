@@ -358,6 +358,18 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->hasMany(Hours::class, ['user_id' => 'id']);
     }
 
+    public function getHoursByMonth($startDate, $finishDate)
+    {
+        $query = $this->hasMany(Hours::class, ['user_id' => 'id']);
+        if (!empty($startDate)) {
+            $query->andWhere(['>=', 'date', $startDate]);
+        }
+        if (!empty($finishDate)) {
+            $query->andWhere(['<=', 'date', $finishDate]);
+        }
+        return $query->all();
+    }
+
     public function loadApi($data)
     {
         $transaction = \Yii::$app->db->beginTransaction();
@@ -421,6 +433,7 @@ class User extends ActiveRecord implements IdentityInterface
                     'COUNT(req.id) = 0' // Нет требований
                 ]
             ])
+            ->andWhere(['status' => Order::STATUS_NEW])
             ->andWhere(['not in', 'order.id', \yii\helpers\ArrayHelper::map($this->orders, 'id', 'id')])
             ->all();
     }

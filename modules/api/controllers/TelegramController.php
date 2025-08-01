@@ -37,9 +37,25 @@ class TelegramController extends \yii\web\Controller
                     $model = $profile->user;
                 }
                 if ($model) {
-                    $model->profile->chat_id = "{$contact["user_id"]}";
-                    if (!$model->profile->save()) {
-                        \Yii::error($model->profile->errors);
+                    \Yii::error("Model founded id = {$model->id}");
+                    
+                    $profile->chat_id = "{$telegram->input->message->from->id}";
+                    $profile->family = $telegram->input->message->from->first_name;
+                    $profile->name = $telegram->input->message->from->last_name;
+                    $profile->phone = $contact["phone_number"];
+                    if (!$profile->save()) {
+                        \Yii::error($profile->errors);
+                    } else {
+                        \Yii::error("Profile saved");
+                        \Yii::error($profile->attributes);
+                        $telegram->sendMessage([
+                            'chat_id' => $telegram->input->message->from->id,
+                            'text' => \Yii::t('app', 'command_contact_complete'),
+                            'reply_markup' => json_encode([
+                                'keyboard' => []
+                            ])
+                        ]);
+                        return ;
                     }
                 } else {
                     $model = new UserRegisterForm([
@@ -58,6 +74,14 @@ class TelegramController extends \yii\web\Controller
                         ]]);
                         if (!$user->profile->save()) {
                             \Yii::error($user->profile->getErrors());
+                        } else {
+                            $telegram->sendMessage([
+                                'chat_id' => $telegram->input->message->from->id,
+                                'text' => \Yii::t('app', 'command_contact_complete'),
+                                'reply_markup' => json_encode([
+                                    'keyboard' => null
+                                ])
+                            ]);
                         }
                     } else {
                         \Yii::error($model->getErrors());
@@ -90,9 +114,9 @@ class TelegramController extends \yii\web\Controller
                             $telegram->sendMessage([
                                 'chat_id' => $telegram->input->message->from->id,
                                 'text' => \Yii::t('app', 'command_hours_created'),
-                                'keyboard' => json_encode([
-                                    'keyboard' => []
-                                ]),
+                                'reply_markup' => [
+                                    'keyboard' => null,
+                                ],
                             ]);
                             \Yii::error('Hours saved');
                         } else {
@@ -132,6 +156,18 @@ class TelegramController extends \yii\web\Controller
                     } else {
                         \Yii::error($coworker->errors);
                     }
+                } else {
+                    $telegram->sendMessage([
+                        'chat_id' => $telegram->input->message->from->id,
+                        'text' => \Yii::t('app', 'command_start'),
+                        'reply_markup' => json_encode([
+                            'keyboard' => [
+                                [['text' => \Yii::t('app', 'command_contact'), 'request_contact' => true]],
+                            ],
+                            'one_time_keyboard' => true,
+                            'resize_keyboard' => true,
+                        ])
+                    ]);
                 }
             });
 
@@ -158,7 +194,10 @@ class TelegramController extends \yii\web\Controller
                 $profile = \app\models\Profile::findOne(['chat_id' => $telegram->input->message->from->id]);
                 $user = $profile->user;
                 $keyboard = [];
-                $hour = \app\models\Hours::find()->where(['user_id' => $user->id])->andWhere(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->one();
+                $hour = \app\models\Hours::find()
+                    ->where(['user_id' => $user->id])
+                    ->andWhere(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])
+                    ->one();
                 if (empty($hour)) {
                     foreach ($user->orders as $order) {
                         $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id='.$order->id]];
@@ -278,14 +317,16 @@ class TelegramController extends \yii\web\Controller
                                     \Yii::t('app', 'New Order') . " #{$order->id}\n";
     
                                 // Для сотрудника, который согласился, убираем кнопки
-                                $replyMarkup = null;
-                                $text = "";
-                                if ($message->chat_id == $coworker->profile->chat_id) {
-                                    $replyMarkup = []; // Убираем кнопки
+                                \Yii::error($telegram->input->callback_query->from['id']);
+                                \Yii::error($coworker->profile->chat_id);
+                                if ($message->chat_id == $telegram->input->callback_query->from['id']) {
+                                    \Yii::error('Keyboard must be empty');
+                                    $replyMarkup = json_encode(['inline_keyboard' => []]);
                                 } else {
-                                    $replyMarkup = json_decode($message->reply_markup); // Оставляем существующие кнопки
+                                    \Yii::error('Keyboard must isset');
+                                    $replyMarkup = $message->reply_markup;
                                 }
-    
+                                $text = "";
                                 $message->editMessageText(
                                     $header . Helper::generateTelegramMessage($order->id),
                                     $replyMarkup
@@ -387,9 +428,6 @@ class TelegramController extends \yii\web\Controller
 //                ]);
 //                $telegram->sendMessage([
 //                ]);
-            });
-            Command::run("/start", function ($telegram, $args) {
-
             });
         }
         return [];

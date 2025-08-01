@@ -141,16 +141,17 @@ class CoworkerController extends Controller
         $order->notify();
     }
 
-    public function actionCalendar($startDate = null, $finishDate = null)
+    public function actionCalendar($year, $month)
     {
         $user = \Yii::$app->user->identity;
         $referrals = $user->referrals;
         $result = [];
-
+        $startDate = date("$year-$month-01");
+        $finishDate = date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year));
         foreach ($referrals as $referral) {
             $result[] = [
                 'user' => $referral,
-                'hours' => $referral->hours,
+                'hours' => $referral->getHoursByMonth($startDate, $finishDate),
                 'debit_amount' => $referral->getDebitAmount($startDate, $finishDate),
                 'credit_amount' => $referral->getCreditAmount($startDate, $finishDate),
                 'debit_hours' => $referral->getDebitHours($startDate, $finishDate),
