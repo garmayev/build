@@ -17,7 +17,7 @@ class MyCallback extends BaseCallback implements CommandInterface
             $keyboard[] = [
                 [
                     'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]),
-                    'callback_data' => '/view_order id=' . $order->id
+                    'callback_data' => '/order_view mode=my&id=' . $order->id
                 ]
             ];
         }

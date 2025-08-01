@@ -1,16 +1,17 @@
 <?php
 
-namespace app\modules\api\commands\command;
+namespace app\modules\api\commands\callback;
 
+use app\modules\api\commands\callback\BaseCallback;
 use app\modules\api\commands\CommandInterface;
 
-class StartDayCommand extends BaseCommand implements CommandInterface
+class StartDayCallback extends BaseCallback implements CommandInterface
 {
 
     public function handle($telegram, $args)
     {
-        $message = $telegram->input->message;
-        $user = \app\models\User::findByChatId($message->from->id);
+        $query = $telegram->input->callback_query;
+        $user = \app\models\User::findByChatId($query->from['id']);
         $keyboard = [];
         $hour = \app\models\Hours::find()
             ->where(['user_id' => $user->id])
@@ -21,7 +22,7 @@ class StartDayCommand extends BaseCommand implements CommandInterface
                 $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id=' . $order->id]];
             }
             $telegram->sendMessage([
-                'chat_id' => $this->message->from->id,
+                'chat_id' => $query->from['id'],
                 'text' => (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list'),
                 'reply_markup' => json_encode([
                     'inline_keyboard' => $keyboard,
@@ -31,7 +32,7 @@ class StartDayCommand extends BaseCommand implements CommandInterface
             ]);
         } else {
             $telegram->sendMessage([
-                'chat_id' => $this->message->from->id,
+                'chat_id' => $query->from['id'],
                 'text' => \Yii::t('app', 'command_hours_isset')
             ]);
         }

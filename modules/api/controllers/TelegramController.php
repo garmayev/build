@@ -2,7 +2,11 @@
 
 namespace app\modules\api\controllers;
 
-use app\modules\api\commands\callback\ViewOrderCallback;
+use app\modules\api\commands\callback\AcceptCallback;
+use app\modules\api\commands\callback\DeclineCallback;
+use app\modules\api\commands\callback\OrderDetailCallback;
+use app\modules\api\commands\callback\OrderViewCallback;
+use app\modules\api\commands\callback\StartDayCallback;
 use app\modules\api\commands\Command;
 use app\modules\api\commands\command\MyCommand;
 use app\modules\api\commands\command\OrderListCommand;
@@ -40,8 +44,13 @@ class TelegramController extends \yii\web\Controller
         Command::onMessage('/order_list', OrderListCommand::class);
 
         Command::onCallback('/order', OrderCallback::class);
-        Command::onCallback('/view_order', ViewOrderCallback::class);
         Command::onCallback('/my', MyCallback::class);
+        Command::onCallback('/order_detail', OrderDetailCallback::class);
+        Command::onCallback('/order_view', OrderViewCallback::class);
+        Command::onCallback('/order_list', OrderListCommand::class);
+        Command::onCallback('/accept', AcceptCallback::class);
+        Command::onCallback('/decline', DeclineCallback::class);
+        Command::onCallback('/start_day', StartDayCallback::class);
     }
 
     private function getProfile($data)

@@ -10,7 +10,8 @@ class OrderListCommand extends BaseCommand implements CommandInterface
 
     public function handle($telegram, $args)
     {
-        $user = User::findByChatId($telegram->input->message->from->id);
+        $message = $telegram->input->message;
+        $user = User::findByChatId($message->from->id);
         if (empty($user)) {
             \Yii::error("Unknown user");
             return null;
@@ -22,7 +23,7 @@ class OrderListCommand extends BaseCommand implements CommandInterface
             $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail id=' . $order->id]];
         }
         $telegram->sendMessage([
-            'chat_id' => $telegram->input->message->from->id,
+            'chat_id' => $message->from->id,
             'text' => count($orders) ? \Yii::t('telegram', 'command_order_list') : \Yii::t('telegram', 'command_empty'),
             'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
         ]);

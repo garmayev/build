@@ -9,17 +9,18 @@ class StartCommand extends BaseCommand implements CommandInterface
 
     public function handle($telegram, $args)
     {
-        $chatId = $telegram->input->message->from->id;
-        $profile = \app\models\User::find()->joinWith('profile')->where(['profile.chat_id' => $chatId])->one();
+        $message = $telegram->input->message;
+        $chatId = $message->from->id;
+        $profile = \app\models\User::findByChatId($message->from->id);
 
         if ($profile) {
             $telegram->sendMessage([
-                'chat_id' => $chatId,
+                'chat_id' => $message->from->id,
                 'text' => \Yii::t('telegram', 'command_already_registered')
             ]);
         } else {
             $telegram->sendMessage([
-                'chat_id' => $telegram->input->message->from->id,
+                'chat_id' => $message->from->id,
                 'text' => \Yii::t('telegram', 'command_start'),
                 'reply_markup' => json_encode([
                     'keyboard' => [

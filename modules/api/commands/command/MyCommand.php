@@ -9,7 +9,6 @@ class MyCommand extends BaseCommand implements CommandInterface
 
     public function handle($telegram, $args)
     {
-        $telegram = \Yii::$app->telegram;
         $message = $telegram->input->message;
         $user = \app\models\User::find()
             ->joinWith('profile')
@@ -17,7 +16,7 @@ class MyCommand extends BaseCommand implements CommandInterface
             ->one();
         $keyboard = [];
         foreach ($user->orders as $order) {
-            $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/view_order id=' . $order->id]];
+            $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_view id=' . $order->id]];
         }
         $telegram->sendMessage([
             'chat_id' => $message->from->id,
