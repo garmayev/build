@@ -12,6 +12,7 @@ use app\modules\api\commands\LocationHandler;
 use app\modules\api\commands\command\MenuCommand;
 use app\modules\api\commands\command\StartCommand;
 use app\modules\api\commands\callback\OrderCallback;
+use app\modules\api\commands\callback\MyCallback;
 use yii\base\InvalidConfigException;
 
 class TelegramController extends \yii\web\Controller
@@ -40,6 +41,7 @@ class TelegramController extends \yii\web\Controller
 
         Command::onCallback('/order', OrderCallback::class);
         Command::onCallback('/view_order', ViewOrderCallback::class);
+        Command::onCallback('/my', MyCallback::class);
     }
 
     private function getProfile($data)

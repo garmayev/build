@@ -22,17 +22,13 @@ class MyCallback extends BaseCallback implements CommandInterface
             ];
         }
         $text = (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list');
-        $telegram->answerCallbackQuery([
-            'chat_id' => $query->from['id'],
-            'message_id' => $query->message['message_id'],
-            'text' => \Yii::t('app', 'answer_my'),
-            'reply_markup' => json_encode([
-                'inline_keyboard' => $keyboard
-            ])
-        ])->editMessageText([
+        $telegram->editMessageText([
             'chat_id' => $query->from['id'],
             'message_id' => $query->message['message_id'],
             'text' => $text,
+            'reply_markup' => json_encode([
+                'inline_keyboard' => $keyboard
+            ])
         ]);
     }
 }
