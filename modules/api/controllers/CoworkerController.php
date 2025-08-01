@@ -39,7 +39,7 @@ class CoworkerController extends Controller
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    ['allow' => true, 'roles' => ['?'], 'actions' => ['calendar', 'advanced']],
+                    ['allow' => true, 'roles' => ['?'], 'actions' => ['advanced', 'calendar']],
                     // Users
                     ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitable-orders', 'calendar-month', 'calendar', 'advanced']],
                 ],
