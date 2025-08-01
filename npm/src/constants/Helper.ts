@@ -1,8 +1,6 @@
-import {useTranslation} from "react-i18next";
-
 export const Helper = {
     // url: "http://build.local",
-    url: "",
+    url: "https://build.amgcompany.ru",
     types: {
         more: 'Больше',
         less: 'Меньше',
