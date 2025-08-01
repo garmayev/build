@@ -29,7 +29,7 @@ class AppAsset extends AssetBundle
     public $js = [
         'https://cdn.jsdelivr.net/npm/jquery.maskedinput@1.4.1/src/jquery.maskedinput.min.js',
         '/react/js/453.abd1f321.chunk.js',
-        '/react/js/main.1e7f03ff.js',
+        '/react/js/main.30adfbd1.js',
     ];
     public $depends = [
         YiiAsset::class,
