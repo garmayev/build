@@ -74,6 +74,15 @@ class TelegramController extends \yii\web\Controller
                 $order = Order::findOne(\Yii::$app->session->get('order_id'));
                 $user = \app\models\User::findByChatId( $telegram->input->message->from->id );
                 if (isset($order)) {
+                    $hour = \app\models\Hours::find()->where(['user_id' => $user->id])->andWhere(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->one();
+                    if ($hour) {
+                        $telegram->sendMessage([
+                            'chat_id' => $telegram->input->message->from->id,
+                            'text' => \Yii::t('app', 'command_hours_isset'),
+                            'keyboard' => null
+                        ]);
+                        return ;
+                    }
                     if ( Helper::isPointInCircle( $order->building->location->attributes, $telegram->input->message->location, $order->building->radius ) ) {
                         $hours = new \app\models\Hours(['order_id' => $order->id, 'user_id' => $user->id, 'is_payed' => 0, 'count' => 0, 'date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d') ]);
                         if ($hours->save()) {
@@ -85,7 +94,12 @@ class TelegramController extends \yii\web\Controller
                                     'keyboard' => []
                                 ]),
                             ]);
+                            \Yii::error('Hours saved');
                         } else {
+                            $telegram->sendMessage([
+                                'chat_id' => $telegram->input->message->from->id,
+                                'text' => \Yii::t('app', 'command_location_missing'),
+                            ]);
                             \Yii::error($hours->errors);
                         }
                     }
@@ -144,19 +158,27 @@ class TelegramController extends \yii\web\Controller
                 $profile = \app\models\Profile::findOne(['chat_id' => $telegram->input->message->from->id]);
                 $user = $profile->user;
                 $keyboard = [];
-                foreach ($user->orders as $order) {
-                    $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id='.$order->id]];
+                $hour = \app\models\Hours::find()->where(['user_id' => $user->id])->andWhere(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->one();
+                if (empty($hour)) {
+                    foreach ($user->orders as $order) {
+                        $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id='.$order->id]];
+                    }
+    //                \Yii::error($keyboard);
+                    $telegram->sendMessage([
+                        'chat_id' => $telegram->input->message->from->id,
+                        'text' => (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list'),
+                        'reply_markup' => json_encode([
+                            'inline_keyboard' => $keyboard,
+    //                        'one_time_keyboard' => true,
+    //                        'resize_keyboard' => true,
+                        ])
+                    ]);
+                } else {
+                    $telegram->sendMessage([
+                        'chat_id' => $telegram->input->message->from->id,
+                        'text' => \Yii::t('app', 'command_hours_isset')
+                    ]);
                 }
-//                \Yii::error($keyboard);
-                $telegram->sendMessage([
-                    'chat_id' => $telegram->input->message->from->id,
-                    'text' => (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list'),
-                    'reply_markup' => json_encode([
-                        'inline_keyboard' => $keyboard,
-//                        'one_time_keyboard' => true,
-//                        'resize_keyboard' => true,
-                    ])
-                ]);
             });
         }
         if (isset($telegram->input->callback_query)) {

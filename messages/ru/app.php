@@ -245,5 +245,8 @@ return [
     'command_location' => 'А теперь отправьте свое местоположение, нажав кнопку "Отправить местоположение"',
     'command_empty' => 'Ничего не найдено',
     'command_order_list' => 'Список доступных заказов, подходящих для вас',
+    'command_location_missing' => 'Вы находитесь слишком далеко от объекта',
+    'command_hours_created' => 'Рабочий день успешно начат',
+    'command_hours_isset' => 'Вы уже начали рабочий день',
     'You have a new order' => ''
 ];

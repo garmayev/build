@@ -16,7 +16,7 @@ class PushController extends \yii\console\Controller {
             ->setTitle('This title overrides initial title')
             ->setBody('This notification body overrides initial body')
             ->setTo($user->profile->device_id)
-            ->setData(['url' => 'build://amgcompany.ru/--/order/1', 'id' => 1])
+            ->setData(['url' => 'build://amgcompany.ru/--/order/18', 'id' => 18])
             ->setChannelId('new-order')
             ->setCategoryId('new-order')
             ->setBadge(0)
