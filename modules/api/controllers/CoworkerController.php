@@ -79,13 +79,16 @@ class CoworkerController extends Controller
             'class' => \yii\data\ActiveDataFilter::class,
             'searchModel' => $this->modelClass,
         ];
+        $actions['options'] = [
+            'class' => \yii\rest\OptionAction::class
+        ];
         return $actions;
     }
 
     public function prepareDataProvider()
     {
         return new \yii\data\ActiveDataProvider([
-            'query' => \app\models\User::find()->where(['created_by' => \Yii::$app->user->getId()])
+            'query' => \app\models\User::find()->where(['created_by' => \Yii::$app->user->getId()])->orWhere(['priority_level' => 0])
         ]);
     }
 
