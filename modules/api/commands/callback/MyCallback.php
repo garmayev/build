@@ -9,7 +9,9 @@ class MyCallback extends BaseCallback implements CommandInterface
 
     public function handle($telegram, $args)
     {
-        $user = \app\models\User::findByChatId($this->query->from["id"]);
+        $telegram = \Yii::$app->telegram;
+        $query = $telegram->input->callback_query;
+        $user = \app\models\User::findByChatId($query->from["id"]);
         $keyboard = [];
         foreach ($user->orders as $order) {
             $keyboard[] = [
@@ -21,12 +23,16 @@ class MyCallback extends BaseCallback implements CommandInterface
         }
         $text = (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list');
         $telegram->answerCallbackQuery([
-            'chat_id' => $this->query->from['id'],
-            'message_id' => $this->query->message['message_id'],
-            'text' => $text,
+            'chat_id' => $query->from['id'],
+            'message_id' => $query->message['message_id'],
+            'text' => \Yii::t('app', 'answer_my'),
             'reply_markup' => json_encode([
                 'inline_keyboard' => $keyboard
             ])
+        ])->editMessageText([
+            'chat_id' => $query->from['id'],
+            'message_id' => $query->message['message_id'],
+            'text' => $text,
         ]);
     }
 }
