@@ -288,7 +288,10 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function getOrders()
     {
-        return $this->hasMany(Order::class, ['id' => 'order_id'])->viaTable('order_user', ['user_id' => 'id'])->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]]);
+        return $this->hasMany(Order::class, ['id' => 'order_id'])
+            ->viaTable('order_user', ['user_id' => 'id'])
+            ->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]])
+            ->andWhere(["or", ["order.created_by" => $this->referrer_id], ["order.created_by" => $this->id]]);
     }
 
     public function setUserProperties($data)
@@ -435,6 +438,7 @@ class User extends ActiveRecord implements IdentityInterface
             ])
             ->andWhere(['status' => Order::STATUS_NEW])
             ->andWhere(['not in', 'order.id', \yii\helpers\ArrayHelper::map($this->orders, 'id', 'id')])
+            ->andWhere(['or', ['order.created_by' => $this->referrer_id], ['order.created_by' => $this->id]])
             ->all();
     }
 

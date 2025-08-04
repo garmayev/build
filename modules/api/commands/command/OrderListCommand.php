@@ -18,7 +18,7 @@ class OrderListCommand extends BaseCommand implements CommandInterface
         }
 
         $keyboard = [];
-        $orders = $user->getSuitableOrders();
+        $orders = $user->suitableOrders;
         foreach ($orders as $order) {
             $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail id=' . $order->id]];
         }

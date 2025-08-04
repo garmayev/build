@@ -17,6 +17,8 @@ class StartDayCallback extends BaseCallback implements CommandInterface
             ->where(['user_id' => $user->id])
             ->andWhere(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])
             ->one();
+
+        \Yii::error($hour);
         if (empty($hour)) {
             foreach ($user->orders as $order) {
                 $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id=' . $order->id]];

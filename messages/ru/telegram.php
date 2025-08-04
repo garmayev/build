@@ -22,6 +22,7 @@ return [
     'button_back' => 'Назад',
     'button_reject' => 'Отказаться',
     'command_already_registered' => 'Вы уже успешно авторизовались в нашей системе',
+    'button_accept' => 'Принять',
     'command_back' => 'Назад',
     'command_contact' => 'Отправить контакт',
     'command_contact_complete' => 'Спасибо, авторизация прошла успешно',

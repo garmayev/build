@@ -48,7 +48,7 @@ class AcceptCallback extends BaseCallback implements CommandInterface
 
                         // Для сотрудника, который согласился, убираем кнопки
                         if ($message->chat_id == $query->from['id']) {
-                            $replyMarkup = json_encode(['inline_keyboard' => []]);
+                            $replyMarkup = json_encode(["inline_keyboard" => []]);
                         } else {
                             $replyMarkup = $message->reply_markup;
                         }

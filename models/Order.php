@@ -467,8 +467,8 @@ class Order extends \yii\db\ActiveRecord
                 ->where('up.user_id = user.id')
                 ->andWhere([
                     'or',
-                    ['and', ['r.type' => 'less'], ['<', 'up.value', new \yii\db\Expression('r.value')]],
-                    ['and', ['r.type' => 'more'], ['>', 'up.value', new \yii\db\Expression('r.value')]],
+                    ['and', ['r.type' => 'less'], ['<=', 'up.value', new \yii\db\Expression('r.value')]],
+                    ['and', ['r.type' => 'more'], ['>=', 'up.value', new \yii\db\Expression('r.value')]],
                     ['and', ['r.type' => 'equal'], ['=', 'up.value', new \yii\db\Expression('r.value')]],
                     ['and', ['r.type' => 'not-equal'], ['!=', 'up.value', new \yii\db\Expression('r.value')]]
                 ])
@@ -578,10 +578,10 @@ class Order extends \yii\db\ActiveRecord
                     }
                 }
             }
-//            if (isset($this->owner->profile->chat_id)) {
-//                Helper::notify($this->owner->profile->chat_id, $this->id);
-//                $notificationService->sendTelegramMessage($this->owner->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, null, $this->id);
-//            }
+            if (isset($this->owner->profile->chat_id)) {
+                Helper::notify($this->owner->profile->chat_id, $this->id);
+                $notificationService->sendTelegramMessage($this->owner->profile->chat_id, "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $message, null, $this->id);
+            }
         } catch (\Exception $e) {
             Yii::error('Error in sendAndUpdateTelegramNotifications: ' . $e->getMessage());
             $results['errors'][] = $e->getMessage();

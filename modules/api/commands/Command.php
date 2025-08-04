@@ -22,16 +22,20 @@ class Command extends Component
         if (!isset($telegram->input->message)) {
             return;
         }
-
-        $text = $telegram->input->message->text ?? '';
-
-        if (!empty($text)) {
-            $args = explode(' ', $text);
-            $inputCommand = array_shift($args);
-
-            if ($inputCommand === $command) {
-                return static::callHandler($handler, $telegram, $args);
+        try {
+            $text = $telegram->input->message->text ?? '';
+    
+            if (!empty($text)) {
+                $args = explode(' ', $text);
+                $inputCommand = array_shift($args);
+    
+                if ($inputCommand === $command) {
+                    return static::callHandler($handler, $telegram, $args);
+                }
             }
+        } catch (\Exception $e) {
+            \Yii::error(json_decode(file_get_contents("php://input"), true));
+            \Yii::error($e);
         }
     }
 
@@ -51,6 +55,7 @@ class Command extends Component
             return;
         }
 
+        try {
         $data = $telegram->input->callback_query->data ?? '';
 
         if (!empty($data)) {
@@ -60,6 +65,10 @@ class Command extends Component
             if ($inputCallback === $callbackData) {
                 return static::callHandler($handler, $telegram, $args);
             }
+        }
+        } catch (\Exception $e) {
+            \Yii::error(json_decode(file_get_contents("php://input"), true));
+            \Yii::error($e);
         }
     }
 
