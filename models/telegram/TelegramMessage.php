@@ -52,8 +52,6 @@ class TelegramMessage extends ActiveRecord
 
     public function editMessageText($text, $keyboard = "")
     {
-//        \Yii::error($text);
-//        \Yii::error($this->text);
         if ($text !== $this->text) {
             $response = \Yii::$app->telegram->editMessageText([
                 "chat_id" => $this->chat_id,

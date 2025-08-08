@@ -6,8 +6,8 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <a href="/" class="brand-link">
-<!--        <img src="/images/logo-white.svg" alt="AdminLTE Logo" class="brand-image"-->
-<!--             style="opacity: .8; min-width: 70px;">-->
+        <!--        <img src="/images/logo-white.svg" alt="AdminLTE Logo" class="brand-image"-->
+        <!--             style="opacity: .8; min-width: 70px;">-->
         <span class="brand-text font-weight-light px-3" style="letter-spacing: 10px;">&nbsp;</span>
     </a>
 
@@ -29,7 +29,7 @@
 
         <nav class="mt-2">
             <?php
-//            var_dump( \Yii::$app->controller->id );
+            //            var_dump( \Yii::$app->controller->id );
             echo \hail812\adminlte\widgets\Menu::widget([
                 'items' => [
                     [
@@ -107,6 +107,11 @@
                                 'icon' => 'users',
                                 'url' => ['/user/index'],
                                 'active' => \Yii::$app->controller->id === 'user',
+                            ], [
+                                'label' => \Yii::t('app', 'Intervals'),
+                                'icon' => 'clock',
+                                'url' => ['/config/interval'],
+                                'active' => \Yii::$app->controller->id === 'interval',
                             ]
                         ],
                     ]

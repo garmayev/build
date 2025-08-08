@@ -4,6 +4,7 @@ namespace app\commands;
 
 use app\models\Building;
 use app\models\Category;
+use app\models\Config;
 use app\models\Dimension;
 use app\models\Order;
 use app\models\Property;
@@ -200,6 +201,22 @@ class DataController extends Controller
             $transaction->rollBack();
             \Yii::error($e->getMessage());
             return null;
+        }
+    }
+
+    public function actionInitConfig()
+    {
+        $config = [
+            ['name' => 'priority_level_0', 'value' => '01:00'],
+            ['name' => 'priority_level_1', 'value' => '01:00'],
+            ['name' => 'priority_level_2', 'value' => '01:00'],
+        ];
+        foreach ($config as $item) {
+            if ((new Config($item))->save()) {
+                echo "config '{$item['name']}' with value '{$item['value']}' created\n";
+            } else {
+                echo "config '{$item['name']}' with value '{$item['value']}' not created\n";
+            }
         }
     }
 }

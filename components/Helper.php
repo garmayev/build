@@ -137,4 +137,23 @@ class Helper extends Component
         // Проверяем, находится ли точка в пределах радиуса
         return $distance <= $radiusKm;
     }
+
+    public static function timeToSeconds($timeString) {
+        $parts = explode(':', $timeString);
+        $seconds = 0;
+
+        // Handle HH:MM:SS or MM:SS
+        if (count($parts) == 3) { // HH:MM:SS
+            $seconds += (int)$parts[0] * 3600; // Hours to seconds
+            $seconds += (int)$parts[1] * 60;    // Minutes to seconds
+            $seconds += (int)$parts[2];         // Seconds
+        } elseif (count($parts) == 2) { // MM:SS
+            $seconds += (int)$parts[0] * 60;    // Minutes to seconds
+            $seconds += (int)$parts[1];         // Seconds
+        } else {
+            // Handle invalid format or throw an error
+            return false;
+        }
+        return $seconds;
+    }
 }

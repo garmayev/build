@@ -8,6 +8,7 @@ $config = [
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'language' => 'ru-RU',
+    'timeZone' => 'Asia/Irkutsk',
     'name' => 'Стройка',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
