@@ -36,6 +36,7 @@ return [
     'command_send_messages' => 'Отправить уведомления',
     'command_start' => 'Для продолжения авторизации отправьте свой контакт, пожалуйста',
     'command_start_day' => 'Начать рабочий день',
+    'command_stop_day' => 'Завершить рабочий день',
     'command_hours_isset' => 'Рабочий день уже был начат',
     'command_hours_created' => 'Рабочий день успешно начат',
     'command_hours_errors' => 'Простите! На сервере произошли какие-то ошибки',
@@ -47,5 +48,10 @@ return [
     'command_accept_successfully' => 'Вы успешно приняли заказ',
     'command_missing_order_id' => 'Вы не выбрали заказ, по которому хотите начать рабочий день',
     'command_my_order_list' => '',
-    'message_menu' => "Здравствуйте!\n Это основное меню телеграм бота",
+    'message_menu' => "Здравствуйте!\nЭто основное меню телеграм бота",
+    'command_hours_closed' => 'Рабочий день закрыт',
+    'command_hours_worked_{time}' => 'Приблизительный расчет часов: {time}',
+    'command_workday_is_closed' => 'Рабочий день успешно закрыт',
+    'command_workday_is_not_started' => 'Рабочий день не начат',
+    'command_workday_is_started' => 'Рабочий день начат'
 ];

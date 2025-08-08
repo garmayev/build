@@ -25,11 +25,18 @@ class RbacController extends Controller
         $auth->addChild($admin, $employee);
     }
 
-    public function actionAssign($username, $role)
+    public function actionAssign($username, $roleName)
     {
         $auth = Yii::$app->authManager;
 
-        $role = $auth->getRole($role);
+        $role = $auth->getRole($roleName);
+        if (empty($role)) {
+            echo \Yii::t('app', 'missing_role {role}', ['role' => $roleName])."\n";
+            echo \Yii::t('app', 'available_roles').":\n";
+            foreach ($auth->getRoles() as $role) {
+                echo "\t".$role->name."\n";
+            }
+        }
         $model = User::findOne(['username' => $username]);
         $auth->revokeAll($model->id);
         $auth->assign($role, $model->id);

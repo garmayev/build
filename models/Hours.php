@@ -10,6 +10,8 @@ use yii\db\ActiveRecord;
  * @property int $count
  * @property bool $is_payed
  * @property string $date
+ * @property string $start_time
+ * @property string $stop_time
  *
  * @property User $user
  * @property Order $order
@@ -31,6 +33,7 @@ class Hours extends ActiveRecord
             [['user_id', 'order_id'], 'integer'],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
             [['order_id'], 'exist', 'skipOnError' => true, 'targetClass' => Order::className(), 'targetAttribute' => ['order_id' => 'id']],
+            [['start_time', 'stop_time'], 'datetime', 'format' => 'php:Y-m-d H:i:s'],
             [['count'], 'integer'],
             [['is_payed'], 'boolean'],
             [['date'], 'date', 'format' => 'php:Y-m-d'],
@@ -97,5 +100,23 @@ class Hours extends ActiveRecord
             return $this->count * $this->price;
         }
         return 0;
+    }
+
+    public function getAutoTime() 
+    {
+        $h = $this->stop_time - $this->start_time;
+        return ($h > 0) ? $h : $this->count;
+    }
+
+    public static function checkState($user_id, $time) 
+    {
+        $user = User::findOne($user_id);
+        $date = \Yii::$app->formatter->asDate($time, 'php:Y-m-d');
+        $model = Hours::find()->where(['user_id' => $user_id])->andWhere(['date' => $date])->one();
+        if (isset($model->start_time)) {
+            return isset($model->stop_time) ? 'closed' : 'opened';
+        } else {
+            return 'missing';
+        }
     }
 }

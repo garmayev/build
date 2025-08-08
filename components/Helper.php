@@ -76,6 +76,8 @@ class Helper extends Component
                 $text .= \Yii::t("app", "--- {$attachment->getLink(true)}") . "\n";
             }
         }
+        $currentCount = $order->issetCoworkers;
+        $totalRequired = $order->requiredCoworkers;
         $text .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
         return $text;
     }

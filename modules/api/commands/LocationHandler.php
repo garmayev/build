@@ -33,16 +33,33 @@ class LocationHandler extends BaseCommand implements CommandInterface
                     'text' => \Yii::t('telegram', 'command_hours_isset'),
                 ]);
             } else {
-                $hours = new \app\models\Hours(['user_id' => $user->id, 'order_id' => $orderId, 'count' => 0, 'is_payed' => 0, 'date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')]);
+                $hours = new \app\models\Hours([
+                    'user_id' => $user->id, 
+                    'order_id' => $orderId, 
+                    'count' => 0, 
+                    'is_payed' => 0, 
+                    'date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d'),
+                    'start_time' => \Yii::$app->formatter->asDatetime(time(), 'php:Y-m-d H:i:s'),
+                ]);
                 if ($hours->save()) {
                     $telegram->sendMessage([
                         'chat_id' => $message->from->id,
                         'text' => \Yii::t("telegram", "command_hours_created"),
+                        'reply_markup' => json_encode([
+                            'inline_keyboard' => [
+                                [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']]
+                            ]
+                        ])
                     ]);
                 } else {
                     $telegram->sendMessage([
                         'chat_id' => $message->from->id,
-                        'text' => \Yii::t("telegram", "command_hours_errors")
+                        'text' => \Yii::t("telegram", "command_hours_errors"),
+                        'reply_markup' => json_encode([
+                            'inline_keyboard' => [
+                                [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']]
+                            ]
+                        ])
                     ]);
                 }
             }

@@ -10,6 +10,7 @@ use app\modules\api\commands\callback\OrderViewCallback;
 use app\modules\api\commands\callback\OrderListCallback;
 use app\modules\api\commands\callback\OrderRejectCallback;
 use app\modules\api\commands\callback\StartDayCallback;
+use app\modules\api\commands\callback\StopDayCallback;
 use app\modules\api\commands\Command;
 use app\modules\api\commands\command\MyCommand;
 use app\modules\api\commands\command\OrderListCommand;
@@ -58,6 +59,7 @@ class TelegramController extends \yii\web\Controller
         Command::onCallback('/accept', AcceptCallback::class);
         Command::onCallback('/decline', DeclineCallback::class);
         Command::onCallback('/inline_start_day', StartDayCallback::class);
+        Command::onCallback('/inline_stop_day', StopDayCallback::class);
         Command::onCallback('/menu', MenuCallback::class);
         Command::onCallback('/order_reject', OrderRejectCallback::class);
         Command::onCallback('/order_accept', OrderAcceptCallback::class);
