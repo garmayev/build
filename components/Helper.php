@@ -29,16 +29,16 @@ class Helper extends Component
         if ($order->attachments) {
             $message .= \Yii::t("app", "<b>Attachments</b>")."\n";
             foreach ($order->attachments as $attachment) {
-                $message .= \Yii::t("app", "--- {$attachment->getLink(true)}");
+                $message .= \Yii::t("app", "--- {$attachment->getLink(true)}") . "\n";
             }
         }
         $currentCount = $order->issetCoworkers;
         $totalRequired = $order->requiredCoworkers;
-        $message .= "\n" . \Yii::t("app", "<b>Requirements</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
-        foreach ($order->requirements as $requirement) {
+        $message .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
+/*        foreach ($order->requirements as $requirement) {
             $eq = Helper::equals[$requirement->type];
             $message .= "--- {$requirement->property->title} {$eq} {$requirement->value} {$requirement->dimension->title}\n";
-        }
+        } */
         return $message;
     }
 
@@ -56,7 +56,7 @@ class Helper extends Component
         }
         $currentCount = $order->issetCoworkers;
         $totalRequired = $order->requiredCoworkers;
-        $message .= "\n" . \Yii::t("app", "<b>Requirements</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
+        $message .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
         return $message;
     }
 
@@ -76,6 +76,7 @@ class Helper extends Component
                 $text .= \Yii::t("app", "--- {$attachment->getLink(true)}") . "\n";
             }
         }
+        $text .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
         return $text;
     }
 

@@ -15,9 +15,17 @@ class MyCommand extends BaseCommand implements CommandInterface
             ->where(['profile.chat_id' => $message->from->id])
             ->one();
         $keyboard = [];
-        foreach ($user->orders as $order) {
-            $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id]];
+
+        if ($user->can("director")) {
+            foreach (\app\models\Order::findAll(["created_by" => $user->id]) as $order) {
+                $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
+            }
+        } else if ($user->can("employee")) {
+            foreach ($user->orders as $order) {
+                $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
+            }
         }
+
         $keyboard[] = [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']];
         $telegram->sendMessage([
             'chat_id' => $message->from->id,

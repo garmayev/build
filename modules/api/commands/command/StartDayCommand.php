@@ -22,7 +22,7 @@ class StartDayCommand extends BaseCommand implements CommandInterface
             }
             $telegram->sendMessage([
                 'chat_id' => $message->from->id,
-                'text' => (empty($keyboard)) ? \Yii::t('app', 'command_empty') : \Yii::t('app', 'command_order_list'),
+                'text' => (empty($keyboard)) ? \Yii::t('telegram', 'command_empty') : \Yii::t('telegram', 'command_order_list'),
                 'reply_markup' => json_encode([
                     'inline_keyboard' => $keyboard,
                     'one_time_keyboard' => true,
@@ -32,7 +32,7 @@ class StartDayCommand extends BaseCommand implements CommandInterface
         } else {
             $telegram->sendMessage([
                 'chat_id' => $message->from->id,
-                'text' => \Yii::t('app', 'command_hours_isset')
+                'text' => \Yii::t('telegram', 'command_hours_isset')
             ]);
         }
     }

@@ -14,7 +14,7 @@ class OrderCallback extends BaseCallback implements CommandInterface
 
         \Yii::$app->session->set('order_id', $id);
 
-        $telegram->editMessageText([
+        $telegram->sendMessage([
             'chat_id' => $query->from['id'],
             'message_id' => $query->message['message_id'],
             'text' => \Yii::t('app', 'command_location'),

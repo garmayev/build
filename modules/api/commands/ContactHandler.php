@@ -15,8 +15,6 @@ class ContactHandler extends BaseCommand implements CommandInterface
         $model = User::find()->joinWith('profile')->where(['or', ['profile.phone' => $phone], ['user.username' => $phone]])->one();
 
         if ($model) {
-            \Yii::error("Model founded id = {$model->id}");
-
             $profile = $model->profile;
 
             $profile->chat_id = "{$telegram->input->message->from->id}";
@@ -37,6 +35,52 @@ class ContactHandler extends BaseCommand implements CommandInterface
                 'chat_id' => $telegram->input->message->from->id,
                 'text' => \Yii::t('telegram', 'command_contact_not_found'),
             ]);
+        }
+
+        if ($model->can("director")) {
+            $this->setCommand([
+                "commands" => [
+                    ["command" => "menu", "description" => \Yii::t("telegram", "command_description_menu")],
+                    ["command" => "my", "description" => \Yii::t("telegram", "command_description_my")],
+                ]
+            ]);
+        } else {
+            $this->setCommand([
+                "commands" => [
+                    ["command" => "menu", "description" => \Yii::t("telegram", "command_description_menu")],
+                    ["command" => "start_day", "description" => \Yii::t("telegram", "command_description_start_day")],
+                ]
+            ]);
+        }
+    }
+
+    private function setCommand($commands)
+    {
+        $botToken = \Yii::$app->telegram->botToken;
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, "https://api.telegram.org/bot{$botToken}/setMyCommands");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($commands));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json'
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        // Обработка ответа
+        $result = json_decode($response, true);
+        if ($result['ok'] ?? false) {
+            \Yii::error("Команды успешно установлены!");
+            \Yii::error("Установленные команды:");
+            foreach ($commands["commands"] as $cmd) {
+                \Yii::error("/{$cmd['command']} - {$cmd['description']}");
+            }
+        } else {
+            \Yii::error("Ошибка при установке команд:");
+            \Yii::error(print_r($result));
         }
     }
 }

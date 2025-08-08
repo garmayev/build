@@ -30,7 +30,7 @@ class CoworkerController extends Controller
                     'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
                     'Access-Control-Request-Headers' => ['*'],
                     'Access-Control-Allow-Credentials' => true,
-                    'CORS_ORIGIN_WHITELIST' => '',
+//                    'CORS_ORIGIN_WHITELIST' => '',
                     'Access-Control-Max-Age' => 86400,
                     'Access-Control-Allow-Origin' => ['*'],
                 ],
@@ -46,6 +46,7 @@ class CoworkerController extends Controller
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
+                'except' => ['calendar']
             ],
         ];
     }

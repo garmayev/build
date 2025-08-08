@@ -16,7 +16,15 @@ class StartCommand extends BaseCommand implements CommandInterface
         if ($profile) {
             $telegram->sendMessage([
                 'chat_id' => $message->from->id,
-                'text' => \Yii::t('telegram', 'command_already_registered')
+                'text' => \Yii::t('telegram', 'command_already_registered'),
+                'reply_markup' => json_encode([
+                    'keyboard' => [
+                        [['text' => \Yii::t('telegram', 'command_contact'), 'request_contact' => true]],
+                        [['text' => \Yii::t('telegram', 'command_location_send'), 'request_location' => true]],
+                    ],
+                    'one_time_keyboard' => true,
+                    'resize_keyboard' => true,
+                ])
             ]);
         } else {
             $telegram->sendMessage([
@@ -25,6 +33,7 @@ class StartCommand extends BaseCommand implements CommandInterface
                 'reply_markup' => json_encode([
                     'keyboard' => [
                         [['text' => \Yii::t('telegram', 'command_contact'), 'request_contact' => true]],
+                        [['text' => \Yii::t('telegram', 'command_location_send'), 'request_location' => true]],
                     ],
                     'one_time_keyboard' => true,
                     'resize_keyboard' => true,

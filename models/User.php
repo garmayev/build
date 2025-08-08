@@ -201,6 +201,12 @@ class User extends ActiveRecord implements IdentityInterface
         return \Yii::$app->security->validatePassword($password, $this->password_hash);
     }
 
+    public function getFullName()
+    {
+        $name = ltrim("{$this->profile->family} {$this->profile->name} {$this->profile->surname}");
+        return $name ?? $this->username;
+    }
+
     public function getPrices()
     {
         return $this->hasMany(Price::class, ['user_id' => 'id']);

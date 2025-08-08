@@ -38,7 +38,12 @@ class StartDayCallback extends BaseCallback implements CommandInterface
             $telegram->editMessageText([
                 'chat_id' => $query->from['id'],
                 'message_id' => $query->message['message_id'],
-                'text' => \Yii::t('app', 'command_hours_isset')
+                'text' => \Yii::t('app', 'command_hours_isset'),
+                'reply_markup' => json_encode([
+                    'inline_keyboard' => [
+                        [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']]
+                    ]
+                ])
             ]);
         }
     }

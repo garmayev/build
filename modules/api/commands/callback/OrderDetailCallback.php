@@ -13,15 +13,26 @@ class OrderDetailCallback extends BaseCallback implements CommandInterface
         $query = $telegram->input->callback_query;
         $args = explode(" ", $query->data);
         parse_str($args[1] ?? '', $data);
+        $user = \app\models\User::findByChatId($query->from['id']);
+        $keyboard = [];
 
         $id = $data['id'] ?? null;
         $mode = $data['mode'];
         if (empty($id) || empty($mode)) {
             return null;
         }
-
+        if ($user->can('director')) {
+            $keyboard = [
+                [['text' => \Yii::t('telegram', 'command_send_messages'), 'callback_data' => '/send-messages']],
+                [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => $mode === 'my' ? '/my' : '/order_list']],
+            ];
+        } else if ($user->can('employee')) {
+            $keyboard = [
+                [['text' => $mode === "my" ? \Yii::t('telegram', 'button_reject') : \Yii::t('telegram', 'button_accept'), 'callback_data' => $mode === "my" ? '/order_reject id='.$id : '/order_accept id='.$id]],
+                [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => $mode === 'my' ? '/my' : '/order_list']],
+            ];
+        }
         $order = \app\models\Order::findOne($id);
-        $user = \app\models\User::findByChatId($query->from['id']);
 
         $telegram->editMessageText([
             'chat_id' => $query->from['id'],
@@ -29,10 +40,7 @@ class OrderDetailCallback extends BaseCallback implements CommandInterface
             'text' => \app\components\Helper::orderDetails($order),
             'parse_mode' => 'html',
             'reply_markup' => json_encode([
-                'inline_keyboard' => [
-                    [['text' => $mode === "my" ? \Yii::t('telegram', 'button_reject') : \Yii::t('telegram', 'button_accept'), 'callback_data' => $mode === "my" ? '/order_reject id='.$id : '/order_accept id='.$id]],
-                    [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => $mode === 'my' ? '/my' : '/order_list']],
-                ]
+                'inline_keyboard' => $keyboard
             ])
         ]);
     }

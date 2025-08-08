@@ -4,7 +4,7 @@ namespace app\modules\api\commands\callback;
 
 use app\modules\api\commands\CommandInterface;
 
-class MyCallback extends BaseCallback implements CommandInterface
+class MyCoworkersCallback extends BaseCallback implements CommandInterface
 {
 
     public function handle($telegram, $args)
@@ -13,15 +13,11 @@ class MyCallback extends BaseCallback implements CommandInterface
         $query = $telegram->input->callback_query;
         $user = \app\models\User::findByChatId($query->from["id"]);
         $keyboard = [];
+        $text = \Yii::t('telegram', 'command_empty');
         if ($user->can("director")) {
-            $text = \Yii::t("telegram", 'command_orders_my');
-            foreach (\app\models\Order::findAll(["created_by" => $user->id]) as $order) {
-                $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
-            }
-        } else if ($user->can("employee")) {
-            $text = (empty($keyboard)) ? \Yii::t('telegram', 'command_empty') : \Yii::t('telegram', 'command_order_list');
-            foreach ($user->orders as $order) {
-                $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
+            $text = \Yii::t("telegram", 'command_coworker_my');
+            foreach ($user->referrals as $referral) {
+                $keyboard[] = [[ 'text' => $referral->fullName, 'callback_data' => '/cwoorker_detail id=' . $referral->id ]];
             }
         }
         $keyboard[] = [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']];
