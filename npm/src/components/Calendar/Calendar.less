@@ -1,4 +1,13 @@
 #my-calendar {
+	.mode {
+		display: flex;
+		justify-content: flex-start;
+		padding: 10px;
+		input {
+			width: 18px;
+			margin-right: 20px;
+		}
+	}
 	thead {
 		cursor: default;
 
@@ -45,6 +54,9 @@
 		&.final {
 			display: inline-flex;
 			flex-direction: row;
+			.summary-cell {
+				display: flex;
+			}
 		}
 	}
 	.final {

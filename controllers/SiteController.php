@@ -11,7 +11,7 @@ class SiteController extends BaseController
         return array_merge(parent::behaviors(), [
             'access' => [
                 'class' => AccessControl::class,
-                'only' => ['login', 'logout', 'index', 'calendar'],
+                'only' => ['login', 'logout', 'index', 'calendar', 'builder'],
                 'rules' => [
                     [
                         'allow' => true,
@@ -20,7 +20,7 @@ class SiteController extends BaseController
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['logout', 'index', 'calendar-month', 'calendar'],
+                        'actions' => ['logout', 'index', 'calendar-month', 'calendar', 'builder'],
                         'roles' => ['@'],
                     ],
                 ],
@@ -76,5 +76,10 @@ class SiteController extends BaseController
             ];
         }
         return $result;
+    }
+
+    public function actionBuilder()
+    {
+        return $this->render('builder');
     }
 }

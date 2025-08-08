@@ -25,8 +25,10 @@ class TelegramController extends \yii\web\Controller
 {
     public function beforeAction($action)
     {
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $this->enableCsrfValidation = false;
+        if ($action->id !== 'builder') {
+            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            $this->enableCsrfValidation = false;
+        }
         return parent::beforeAction($action);
     }
 
@@ -54,6 +56,11 @@ class TelegramController extends \yii\web\Controller
         Command::onCallback('/decline', DeclineCallback::class);
         Command::onCallback('/inline_start_day', StartDayCallback::class);
         Command::onCallback('/menu', MenuCallback::class);
+    }
+
+    public function actionBuilder()
+    {
+        return $this->render('builder');
     }
 
     private function getProfile($data)
