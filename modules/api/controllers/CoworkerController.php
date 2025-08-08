@@ -46,7 +46,7 @@ class CoworkerController extends Controller
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['calendar']
+//                'except' => ['calendar']
             ],
         ];
     }
