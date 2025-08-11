@@ -111,7 +111,7 @@
                                 'label' => \Yii::t('app', 'Intervals'),
                                 'icon' => 'clock',
                                 'url' => ['/config/interval'],
-                                'active' => \Yii::$app->controller->id === 'interval',
+                                'active' => \Yii::$app->controller->id === 'config',
                             ]
                         ],
                     ]

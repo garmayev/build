@@ -14,7 +14,16 @@ class Config extends ActiveRecord
     {
         return [
             [['name', 'value'], 'required'],
-            [['name', 'value'], 'string'],
+            [['name', 'value', 'label'], 'string'],
+        ];
+    }
+
+    public function attributeLabels() 
+    {
+        return [
+            'name' => \Yii::t('app', 'Name'),
+            'label' => \Yii::t('app', 'Title'),
+            'value' => \Yii::t('app', 'Value'),
         ];
     }
 }

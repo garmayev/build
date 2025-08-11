@@ -6,10 +6,27 @@ use app\models\Config;
 use app\models\search\ConfigSearch;
 use Yii;
 use yii\data\ActiveDataProvider;
-use yii\web\Controller;
+use yii\filters\AccessControl;
 
-class ConfigController extends Controller
+class ConfigController extends BaseController
 {
+    public function behaviors()
+    {
+        return array_merge(parent::behaviors(), [
+            'access' => [
+                'class' => AccessControl::class,
+                'only' => ['update', 'interval'],
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['update', 'interval'],
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
     public function actionInterval()
     {
         $searchModel = new ConfigSearch();

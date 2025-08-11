@@ -62,7 +62,9 @@ class Hours extends ActiveRecord
                 return $model->getPrice();
             },
             'debit',
-            'credit'
+            'credit',
+            'start_time',
+            'stop_time'
         ];
     }
 

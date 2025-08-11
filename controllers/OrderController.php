@@ -21,7 +21,7 @@ class OrderController extends BaseController
                     [
                         'allow' => true,
                         'actions' => ['index', 'view', 'delete', 'coworker', 'material'],
-                        'roles' => ['employee'],
+                        'roles' => ['@'],
                     ],
                     [
                         'allow' => true,

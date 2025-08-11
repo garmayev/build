@@ -122,7 +122,7 @@ class OrderController extends \yii\rest\ActiveController
 //            $result[] = $oc->order;
 //        }
 //        return ['data' => $result];
-        return ['data' => $coworker->suitableOrders];
+        return ['data' => $coworker->getSuitableOrders()->all()];
     }
 
     public function actionSetHours()

@@ -20,7 +20,7 @@ echo GridView::widget([
         [
             'attribute' => 'label',
             'value' => function ($model) {
-                return \Yii::t('app', $model->label);
+                return $model->label;
             }
         ],
         'value',

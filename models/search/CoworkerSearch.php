@@ -37,14 +37,13 @@ class CoworkerSearch extends User
      */
     public function search($params)
     {
-        $ids = array_merge(
-            \Yii::$app->authManager->getUserIdsByRole("employee"),
-            \Yii::$app->authManager->getUserIdsByRole("director"));
-
-        $query = User::find()
-            ->joinWith('profile')
-            ->joinWith('userProperties')
-            ->where(['user.id' => $ids]);
+        if (\Yii::$app->user->can('admin')) {
+            $query = User::find();
+        } else if (\Yii::$app->user->can('director')) {
+            $query = User::find()->where(['referrer_id' => \Yii::$app->user->getId()]);
+        } else {
+            $query = User::find()->where(['id' => \Yii::$app->user->getId()]);
+        }
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,

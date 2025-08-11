@@ -444,8 +444,7 @@ class User extends ActiveRecord implements IdentityInterface
             ])
             ->andWhere(['status' => Order::STATUS_NEW])
             ->andWhere(['not in', 'order.id', \yii\helpers\ArrayHelper::map($this->orders, 'id', 'id')])
-            ->andWhere(['or', ['order.created_by' => $this->referrer_id], ['order.created_by' => $this->id]])
-            ->all();
+            ->andWhere(['or', ['order.created_by' => $this->referrer_id], ['order.created_by' => $this->id]]);
     }
 
     public function getDebitAmount($startDate, $finishDate)

@@ -32,7 +32,7 @@ class OrderController extends Controller
                 if ($this->checkTime($model->notify_date, $model)) {
                     echo "\tOrder {$model->id} is needle to notify\n";
                     echo "\tPriority: $priority\n";
-                    $model->priority_level = $priority--;
+                    $model->priority_level = $model->priority_level--;
                     $model->notify_date = time();
                     $model->save();
                     $model->sendAndUpdateTelegramNotifications();

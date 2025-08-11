@@ -549,7 +549,6 @@ class Order extends \yii\db\ActiveRecord
 
             // 3. Отправка уведомлений подходящим сотрудникам
             foreach ($this->suitableCoworkers as $coworker) {
-<<<<<<< HEAD
                 if ($coworker->status !== User::STATUS_ACTIVE ||
                     in_array($coworker->id, $assignedCoworkerIds)) {
                     continue;

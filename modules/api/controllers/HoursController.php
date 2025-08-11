@@ -29,7 +29,7 @@ class HoursController extends \yii\rest\Controller {
                     // Guests
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create', 'get-hours'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today', 'close-workday'] ],
                 ],
             ],
             'authenticator' => [
@@ -51,6 +51,7 @@ class HoursController extends \yii\rest\Controller {
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
             'check-today' => ['GET', 'OPTIONS'],
+            'close-workday' => ['GET', 'OPTIONS'],
         ];
     }
 
@@ -75,7 +76,7 @@ class HoursController extends \yii\rest\Controller {
     {
         $order = \app\models\Order::find()->where(['id' => $order_id])->one();
         $coworker = \app\models\User::findOne(\Yii::$app->user->getId());
-        \Yii::error( \Yii::$app->user->isGuest );
+//        \Yii::error( \Yii::$app->user->isGuest );
         if (isset($coworker)) {
             $hours = \app\models\Hours::find()->where(['user_id' => $coworker->id])->andWhere(['date' => date('Y-m-d', $time)])->one();
             if (isset($hours)) {
@@ -83,7 +84,7 @@ class HoursController extends \yii\rest\Controller {
                 if (!$result) { \Yii::error($hours->getErrorSummary(true)); }
                 return ['ok' => $result];
             } else {
-                $hours = new \app\models\Hours(['user_id' => $coworker->id, 'date' => date('Y-m-d', $time), 'count' => $count, 'is_payed' => $is_payed, 'order_id' => $order_id]);
+                $hours = new \app\models\Hours(['user_id' => $coworker->id, 'date' => date('Y-m-d', $time), 'count' => $count, 'is_payed' => $is_payed, 'order_id' => $order_id, 'start_time' => date('Y-m-d H:i:s')]);
             }
             $is_saved = $hours->save();
             return ['ok' => $is_saved, 'message' => $hours->getErrorSummary(true)];
@@ -97,6 +98,22 @@ class HoursController extends \yii\rest\Controller {
         if ($coworker_id) {
             return ["ok" => true, "model" => \app\models\Hours::find()->where(["date" => $d])->andWhere(["user_id" => $coworker_id])->one()];
         }
+    }
+
+    public function actionCloseWorkday()
+    {
+        $user = \Yii::$app->user->identity;
+        $hour = \app\models\Hours::find()
+            ->where(['user_id' => $user->id])
+            ->andWhere(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])
+            ->andWhere(['not', ['start_time' => null]])
+            ->one();
+        $hour->stop_time = date('Y-m-d H:i:s');
+        $hour->count = ceil((\Yii::$app->formatter->asTimestamp($hour->stop_time) - \Yii::$app->formatter->asTimestamp($hour->start_time)) / 3600);
+        if ($hour->save()) {
+            return ['ok' => true];
+        }
+        return ['ok' => false, 'message' => $hours->getErrorSummary('true')];
     }
 
     public function actionCheckToday()
