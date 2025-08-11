@@ -131,26 +131,32 @@ class OrderController extends \yii\rest\ActiveController
         $result = [];
         $model = Hours::find()->where(["user_id" => $data["user_id"]])->andWhere(["date" => $data["date"]])->one();
         if (empty($model)) {
+            \Yii::error("New model");
             $hours = new Hours([
                 "order_id" => $data["order_id"],
                 "user_id" => $data["user_id"],
                 "date" => $data["date"],
                 "count" => $data["count"],
-                "is_payed" => $data["is_payed"],
+                "is_payed" => $data["is_payed"] === '1' ? 1 : 0,
             ]);
-            $result[] = ["ok" => $hours->save()];
+            if ($hours->save()) {
+                $result = ["ok" => true];
+            } else {
+                \Yii::error($hours->getErrors());
+            }
         } else {
+            \Yii::error("update model");
             $ok = $model->load(["Hours" => [
                     "order_id" => $data["order_id"],
                     "user_id" => $data["user_id"],
                     "date" => $data["date"],
                     "count" => $data["count"],
-                    "is_payed" => $data["is_payed"],
+                    "is_payed" => $data["is_payed"] === '1' ? 1 : 0,
                 ]]) && $model->save();
             if (!$ok) {
                 \Yii::error($model->errors);
             }
-            $result[] = ["ok" => $ok];
+            $result = ["ok" => $ok];
         }
         return $result;
     }
