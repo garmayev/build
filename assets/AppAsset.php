@@ -24,7 +24,7 @@ class AppAsset extends AssetBundle
     public $baseUrl = '@web';
     public $css = [
         '/css/site.css',
-        '/react/css/main.e4963820.css',
+        '/react/css/main.0d903fa5.css',
     ];
     public $js = [
         'https://cdn.jsdelivr.net/npm/jquery.maskedinput@1.4.1/src/jquery.maskedinput.min.js',
