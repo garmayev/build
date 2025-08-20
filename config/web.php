@@ -93,6 +93,15 @@ $config = [
         'notificationService' => [
             'class' => \app\modules\notifications\components\NotificationService::class,
         ],
+        'response' => [
+            'class' => 'yii\web\Response',
+            'on beforeSend' => function ($event) {
+                $response = $event->sender;
+                $response->getHeaders()->set('Access-Control-Allow-Origin', '*');
+                $response->getHeaders()->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+                $response->getHeaders()->set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            },
+        ],
     ],
     'modules' => [
         'api' => [

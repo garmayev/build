@@ -2,13 +2,10 @@
 
 namespace app\modules\api\controllers;
 
-use app\models\Coworker;
 use app\models\Hours;
 use app\models\Order;
-use app\models\OrderCoworker;
 use app\models\OrderUser;
 use app\models\User;
-use yii\helpers\ArrayHelper;
 use yii\rest\Controller;
 
 class CoworkerController extends Controller
@@ -46,7 +43,7 @@ class CoworkerController extends Controller
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-//                'except' => ['calendar']
+                'except' => ['calendar']
             ],
         ];
     }

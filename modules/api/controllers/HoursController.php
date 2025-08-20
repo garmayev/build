@@ -2,6 +2,7 @@
 namespace app\modules\api\controllers;
 
 use app\models\Hours;
+use yii\base\InvalidConfigException;
 
 class HoursController extends \yii\rest\Controller {
     public $serializer = [
@@ -27,14 +28,14 @@ class HoursController extends \yii\rest\Controller {
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create', 'get-hours'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create', 'get-hours', 'quick'] ],
                     // Users
                     [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today', 'close-workday', 'open-workday', 'is-opened', 'is-closed', 'by-date', 'quick'] ],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'get-hours']
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'get-hours', 'quick']
             ],
         ];
     }
@@ -97,12 +98,16 @@ class HoursController extends \yii\rest\Controller {
         return ['ok' => false];
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function actionGetHours($coworker_id = null, $date = null)
     {
         $d = \Yii::$app->formatter->asDate($date, 'php:YYYY-m-d');
         if ($coworker_id) {
             return ["ok" => true, "model" => \app\models\Hours::find()->where(["date" => $d])->andWhere(["user_id" => $coworker_id])->one()];
         }
+        return ["ok" => false];
     }
 
     public function actionCloseWorkday()
@@ -119,7 +124,7 @@ class HoursController extends \yii\rest\Controller {
         if ($hour->save()) {
             return ['ok' => true, 'model' => $hour];
         }
-        return ['ok' => false, 'message' => $hours->getErrorSummary('true')];
+        return ['ok' => false, 'message' => $hour->getErrorSummary('true')];
     }
 
     public function actionOpenWorkday()
@@ -183,5 +188,25 @@ class HoursController extends \yii\rest\Controller {
         $raw = \Yii::$app->request->post();
         $hours = new \app\models\Hours($raw);
         return ['ok' => $hours->save(), 'message' => $hours->errors];
+    }
+
+    public function actionCalendar($year, $month)
+    {
+        $user = \Yii::$app->user->identity;
+        $referrals = $user->referrals;
+        $result = [];
+        $startDate = date("$year-$month-01");
+        $finishDate = date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year));
+        foreach ($referrals as $referral) {
+            $result[] = [
+                'user' => $referral,
+                'hours' => $referral->getHoursByMonth($startDate, $finishDate),
+                'debit_amount' => $referral->getDebitAmount($startDate, $finishDate),
+                'credit_amount' => $referral->getCreditAmount($startDate, $finishDate),
+                'debit_hours' => $referral->getDebitHours($startDate, $finishDate),
+                'credit_hours' => $referral->getCreditHours($startDate, $finishDate),
+            ];
+        }
+        return $result;
     }
 }
