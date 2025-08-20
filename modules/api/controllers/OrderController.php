@@ -160,9 +160,17 @@ class OrderController extends \yii\rest\ActiveController
         ]);
     }
 
-    public function actionMy($user_id)
+    public function actionMy($user_id, $date = null)
     {
         $user = \app\models\User::findOne($user_id);
+        if ($date) {
+            $orders = $user->getOrders();
+            $hour = \app\models\Hours::find()->where(['date' => $date])->andWhere(['user_id' => $user_id])->all();
+
+            \Yii::error(count($hour));
+
+            return $orders->andWhere(['not', ['id' => \yii\helpers\ArrayHelper::getColumn($hour, 'order_id')]])->all();
+        }
         return $user->orders;
     }
 
