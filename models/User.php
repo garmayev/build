@@ -166,6 +166,11 @@ class User extends ActiveRecord implements IdentityInterface
         return self::find()->joinWith('profile')->where(['profile.chat_id' => $chat_id])->one();
     }
 
+    public static function findByPhone($phone): ?User
+    {
+        return self::find()->joinWith('profile')->where(['profile.phone' => $phone])->one();
+    }
+
     /**
      * {@inheritdoc}
      */

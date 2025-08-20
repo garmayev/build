@@ -30,7 +30,7 @@ class CoworkerController extends Controller
                     'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'PREFLIGHT'],
                     'Access-Control-Request-Headers' => ['*'],
                     'Access-Control-Allow-Credentials' => true,
-//                    'CORS_ORIGIN_WHITELIST' => '',
+                    'CORS_ORIGIN_WHITELIST' => '',
                     'Access-Control-Max-Age' => 86400,
                     'Access-Control-Allow-Origin' => ['*'],
                 ],
@@ -39,7 +39,7 @@ class CoworkerController extends Controller
                 'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     // Guests
-                    ['allow' => true, 'roles' => ['?'], 'actions' => ['advanced', 'calendar']],
+                    ['allow' => true, 'roles' => ['?'], 'actions' => ['advanced']],
                     // Users
                     ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'view', 'create', 'suitable-orders', 'calendar-month', 'calendar', 'advanced']],
                 ],

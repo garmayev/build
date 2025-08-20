@@ -29,7 +29,7 @@ class HoursController extends \yii\rest\Controller {
                     // Guests
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create', 'get-hours'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today', 'close-workday'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today', 'close-workday', 'open-workday', 'is-opened', 'is-closed', 'by-date', 'quick'] ],
                 ],
             ],
             'authenticator' => [
@@ -51,7 +51,12 @@ class HoursController extends \yii\rest\Controller {
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
             'check-today' => ['GET', 'OPTIONS'],
-            'close-workday' => ['GET', 'OPTIONS'],
+            'close-workday' => ['POST', 'OPTIONS'],
+            'open-workday' => ['POST', 'OPTIONS'],
+            'is-opened' => ['POST', 'OPTIONS'],
+            'is-closed' => ['POST', 'OPTIONS'],
+            'by-date' => ['GET', 'OPTIONS'],
+            'quick' => ['POST', 'OPTIONS']
         ];
     }
 
@@ -92,7 +97,7 @@ class HoursController extends \yii\rest\Controller {
         return ['ok' => false];
     }
 
-    public function actionGetHours($coworker_id, $date)
+    public function actionGetHours($coworker_id = null, $date = null)
     {
         $d = \Yii::$app->formatter->asDate($date, 'php:YYYY-m-d');
         if ($coworker_id) {
@@ -102,23 +107,81 @@ class HoursController extends \yii\rest\Controller {
 
     public function actionCloseWorkday()
     {
+        $raw = \Yii::$app->request->post();
         $user = \Yii::$app->user->identity;
         $hour = \app\models\Hours::find()
-            ->where(['user_id' => $user->id])
-            ->andWhere(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])
-            ->andWhere(['not', ['start_time' => null]])
+            ->where(['user_id' => $raw['user_id']])
+            ->andWhere(['date' => $raw['date']])
+            ->andWhere(['order_id' => $raw['order_id']])
             ->one();
         $hour->stop_time = date('Y-m-d H:i:s');
         $hour->count = ceil((\Yii::$app->formatter->asTimestamp($hour->stop_time) - \Yii::$app->formatter->asTimestamp($hour->start_time)) / 3600);
         if ($hour->save()) {
-            return ['ok' => true];
+            return ['ok' => true, 'model' => $hour];
         }
         return ['ok' => false, 'message' => $hours->getErrorSummary('true')];
+    }
+
+    public function actionOpenWorkday()
+    {
+        $raw = \Yii::$app->request->post();
+        $user = \app\models\User::findOne(\Yii::$app->user->getId());
+
+        $hours = \app\models\Hours::find()->where(['user_id' => $user->id])->andWhere(['date' => $raw['date']])->andWhere(['order_id' => $raw['order_id']])->one();
+        if (isset($hours)) {
+            $result = $hours->load(['Hours' => $raw]) && $hours->save();
+            if (!$result) { \Yii::error($hours->getErrorSummary(true)); }
+            return ['ok' => $result, 'model' => $hours];
+        }
+
+        $hours = new \app\models\Hours(array_merge(\Yii::$app->request->post(), ['start_time' => date('Y-m-d H:i:s')]));
+        $is_saved = $hours->save();
+        if (!$is_saved) {
+            \Yii::error($hours->getErrorSummary(true));
+        }
+        return ['ok' => $is_saved, 'message' => $hours->getErrorSummary(true)];
+
     }
 
     public function actionCheckToday()
     {
         $hours = \app\models\Hours::find()->where(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->andWhere(['user_id' => \Yii::$app->user->getId()])->one();
         return $hours;
+    }
+
+    public function actionIsOpened()
+    {
+        $raw = \Yii::$app->request->post();
+        $hours = \app\models\Hours::find()->where(['user_id' => $raw['user_id']])->andWhere(['date' => $raw['date']])->andWhere(['order_id' => $raw['order_id']])->one();
+        if ($hours) {
+            return ['ok' => isset($hours->start_time)];
+        }
+        return ['ok' => false];
+    }
+
+    public function actionIsClosed()
+    {
+        $raw = \Yii::$app->request->post();
+        $hours = \app\models\Hours::find()->where(['user_id' => $raw['user_id']])->andWhere(['date' => $raw['date']])->andWhere(['order_id' => $raw['order_id']])->one();
+        if ($hours) {
+            return ['ok' => isset($hours->stop_time)];
+        }
+        return ['ok' => false];
+    }
+
+    public function actionByDate($date)
+    {
+        $hours = \app\models\Hours::find()->where(['date' => $date])->andWhere(['user_id' => \Yii::$app->user->getId()])->all();
+        if ($hours) {
+            return ['ok' => true, 'data' => $hours];
+        }
+        return ['ok' => false, 'message' => \Yii::t('app', 'empty_list')];
+    }
+
+    public function actionQuick()
+    {
+        $raw = \Yii::$app->request->post();
+        $hours = new \app\models\Hours($raw);
+        return ['ok' => $hours->save(), 'message' => $hours->errors];
     }
 }

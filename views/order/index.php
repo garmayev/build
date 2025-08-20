@@ -78,5 +78,11 @@ echo GridView::widget([
                 },
             ]
         ]
-    ]
+    ],
+    'pager' => [
+        'class' => \yii\widgets\LinkPager::class, // Explicitly specify LinkPager
+        'options' => [
+            'class' => 'pagination pagination-sm no-margin pull-right', // AdminLTE pagination styling
+        ],
+    ],
 ]);

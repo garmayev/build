@@ -77,11 +77,12 @@ class TelegramMessage extends ActiveRecord
     public static function sendMessage($params)
     {
         $response = \Yii::$app->telegram->sendMessage($params);
-        if ($response) {
+        if ($response->ok) {
             $message = new TelegramMessage();
-            $message->id = $response["result"]["message_id"];
-            $message->message_id = $response["result"]["message_id"];
-            $message->chat_id = $params["chat_id"];
+//            \Yii::error($response);
+            $message->id = $response->result->message_id;
+            $message->message_id = $response->result->message_id;
+            $message->chat_id = $params->result->from->id;
             $message->save();
         }
     }

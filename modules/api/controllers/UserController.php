@@ -159,7 +159,7 @@ class UserController extends \yii\rest\Controller
         $data = \Yii::$app->request->post();
         if ($data["token"]) {
             $model->device_id = $data["token"];
-            \Yii::error($data);
+//            \Yii::error($data);
             $saved = $model->save();
             return ["ok" => $saved, "message" => !$saved ? $model->errors : ""];
         }

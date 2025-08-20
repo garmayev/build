@@ -8,6 +8,7 @@ use app\modules\api\commands\callback\OrderAcceptCallback;
 use app\modules\api\commands\callback\OrderDetailCallback;
 use app\modules\api\commands\callback\OrderViewCallback;
 use app\modules\api\commands\callback\OrderListCallback;
+use app\modules\api\commands\callback\OrderStatusProcess;
 use app\modules\api\commands\callback\OrderRejectCallback;
 use app\modules\api\commands\callback\StartDayCallback;
 use app\modules\api\commands\callback\StopDayCallback;
@@ -64,6 +65,7 @@ class TelegramController extends \yii\web\Controller
         Command::onCallback('/order_reject', OrderRejectCallback::class);
         Command::onCallback('/order_accept', OrderAcceptCallback::class);
         Command::onCallback('/my_coworkers', MyCoworkersCallback::class);
+        Command::onCallback('/order_status_process', OrderStatusProcessCallback::class);
     }
 
     public function actionBuilder()
@@ -76,5 +78,11 @@ class TelegramController extends \yii\web\Controller
         $phone = preg_replace("/[\(\)\+\ \-]/", "", $data["phone_number"]);
         $profile = \app\models\Profile::findOne(["phone" => $phone]);
         return $profile;
+    }
+
+    public function actionCheckChatId($chat_id)
+    {
+        $user = \app\models\User::findByChatId($chat_id);
+        return ["ok" => isset($user), "data" => $user];
     }
 }

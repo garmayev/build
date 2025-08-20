@@ -30,7 +30,7 @@ class CoworkerController extends \yii\console\Controller
             echo \Yii::t("app", "Coworker not found");
         }
 
-        $suitableOrders = $coworker->suitableOrders;
+        $suitableOrders = $coworker->getSuitableOrders()->all();
         foreach ($suitableOrders as $order) {
             echo \Yii::t("app", "Order #{id}", ['id' => $order->id])."\n";
         }

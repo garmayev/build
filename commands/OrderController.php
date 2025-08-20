@@ -78,4 +78,18 @@ class OrderController extends Controller
         }
         echo "Total: " . count($coworkers) . "\n\n";
     }
+
+    public function actionIsOwnerNotified($order_id)
+    {
+        $model = \app\models\Order::findOne($order_id);
+        echo "Model {$order_id}\n";
+        echo "{$model->owner->profile->chat_id}\n";
+        $message = \app\models\telegram\TelegramMessage::find()->where(['chat_id' => $model->owner->profile->chat_id])->andWhere(['order_id' => $order_id])->one();
+        echo $message->text."\n";
+        if ($model->isOwnerNotified()) {
+            echo "Order #{$order_id} already Notified\n";
+        } else {
+            echo "Not notified\n";
+        }
+    }
 }

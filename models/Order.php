@@ -452,10 +452,11 @@ class Order extends \yii\db\ActiveRecord
         $requirementSubQuery = Requirement::find()
             ->select(['property_id', 'dimension_id', 'category_id', 'type', 'value'])
             ->where(['order_id' => $this->id]);
-
+        $userIds = \Yii::$app->authManager->getUserIdsByRole('employee');
         // Основной запрос для поиска подходящих пользователей
         return User::find()
             ->where(['and', ['priority_level' => $this->priority_level], ['referrer_id' => $this->owner->id]])
+            ->andWhere(['id' => $userIds])
             ->andWhere(['exists', (new \yii\db\Query())
                 ->select('*')
                 ->from(['r' => $requirementSubQuery])
@@ -496,6 +497,16 @@ class Order extends \yii\db\ActiveRecord
         if (!in_array($coworker->id, $coworkersIds)) {
             $this->link('coworkers', $coworker);
             return $this->save();
+        }
+        return false;
+    }
+
+    public function isOwnerNotified()
+    {
+        $profile = $this->owner->profile;
+        if ($profile && $profile->chat_id) {
+            $message = \app\models\telegram\TelegramMessage::find()->where(['chat_id' => $this->owner->profile->chat_id])->andWhere(['order_id' => $this->id])->one();
+            return isset($message);
         }
         return false;
     }
@@ -572,7 +583,7 @@ class Order extends \yii\db\ActiveRecord
                     }
                 }
                 // Push-уведомления
-                elseif ($profile->device_id) {
+/*                elseif ($profile->device_id) {
                     $expoMessage = (new ExpoMessage())
                         ->setTitle(\Yii::t('app', 'New Order') . ' #' . $this->id)
                         ->setBody(Helper::orderDetailsPlain($this))
@@ -582,20 +593,24 @@ class Order extends \yii\db\ActiveRecord
                         ->setCategoryId('new-order')
                         ->playSound();
                     (new Expo())->send($expoMessage)->push();
-                }
+                } */
             }
 
             // 4. Уведомление владельца
-            if ($this->owner->profile->chat_id ?? false) {
-                TelegramMessage::sendMessage([
+            if (!$this->isOwnerNotified()) {
+                $telegramMsg = new TelegramMessage([
                     'chat_id' => $this->owner->profile->chat_id,
+                    'order_id' => $this->id,
                     'text' => "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $messageText,
                     'reply_markup' => json_encode([
                         'inline_keyboard' => [
                             [['text' => \Yii::t('app', 'Set order to status process'), 'callback_data' => "/order_status_process order_id={$this->id}"]],
                         ]
-                    ])
+                    ]),
+                    'created_at' => time(),
+                    'updated_at' => time(),
                 ]);
+                $telegramMsg->send();
             }
 
         } catch (\Exception $e) {
