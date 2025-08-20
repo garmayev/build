@@ -12,7 +12,7 @@ const Helper = {
             }
         }
         return el;
-    }
+    },
 }
 let map, placemark;
 let latitudeInput, longitudeInput;

@@ -24,12 +24,12 @@ class AppAsset extends AssetBundle
     public $baseUrl = '@web';
     public $css = [
         '/css/site.css',
-        '/react/css/main.0d903fa5.css',
+        '/react/css/main.3113935e.css',
     ];
     public $js = [
         'https://cdn.jsdelivr.net/npm/jquery.maskedinput@1.4.1/src/jquery.maskedinput.min.js',
         '/react/js/453.abd1f321.chunk.js',
-        '/react/js/main.e14d1318.js',
+        '/react/js/main.c67f51b0.js',
     ];
     public $depends = [
         YiiAsset::class,
