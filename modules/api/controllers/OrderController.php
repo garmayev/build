@@ -20,7 +20,7 @@ class OrderController extends \yii\rest\ActiveController
 
     public function behaviors()
     {
-        return [
+/*        return [
             'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
@@ -60,13 +60,66 @@ class OrderController extends \yii\rest\ActiveController
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
                 'except' => ['set-hours'],
             ],
+        ]; */
+        $behaviors = parent::behaviors();
+
+        // Убираем стандартный authenticator (добавим его позже)
+        unset($behaviors['authenticator']);
+
+        // Настраиваем CORS фильтр первым
+        $behaviors['corsFilter'] = [
+            'class' => \yii\filters\Cors::class,
+            'cors' => [
+                'Origin' => ['*'],
+//                'Origin' => ['http://localhost:3000', 'http://build.local', 'https://build.amgcompany.ru'],
+                'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+                'Access-Control-Request-Headers' => ['*'],
+                'Access-Control-Allow-Credentials' => false,
+                'Access-Control-Max-Age' => 86400,
+                'Access-Control-Expose-Headers' => ['X-Pagination-Current-Page', 'X-Pagination-Page-Count'],
+            ],
         ];
+
+        // Добавляем аутентификатор ПОСЛЕ CORS
+        $behaviors['authenticator'] = [
+            'class' => \yii\filters\auth\HttpBearerAuth::class,
+            'except' => ['options'], // Добавляем options и calendar в исключения
+        ];
+
+        // Настройка контроля доступа
+        $behaviors['access'] = [
+            'class' => \yii\filters\AccessControl::class,
+            'rules' => [
+                ['allow' => true, 'roles' => ['?'], 'actions' => ['images', 'status', 'by-coworker', 'view']],
+                ['allow' => true, 'roles' => ['@'], 'actions' => [
+                    'index',
+                    'view',
+                    'update',
+                    'create',
+                    'delete',
+                    'my',
+                    'close',
+                    'detail',
+                    'by-coworker',
+                    'free',
+                    'apply',
+                    'reject',
+                    'set-status',
+                    'get-list',
+                    'set-hours',
+                    'my'
+                ]],
+            ],
+        ];
+
+        return $behaviors;
+
     }
 
     protected function verbs()
     {
         return [
-            'apply' => ['GET', 'OPTIONS'],
+            'apply' => ['GET', 'POST', 'OPTIONS'],
             'detail' => ['GET', 'OPTIONS'],
             'view' => ['GET', 'OPTIONS'],
             'status' => ['GET', 'OPTIONS'],
