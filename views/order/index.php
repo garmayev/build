@@ -26,26 +26,39 @@ echo GridView::widget([
         [
             'attribute' => 'id',
             'label' => '#',
+            'headerOptions' => ['class' => 'text-center col-md-1 col-1'],
+            'contentOptions' => ['class' => 'text-center col-md-1 col-1'],
             'value' => function (Order $model) {
                 return "#{$model->id}";
             }
         ],
         [
             'attribute' => 'status',
+            'headerOptions' => ['class' => 'text-center col-md-2 col-4'],
+            'contentOptions' => ['class' => 'text-center col-md-2 col-4'],
             'value' => function (Order $model) {
                 return $model->statusTitle;
             }
         ], [
             'attribute' => 'building_id',
             'label' => \Yii::t('app', 'Building'),
+            'headerOptions' => ['class' => 'text-center col-md-2 col-4'],
+            'contentOptions' => ['class' => 'text-center col-md-2 col-4'],
             'value' => function (Order $model) {
                 return $model->building->title;
             }
         ],
-        'date:date',
+        [ 
+            'attribute' => 'date', 
+            'format' => 'date',
+            'headerOptions' => ['class' => 'text-center col-md-2 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-2 hide-on-mobile'],
+        ],
         [
             'label' => \Yii::t("app", 'Full'),
             'format' => 'raw',
+            'headerOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
             'value' => function (Order $model) {
                 $totalCount = 0;
                 foreach ( $model->requirements as $requirement) { $totalCount += $requirement->count; }
@@ -54,11 +67,15 @@ echo GridView::widget([
         ], [
             'attribute' => 'owner',
             'label' => \Yii::t("app", 'Owner'),
+            'headerOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
             'value' => function (Order $model) {
                 return $model->owner->name;
             }
         ], [
             'class' => \yii\grid\ActionColumn::class,
+            'headerOptions' => ['class' => 'text-center col-md-1 col-3'],
+            'contentOptions' => ['class' => 'text-center col-md-1 col-3'],
             'buttons' => [
                 'view' => function ($url, $model, $key) {
                     return Html::a('<svg aria-hidden="true" style="display:inline-block;font-size:inherit;height:1em;overflow:visible;vertical-align:-.125em;width:1.125em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path fill="currentColor" d="M573 241C518 136 411 64 288 64S58 136 3 241a32 32 0 000 30c55 105 162 177 285 177s230-72 285-177a32 32 0 000-30zM288 400a144 144 0 11144-144 144 144 0 01-144 144zm0-240a95 95 0 00-25 4 48 48 0 01-67 67 96 96 0 1092-71z"></path></svg>',$url);

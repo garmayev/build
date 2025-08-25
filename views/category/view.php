@@ -51,7 +51,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'property_id',
                 'label' => Yii::t('app', 'Property'),
-                'value' => function (CategoryProperty $categoryProperty) {
+                'value' => function (categoryProperty $categoryProperty) {
                     return $categoryProperty->property->title;
                 }
             ],

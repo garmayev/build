@@ -62,16 +62,19 @@ $actionButtons = [
         'columns' => [
             [
                 'class' => 'yii\grid\SerialColumn',
-                'headerOptions' => ['width' => '3%'],
+                'headerOptions' => ['class' => 'text-center col-md-1 hide-on-mobile'],
+                'contentOptions' => ['class' => 'text-center col-md-1 hide-on-mobile'],
+                'filterOptions' => ['class' => 'text-center col-md-1 hide-on-mobile'],
             ],
             [
                 'attribute' => 'name',
                 'format' => 'raw',
                 'label' => Yii::t('app', 'Name'),
-                'headerOptions' => ['class' => 'col-2'],
+                'headerOptions' => ['class' => 'col-md-2 col-9'],
+                'contentOptions' => ['class' => 'col-md-2 col-9'],
+                'filterOptions' => ['class' => 'col-md-2 col-9'],
                 'filterInputOptions' => [
                     'class' => 'form-control',
-
                 ],
                 'value' => function (User $model) {
                     $profileName = ltrim("{$model->profile->family} {$model->profile->name} {$model->profile->surname}");
@@ -82,13 +85,17 @@ $actionButtons = [
                 'attribute' => 'email',
                 'format' => 'email',
                 'label' => Yii::t('app', 'Email'),
-                'headerOptions' => ['class' => 'col-2'],
+                'headerOptions' => ['class' => 'col-md-2 hide-on-mobile'],
+                'contentOptions' => ['class' => 'col-md-2 hide-on-mobile'],
+                'filterOptions' => ['class' => 'col-md-2 hide-on-mobile'],
             ],
             [
                 'attribute' => 'phone',
                 'format' => 'raw',
                 'label' => Yii::t('app', 'Phone'),
-                'headerOptions' => ['class' => 'col-2'],
+                'headerOptions' => ['class' => 'col-md-1 hide-on-mobile'],
+                'contentOptions' => ['class' => 'col-md-1 hide-on-mobile'],
+                'filterOptions' => ['class' => 'col-md-1 hide-on-mobile'],
                 'filterInputOptions' => ['class' => 'form-control masked-input'],
                 'value' => function (User $model) {
                     return !empty($model->profile->phone) ? $model->profile->phone : Html::tag('span', \Yii::t('yii', '(not set)'), ['class' => 'not-set']);
@@ -98,7 +105,9 @@ $actionButtons = [
                 'attribute' => 'birthday',
                 'format' => 'raw',
                 'label' => Yii::t('app', 'Birthday'),
-                'headerOptions' => ['class' => 'col-2'],
+                'headerOptions' => ['class' => 'col-md-1 hide-on-mobile'],
+                'filterOptions' => ['class' => 'col-md-1 hide-on-mobile'],
+                'contentOptions' => ['class' => 'col-md-1 hide-on-mobile'],
                 'filterInputOptions' => ['type' => 'date', 'class' => 'form-control'],
                 'value' => function (User $model) {
                     return Yii::$app->formatter->asDate($model->profile->birthday);
@@ -107,7 +116,9 @@ $actionButtons = [
             [
                 'format' => 'raw',
                 'label' => \Yii::t('app', 'Devices'),
-                'headerOptions' => ['class' => 'col-1'],
+                'headerOptions' => ['class' => 'col-md-2 hide-on-mobile'],
+                'filterOptions' => ['class' => 'col-md-2 hide-on-mobile'],
+                'contentOptions' => ['class' => 'col-md-2 hide-on-mobile'],
                 'value' => function (User $model) {
                     $result = $model->profile->chat_id ? Html::tag('span', "", ['class' => 'fab fa-telegram mx-2']) : '';
                     $result .= $model->profile->device_id ? Html::tag('span', "", ['class' => 'fas fa-mobile mx-2']) : '';
@@ -118,7 +129,9 @@ $actionButtons = [
                 'attribute' => 'userProperties',
                 'format' => 'raw',
                 'label' => Yii::t('app', 'Properties'),
-                'headerOptions' => ['class' => 'col-2'],
+                'headerOptions' => ['class' => 'col-md-2 hide-on-mobile'],
+                'contentOptions' => ['class' => 'col-md-2 hide-on-mobile'],
+                'filterOptions' => ['class' => 'col-md-2 hide-on-mobile'],
                 'value' => function (User $model) {
                     $result = "";
                     foreach ($model->userProperties as $userProperty) {
@@ -129,7 +142,10 @@ $actionButtons = [
             ],
             [
                 'class' => \microinginer\dropDownActionColumn\DropDownActionColumn::className(),
-                'items' => $actionButtons
+                'items' => $actionButtons,
+                'headerOptions' => ['class' => 'col-md-1 col-3'],
+                'filterOptions' => ['class' => 'col-md-1 col-3'],
+                'contentOptions' => ['class' => 'col-md-1 col-3'],
             ],
         ],
     ]); ?>

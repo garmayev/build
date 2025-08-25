@@ -25,18 +25,24 @@ echo GridView::widget([
     'columns' => [
         [
             'attribute' => 'username',
-            'headerOptions' => ['class' => 'text-center col-3'],
+            'headerOptions' => ['class' => 'text-center col-md-3 hide-on-mobile'],
+            'filterOptions' => ['class' => 'text-center col-md-3 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-3 hide-on-mobile'],
             'label' => \Yii::t('app', 'Username'),
         ],
         [
             'attribute' => 'email',
-            'headerOptions' => ['class' => 'text-center col-3'],
+            'headerOptions' => ['class' => 'text-center col-md-3 hide-on-mobile'],
+            'filterOptions' => ['class' => 'text-center col-md-3 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-3 hide-on-mobile'],
             'format' => 'email',
             'label' => \Yii::t('app', 'Email'),
         ],
         [
             'attribute' => 'fullName',
-            'headerOptions' => ['class' => 'text-center col-1'],
+            'headerOptions' => ['class' => 'text-center col-md-1 col-6'],
+            'filterOptions' => ['class' => 'text-center col-md-1 col-6'],
+            'contentOptions' => ['class' => 'text-center col-md-1 col-6'],
             'label' => \Yii::t('app', 'Name'),
             'value' => function (\app\models\User $model) {
                 return !empty($model->profile->fullName) ? $model->profile->fullName : $model->username;
@@ -45,7 +51,9 @@ echo GridView::widget([
         [
             'attribute' => 'phone',
             'label' => \Yii::t('app', 'Phone'),
-            'headerOptions' => ['class' => 'text-center col-1'],
+            'headerOptions' => ['class' => 'text-center col-md-1 col-6 hide-on-break'],
+            'filterOptions' => ['class' => 'text-center col-md-1 col-6 hide-on-break'],
+            'contentOptions' => ['class' => 'text-center col-md-1 col-6 hide-on-break'],
             'format' => 'raw',
             'value' => function (\app\models\User $model) {
                 return !empty($model->profile->phone) ? \floor12\phone\PhoneFormatter::a($model->profile->phone) : null;
@@ -53,11 +61,12 @@ echo GridView::widget([
         ], [
             'attribute' => 'role',
             'label' => \Yii::t('app', 'Role'),
-            'headerOptions' => ['class' => 'text-center col-1'],
+            'headerOptions' => ['class' => 'text-center col-md-1 hide-on-mobile'],
+            'filterOptions' => ['class' => 'text-center col-md-1 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-1 hide-on-mobile'],
             'format' => 'raw',
             'value' => function (\app\models\User $model) {
                 $roles = \Yii::$app->authManager->getRoles();
-//                \Yii::error($roles);
                 $currentRole = \Yii::$app->authManager->getRolesByUser($model->id);
                 return Html::dropDownList('',
                     ArrayHelper::map($currentRole, 'name', 'name'),
@@ -68,7 +77,9 @@ echo GridView::widget([
         ], [
             'attribute' => 'status',
             'label' => \Yii::t('app', 'Status'),
-            'headerOptions' => ['class' => 'text-center col-2'],
+            'headerOptions' => ['class' => 'text-center col-md-2 hide-on-mobile'],
+            'filterOptions' => ['class' => 'text-center col-md-2 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-2 hide-on-mobile'],
             'format' => 'raw',
             'value' => function (\app\models\User $model) {
                 return Html::dropDownList('status', $model->status, $model->statusList, ['class' => ['form-control', 'status'], 'data-key' => $model->id]);

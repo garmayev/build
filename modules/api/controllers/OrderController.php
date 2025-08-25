@@ -83,14 +83,14 @@ class OrderController extends \yii\rest\ActiveController
         // Добавляем аутентификатор ПОСЛЕ CORS
         $behaviors['authenticator'] = [
             'class' => \yii\filters\auth\HttpBearerAuth::class,
-            'except' => ['options'], // Добавляем options и calendar в исключения
+            'except' => ['options', 'images', 'status'],
         ];
 
         // Настройка контроля доступа
         $behaviors['access'] = [
             'class' => \yii\filters\AccessControl::class,
             'rules' => [
-                ['allow' => true, 'roles' => ['?'], 'actions' => ['images', 'status', 'by-coworker', 'view']],
+                ['allow' => true, 'roles' => ['?'], 'actions' => ['images', 'status', 'view']],
                 ['allow' => true, 'roles' => ['@'], 'actions' => [
                     'index',
                     'view',
@@ -171,7 +171,7 @@ class OrderController extends \yii\rest\ActiveController
 
             return $orders->andWhere(['not', ['id' => \yii\helpers\ArrayHelper::getColumn($hour, 'order_id')]])->all();
         }
-        return $user->orders;
+        return $user->getOrders()->orderBy(['id' => SORT_DESC])->all();
     }
 
     public function actionByCoworker()
@@ -183,7 +183,7 @@ class OrderController extends \yii\rest\ActiveController
 //            $result[] = $oc->order;
 //        }
 //        return ['data' => $result];
-        return ['data' => $coworker->getSuitableOrders()->all()];
+        return ['data' => $coworker->getSuitableOrders()->orderBy(['id' => SORT_DESC])->all()];
     }
 
     public function actionSetHours()

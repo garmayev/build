@@ -70,6 +70,7 @@ class User extends ActiveRecord implements IdentityInterface
             [['status'], 'default', 'value' => self::STATUS_ACTIVE],
             [['priority_level'], 'default', 'value' => self::PRIORITY_HIGH],
             [['userProperties', 'price'], 'safe'],
+            [['referrer_id'], 'exist', 'targetClass' => self::class, 'targetAttribute' => 'id'],
         ];
     }
 

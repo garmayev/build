@@ -21,6 +21,7 @@ echo Html::a(\Yii::t('app', 'Notify'), ["order/resend-notify", "id" => $model->i
 
 echo DetailView::widget([
     'model' => $model,
+    'template' => "<tr><th class='col-5 col-md-4'>{label}</th><td class='col-7 col-md-8 text-break'>{value}.</td></tr>",
     'attributes' => [
         'building.title',
         [
@@ -49,11 +50,11 @@ echo DetailView::widget([
             'label' => \Yii::t('app', 'Attachments'),
             'format' => 'raw',
             'value' => function (Order $model) {
-                $result = "";
+                $result = [];
                 foreach ($model->attachments as $attachment) {
-                    $result .= Html::tag('p', Html::a($attachment->url, $attachment->url, ['target' => '_blank']));
+                    $result[] = Html::tag('p', Html::a($attachment->url, $attachment->url, ['target' => '_blank']));
                 }
-                return $result;
+                return implode(", ", $result);
             }
         ],
     ],
@@ -70,34 +71,34 @@ echo GridView::widget([
     'columns' => [
         [
             'attribute' => 'category.title',
-            'headerOptions' => ['class' => 'col-2'],
+            'headerOptions' => ['class' => 'col-md-2 col-2'],
         ],
         [
             'attribute' => 'count',
-            'headerOptions' => ['class' => 'col-2'],
+            'headerOptions' => ['class' => 'col-md-2 col-1'],
         ],
         [
             'attribute' => 'property.title',
-            'headerOptions' => ['class' => 'col-2'],
+            'headerOptions' => ['class' => 'col-md-2'],
         ],
         [
             'attribute' => 'type',
-            'headerOptions' => ['class' => 'col-2'],
+            'headerOptions' => ['class' => 'col-md-2'],
             'value' => function (\app\models\Requirement $model) {
                 return \Yii::t('app', $model->type);
             }
         ],
         [
             'attribute' => 'value',
-            'headerOptions' => ['class' => 'col-2'],
+            'headerOptions' => ['class' => 'col-md-2'],
         ],
         [
             'attribute' => 'dimension.title',
-            'headerOptions' => ['class' => 'col-2'],
+            'headerOptions' => ['class' => 'col-md-2'],
         ]
     ],
     'tableOptions' => [
-        'class' => 'table table-striped'
+        'class' => 'table table-striped d-none d-md-block'
     ]
 ]);
 
@@ -110,6 +111,8 @@ echo GridView::widget([
             [
                 'attribute' => 'name',
                 'label' => \Yii::t('app', 'Coworkers'),
+                'headerOptions' => ['class' => 'text-center col-md-3 col-6'],
+                'contentOptions' => ['class' => 'text-center col-md-3 col-6'],
                 'value' => function (\app\models\User  $model) {
                     return "{$model->profile->family} {$model->profile->name} {$model->profile->surname}";
                 }
@@ -117,6 +120,8 @@ echo GridView::widget([
                 'attribute' => 'coworkerProperties',
                 'label' => \Yii::t('app', 'Properties'),
                 'format' => 'raw',
+                'headerOptions' => ['class' => 'text-center col-md-9 col-6'],
+                'contentOptions' => ['class' => 'text-center col-md-9 col-6'],
                 'value' => function (app\models\User  $model) {
                     $result = "";
                     foreach ($model->userProperties as $userProperty) {

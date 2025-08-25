@@ -6,9 +6,9 @@ use app\models\Hours;
 use app\models\Order;
 use app\models\OrderUser;
 use app\models\User;
-use yii\rest\Controller;
+use yii\rest\ActiveController;
 
-class CoworkerController extends Controller
+class CoworkerController extends ActiveController
 {
     public $modelClass = User::class;
 
@@ -78,7 +78,7 @@ class CoworkerController extends Controller
                 [
                     'allow' => true,
                     'roles' => ['@'],
-                    'actions' => ['check', 'list', 'view', 'create', 'suitable-orders', 'calendar-month', 'advanced', 'calendar'],
+                    'actions' => ['index', 'check', 'list', 'view', 'create', 'suitable-orders', 'calendar-month', 'advanced', 'calendar'],
                 ],
             ],
         ];
@@ -124,7 +124,7 @@ class CoworkerController extends Controller
     public function prepareDataProvider()
     {
         return new \yii\data\ActiveDataProvider([
-            'query' => \app\models\User::find()->where(['created_by' => \Yii::$app->user->getId()])->orWhere(['priority_level' => 0])
+            'query' => \app\models\User::find()->where(['referrer_id' => \Yii::$app->user->getId()])->orWhere(['priority_level' => 0])
         ]);
     }
 

@@ -15,7 +15,7 @@ $this->title = \Yii::$app->name;
             'icon' => 'far fa-building',
             'linkText' => \Yii::t('app', 'See all buildings'),
             'linkUrl' => ['building/index']
-        ]), ['class' => 'col-3']);
+        ]), ['class' => 'col-md-3 col-sm-6']);
     }
     if (!\Yii::$app->user->can('admin')) {
         $model = \Yii::$app->user->identity;
@@ -27,7 +27,7 @@ $this->title = \Yii::$app->name;
                 'theme' => 'primary',
                 'linkText' => \Yii::t('app', 'Telegram Bot'),
                 'linkUrl' => ['telegram-bot'],
-            ]), ['class' => 'col-3']);
+            ]), ['class' => 'col-md-3 col-sm-6']);
 
         }
         if (empty($model->profile->device_id)) {
@@ -38,7 +38,7 @@ $this->title = \Yii::$app->name;
                 'theme' => 'success',
                 'linkText' => \Yii::t('app', 'Android App'),
                 'linkUrl' => ['android-app']
-            ]), ['class' => 'col-3']);
+            ]), ['class' => 'col-md-3 col-sm-6']);
         }
     }
     echo \yii\helpers\Html::endTag('div');

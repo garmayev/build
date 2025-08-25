@@ -31,11 +31,13 @@ $this->params['breadcrumbs'][] = $this->title;
         'columns' => [
             [
                 'attribute' => 'title',
-                'headerOptions' => ['class' => 'text-center col-6'],
+                'headerOptions' => ['class' => 'text-center col-9 col-md-6'],
+                'contentOptions' => ['class' => 'text-center col-9 col-md-6'],
             ],
             [
                 'attribute' => 'type',
-                'headerOptions' => ['class' => 'text-center col-5'],
+                'headerOptions' => ['class' => 'text-center col-md-5 hide-on-mobile'],
+                'contentOptions' => ['class' => 'text-center col-md-5 hide-on-mobile'],
                 'format' => 'html',
                 'value' => function (Category $model) {
                     $list = [
@@ -48,6 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'class' => ActionColumn::className(),
+                'headerOptions' => ['text-center col-3 col-md-1'],
                 'urlCreator' => function ($action, Category $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                 }

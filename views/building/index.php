@@ -24,20 +24,27 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
         'summary' => false,
         'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
+            [
+                'class' => 'yii\grid\SerialColumn',
+                'headerOptions' => ['class' => 'text-center col-md-1 col-3'],
+                'contentOptions' => ['class' => 'text-center col-md-1 col-3'],
+            ],
             [
                 'attribute' => 'title',
                 'format' => 'raw',
-                'headerOptions' => ['class' => 'text-center col-4'],
+                'headerOptions' => ['class' => 'text-center col-md-4 col-6'],
+                'contentOptions' => ['class' => 'text-center col-md-4 col-6'],
             ],
             [
                 'attribute' => 'location.address',
                 'format' => 'raw',
-                'headerOptions' => ['class' => 'text-center col-7'],
+                'headerOptions' => ['class' => 'text-center col-md-6 col-0 hide-on-mobile'],
+                'contentOptions' => ['class' => 'text-center col-md-6 col-0 hide-on-mobile'],
             ],
             [
                 'class' => ActionColumn::className(),
-                'headerOptions' => ['class' => 'text-center col-1'],
+                'headerOptions' => ['class' => 'text-center col-md-1 col-3'],
+                'contentOptions' => ['class' => 'text-center col-md-1 col-3']
             ],
         ],
     ]); ?>
