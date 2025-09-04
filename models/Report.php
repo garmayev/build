@@ -10,7 +10,8 @@ use yii\db\ActiveQuery;
  *
  * @property int $id
  * @property string|null $comment
- * @property int|null $created_at
+ * @property int $created_at
+ * @property int $order_id
  *
  * @property Attachment[] $attachments
  */
@@ -26,10 +27,8 @@ class Report extends \yii\db\ActiveRecord
         return [
             'timestamp' => [
                 'class' => 'yii\behaviors\TimestampBehavior',
-                'attributes' => [
-                    'createdAtAttribute' => 'created_at',
-                    'updatedAtAttribute' => false,
-                ]
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => false,
             ]
         ];
     }
@@ -50,9 +49,10 @@ class Report extends \yii\db\ActiveRecord
     public function rules(): array
     {
         return [
-            [['comment', 'created_at'], 'default', 'value' => null],
             [['comment'], 'string'],
-            [['created_at'], 'integer'],
+            [['created_at', 'order_id'], 'integer'],
+            [['order_id'], 'exist', 'skipOnError' => true, 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']],
+            [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg', 'maxFiles' => 10],
         ];
     }
 
@@ -71,36 +71,45 @@ class Report extends \yii\db\ActiveRecord
 
     public function getAttachments(): ActiveQuery
     {
-        return $this->hasMany(Attachment::class, ['and', ['target_id' => 'id'], ['target_class' => self::class]]);
+        return $this->hasMany(Attachment::class, ['target_id' => 'id'])
+            ->andWhere(['target_class' => self::class]);
     }
 
-    public function setAttachment($attachments): void
+    public function upload()
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
-            $this->save(false);
-            if (!empty($this->files)) {
+            $this->save();
+            if ($this->files && !empty($this->files)) {
+                \Yii::error('upload files');
                 foreach ($this->files as $file) {
                     $this->attachFile($file);
                 }
-            } else if($attachments) {
-                $this->unlinkAll('attachments', true);
-                foreach ($attachments as $attachment) {
-                    $this->attachFile($attachment);
-                }
+            } else {
+                \Yii::error('no files');
             }
             $transaction->commit();
+            return true;
         } catch (\Exception $exception) {
+            \Yii::error($exception->getMessage());
             $transaction->rollBack();
+            return false;
         }
     }
 
     private function attachFile($file)
     {
-        $attach = new Attachment();
-        $attach->file = $file;
+        $attach = new Attachment([
+            'file' => $file,
+            'target_class' => self::class,
+            'target_id' => $this->id,
+        ]);
         if ($attach->upload() && $attach->save()) {
-            $this->link('attachments', $attach, ['target_class' => self::class, 'target_id' => $this->id]);
+            \Yii::error('attach file');
+            $this->link('attachments', $attach, ['target_class' => Report::class]);
+        } else {
+            \Yii::error('attach file error');
+            \Yii::error($attach->errors);
         }
     }
 }

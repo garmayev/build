@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\Order;
+use app\models\Report;
 use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -125,5 +126,36 @@ class OrderController extends BaseController
         $model = Order::findOne($id);
         $result = $model->sendAndUpdateTelegramNotifications();
         return $this->redirect(['view', 'id' => $id]);
+    }
+
+    public function actionReport($id)
+    {
+        $report = new Report();
+        $order = Order::findOne($id);
+        if (\Yii::$app->request->isPost) {
+            $report->load(\Yii::$app->request->post());
+            $report->files = UploadedFile::getInstances($report, 'files');
+            if ($report->validate() && $report->upload()) {
+                \Yii::$app->session->setFlash('success', \Yii::t('app', 'Report is successfully saved'));
+                return $this->redirect(['view', 'id' => $id]);
+            } else {
+                \Yii::$app->session->setFlash('danger', \Yii::t('app', 'Report is not saved'));
+                \Yii::error($report->getErrors());
+            }
+        }
+        return $this->render('report', [
+            'order' => $order,
+            'model' => $report
+        ]);
+    }
+
+    public function actionDeleteReport($id)
+    {
+        $report = Report::findOne($id);
+        foreach ($report->attachments as $attachment) {
+            $report->unlink('attachments', $attachment, true);
+        }
+        $report->delete();
+        return $this->redirect(['view', 'id' => $report->order_id]);
     }
 }

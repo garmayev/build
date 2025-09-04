@@ -12,7 +12,7 @@ class HoursController extends \yii\rest\Controller {
 
     public function behaviors()
     {
-        return [
+/*        return [
             'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
@@ -37,7 +37,44 @@ class HoursController extends \yii\rest\Controller {
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
                 'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'images', 'status', 'get-hours', 'quick']
             ],
+        ]; */
+        $behaviors = parent::behaviors();
+
+        // Убираем стандартный authenticator (добавим его позже)
+        unset($behaviors['authenticator']);
+
+        // Настраиваем CORS фильтр первым
+        $behaviors['corsFilter'] = [
+            'class' => \yii\filters\Cors::class,
+            'cors' => [
+                'Origin' => ['*'],
+//                'Origin' => ['http://localhost:3000', 'http://build.local', 'https://build.amgcompany.ru'],
+                'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+                'Access-Control-Request-Headers' => ['*'],
+                'Access-Control-Allow-Credentials' => null,
+                'Access-Control-Max-Age' => 86400,
+                'Access-Control-Expose-Headers' => ['X-Pagination-Current-Page', 'X-Pagination-Page-Count'],
+            ],
         ];
+
+        // Добавляем аутентификатор ПОСЛЕ CORS
+        $behaviors['authenticator'] = [
+            'class' => \yii\filters\auth\HttpBearerAuth::class,
+            'except' => ['options'], // Добавляем options и calendar в исключения
+        ];
+
+        // Настройка контроля доступа
+        $behaviors['access'] = [
+            'class' => \yii\filters\AccessControl::class,
+            'rules' => [
+                    // Guests
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['images', 'status', 'create', 'get-hours', 'quick'] ],
+                    // Users
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today', 'close-workday', 'start-workday', 'is-opened', 'is-closed', 'by-date', 'quick', 'paid'] ],
+            ],
+        ];
+
+        return $behaviors;
     }
 
     protected function verbs()
@@ -53,11 +90,12 @@ class HoursController extends \yii\rest\Controller {
             'login' => ['POST', 'OPTIONS'],
             'check-today' => ['GET', 'OPTIONS'],
             'close-workday' => ['POST', 'OPTIONS'],
-            'open-workday' => ['POST', 'OPTIONS'],
+            'start-workday' => ['POST', 'OPTIONS'],
             'is-opened' => ['POST', 'OPTIONS'],
             'is-closed' => ['POST', 'OPTIONS'],
             'by-date' => ['GET', 'OPTIONS'],
-            'quick' => ['POST', 'OPTIONS']
+            'quick' => ['POST', 'OPTIONS'],
+            'paid' => ['POST', 'OPTIONS']
         ];
     }
 
@@ -65,6 +103,7 @@ class HoursController extends \yii\rest\Controller {
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $this->enableCsrfValidation = false;
+
         return parent::beforeAction($action);
     }
 
@@ -127,7 +166,7 @@ class HoursController extends \yii\rest\Controller {
         return ['ok' => false, 'message' => $hour->getErrorSummary('true')];
     }
 
-    public function actionOpenWorkday()
+    public function actionStartWorkday()
     {
         $raw = \Yii::$app->request->post();
         $user = \app\models\User::findOne(\Yii::$app->user->getId());
@@ -157,7 +196,11 @@ class HoursController extends \yii\rest\Controller {
     public function actionIsOpened()
     {
         $raw = \Yii::$app->request->post();
-        $hours = \app\models\Hours::find()->where(['user_id' => $raw['user_id']])->andWhere(['date' => $raw['date']])->andWhere(['order_id' => $raw['order_id']])->one();
+        $hours = \app\models\Hours::find()
+            ->where(['user_id' => $raw['user_id']])
+            ->andWhere(['date' => $raw['date']])
+            ->andWhere(['order_id' => $raw['order_id']])
+            ->one();
         if ($hours) {
             return ['ok' => isset($hours->start_time)];
         }
@@ -185,7 +228,8 @@ class HoursController extends \yii\rest\Controller {
 
     public function actionQuick()
     {
-        $raw = \Yii::$app->request->post();
+        $raw = json_decode(file_get_contents("php://input"), true);
+        \Yii::error($raw);
         $hours = new \app\models\Hours($raw);
         return ['ok' => $hours->save(), 'message' => $hours->errors];
     }
@@ -208,5 +252,17 @@ class HoursController extends \yii\rest\Controller {
             ];
         }
         return $result;
+    }
+
+    public function actionPaid()
+    {
+        $data = \Yii::$app->request->post();
+        $hour = \app\models\Hours::find()
+            ->where(['user_id' => $data['user_id']])
+            ->andWhere(['order_id' => $data['order_id']])
+            ->andWhere(['date' => $data['date']])
+            ->one();
+        $hour->is_payed = 1;
+        return ['ok' => $hour->save(), 'model' => $hour, 'message' => $hour->errors];
     }
 }

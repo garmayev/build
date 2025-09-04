@@ -116,7 +116,7 @@ class Hours extends ActiveRecord
         $date = \Yii::$app->formatter->asDate($time, 'php:Y-m-d');
         $model = Hours::find()->where(['user_id' => $user_id])->andWhere(['date' => $date])->one();
         if (isset($model->start_time)) {
-            return isset($model->stop_time) ? 'closed' : 'opened';
+            return isset($model->stop_time) ? 'closed' : "opened";
         } else {
             return 'missing';
         }

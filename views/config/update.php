@@ -11,6 +11,10 @@ use yii\bootstrap5\Html;
  * @var $model Config
  */
 
+$this->title = \Yii::t('app', 'Update');
+$this->params['breadcrumbs'][] = ['label' => \Yii::t('app', 'Intervals'), 'url' => ['config/interval']];
+$this->params['breadcrumbs'][] = $this->title;
+
 $form = ActiveForm::begin([]);
 
 echo $form->field($model, 'name')->textInput(['class' => 'disabled', 'disabled' => true]);

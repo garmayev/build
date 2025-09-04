@@ -30,11 +30,13 @@ $this->params['breadcrumbs'][] = $this->title;
         'columns' => [
             [
                 'attribute' => 'title',
-                'headerOptions' => ['class' => 'col-11'],
+                'headerOptions' => ['class' => 'col-9 col-md-11'],
+                'filterOptions' => ['class' => 'col-9 col-md-11'],
+                'contentOptions' => ['class' => 'col-9 col-md-11'],
             ],
             [
                 'class' => ActionColumn::className(),
-                'headerOptions' => ['class' => 'col-1'],
+                'headerOptions' => ['class' => 'col-3 col-md-1'],
                 'urlCreator' => function ($action, Property $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                 }

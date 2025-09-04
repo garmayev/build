@@ -45,6 +45,7 @@ use yii\helpers\ArrayHelper;
  * @property int $requiredCoworkers
  * @property int $issetCoworkers
  * @property User[] $suitableCoworkers
+ * @property Report[] $reports
  */
 class Order extends \yii\db\ActiveRecord
 {
@@ -285,6 +286,11 @@ class Order extends \yii\db\ActiveRecord
             Yii::error('Error setting attachments: ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    public function getReports()
+    {
+        return $this->hasMany(Report::class, ['order_id' => 'id']);
     }
 
     /**

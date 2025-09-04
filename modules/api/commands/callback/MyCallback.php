@@ -19,10 +19,10 @@ class MyCallback extends BaseCallback implements CommandInterface
                 $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
             }
         } else if ($user->can("employee")) {
-            $text = (empty($keyboard)) ? \Yii::t('telegram', 'command_empty') : \Yii::t('telegram', 'command_order_list');
             foreach ($user->orders as $order) {
                 $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
             }
+            $text = (empty($keyboard)) ? \Yii::t('telegram', 'command_empty') : \Yii::t('telegram', 'command_order_list');
         }
         $keyboard[] = [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']];
 

@@ -24,21 +24,9 @@ class MenuCallback extends BaseCallback implements CommandInterface
             ];
         } else if ($user->can('employee')) {
             $state = \app\models\Hours::checkState($user->id, time());
-            switch($state) {
-                case 'missing':
-                    $text = "\n\n<b>".\Yii::t('telegram', 'command_workday_is_not_started')."</b>";
-                    $keyboard[] = [['text' => \Yii::t('telegram', 'command_start_day'), 'callback_data' => '/inline_start_day']];
-                    break;
-                case 'opened':
-                    $text = "\n\n<b>".\Yii::t('telegram', 'command_workday_is_started')."</b>";
-                    $keyboard[] = [['text' => \Yii::t('telegram', 'command_stop_day'), 'callback_data' => '/inline_stop_day']];
-                    break;
-                case 'closed':
-                    $text = "\n\n<b>".\Yii::t('telegram', 'command_workday_is_closed')."</b>";
-                    break;
-            }
-            $keyboard[] = [['text' => \Yii::t('telegram', 'command_orders_list'), 'callback_data' => '/order_list']];
             $keyboard[] = [['text' => \Yii::t('telegram', 'command_orders_my'), 'callback_data' => '/my']];
+            $keyboard[] = [['text' => \Yii::t('telegram', 'command_orders_list'), 'callback_data' => '/order_list']];
+            $keyboard[] = [['text' => \Yii::t('telegram', 'command_day_list'), 'callback_data' => '/day_list']];
         }
         $telegram->editMessageText([
             'chat_id' => $query->from['id'],

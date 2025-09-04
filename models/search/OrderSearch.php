@@ -25,6 +25,11 @@ class OrderSearch extends Order
             'query' => $query,
             'pagination' => [
                 'pageSize' => 10,
+            ],
+            'sort' => [
+                'defaultOrder' => [
+                    'id' => SORT_DESC,
+                ]
             ]
         ]);
         $dataFilter = new ActiveDataFilter([

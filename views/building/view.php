@@ -51,7 +51,7 @@ $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
                                 'height' => "400px",
                                 'width' => '100%'
                             ],
-                            'class' => 'col-6',
+                            'class' => 'col-12 col-md-6',
                         ]);
                     }
                 ],

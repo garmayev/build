@@ -3,14 +3,20 @@
 namespace app\modules\api\controllers;
 
 use app\models\Category;
-use yii\rest\Controller;
+use yii\rest\ActiveController;
 
-class CategoryController extends Controller
+class CategoryController extends ActiveController
 {
+    public $modelClass = Category::class;
+
+    public $serializer = [
+        'class' => 'yii\rest\Serializer',
+        'collectionEnvelope' => 'data',
+    ];
 
     public function behaviors()
     {
-        return [
+/*        return [
             'corsFilter' => [
                 'class' => \yii\filters\Cors::class,
                 'cors' => [
@@ -35,13 +41,52 @@ class CategoryController extends Controller
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
                 'except' => ['index', 'list', 'view'],
             ],
+        ]; */
+
+        $behaviors = parent::behaviors();
+
+        // Убираем стандартный authenticator (добавим его позже)
+        unset($behaviors['authenticator']);
+
+        // Настраиваем CORS фильтр первым
+        $behaviors['corsFilter'] = [
+            'class' => \yii\filters\Cors::class,
+            'cors' => [
+                'Origin' => ['*'],
+//                'Origin' => ['http://localhost:3000', 'http://build.local', 'https://build.amgcompany.ru'],
+                'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+                'Access-Control-Request-Headers' => ['*'],
+                'Access-Control-Allow-Credentials' => false,
+                'Access-Control-Max-Age' => 86400,
+                'Access-Control-Expose-Headers' => ['X-Pagination-Current-Page', 'X-Pagination-Page-Count'],
+            ],
         ];
+
+        // Добавляем аутентификатор ПОСЛЕ CORS
+        $behaviors['authenticator'] = [
+            'class' => \yii\filters\auth\HttpBearerAuth::class,
+            'except' => ['options'], // Добавляем options и calendar в исключения
+        ];
+
+        // Настройка контроля доступа
+        $behaviors['access'] = [
+            'class' => \yii\filters\AccessControl::class,
+            'rules' => [
+                [
+                    'allow' => true,
+                    'roles' => ['@'],
+                    'actions' => ['index', 'list', 'view', 'info'],
+                ],
+            ],
+        ];
+
+        return $behaviors;
     }
 
     protected function verbs()
     {
         return [
-            'index' => ['GET', 'OPTIONS'],
+            'index' => ['GET', 'POST', 'OPTIONS'],
             'view' => ['GET', 'OPTIONS'],
             'create' => ['POST', 'OPTIONS'],
             'update' => ['POST', 'PUT', 'OPTIONS'],
@@ -50,6 +95,17 @@ class CategoryController extends Controller
             'login' => ['POST', 'OPTIONS'],
             'calendar-month' => ['GET', 'OPTIONS'],
         ];
+    }
+
+    public function actions()
+    {
+        $actions = parent::actions();
+        unset($actions['index']);
+        unset($actions['view']);
+        $actions['options'] = [
+            'class' => \yii\rest\OptionAction::class
+        ];
+        return $actions;
     }
 
     public function beforeAction($action)

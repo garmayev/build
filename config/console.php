@@ -31,7 +31,7 @@ $config = [
         ],
         'telegram' => [
             'class' => \aki\telegram\Telegram::class,
-            'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
+            'botToken' => '8461352654:AAGxgiJVcy2ScgSO6p5akN4gzzSEC25ZlQM',
         ],
         'log' => [
             'targets' => [

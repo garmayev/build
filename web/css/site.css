@@ -4,4 +4,129 @@ ul.pagination {
 ul.pagination li {
   padding: 10px 5px;
 }
-/*# sourceMappingURL=site.css.map */
+
+.footer > .container {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.not-set {
+    color: #c55;
+    font-style: italic;
+}
+
+/* add sorting icons to gridview sort links */
+a.asc:after, a.desc:after {
+    content: '';
+    left: 3px;
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border: solid 5px transparent;
+    margin: 4px 4px 2px 4px;
+    background: transparent;
+}
+
+a.asc:after {
+    border-bottom: solid 7px #212529;
+    border-top-width: 0;
+}
+
+a.desc:after {
+    border-top: solid 7px #212529;
+    border-bottom-width: 0;
+}
+
+.grid-view th {
+    white-space: nowrap;
+}
+
+.hint-block {
+    display: block;
+    margin-top: 5px;
+    color: #999;
+}
+
+.error-summary {
+    color: #a94442;
+    background: #fdf7f7;
+    border-left: 3px solid #eed3d7;
+    padding: 10px 20px;
+    margin: 0 0 15px 0;
+}
+
+/* align the logout "link" (button in form) of the navbar */
+.nav li > form > button.logout {
+    padding-top: 7px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+@media(max-width:767px) {
+    .nav li > form > button.logout {
+        display:block;
+        text-align: left;
+        width: 100%;
+        padding: 10px 0;
+    }
+}
+
+.nav > li > form > button.logout:focus,
+.nav > li > form > button.logout:hover {
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.nav > li > form > button.logout:focus {
+    outline: none;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.table p {
+    padding: 0;
+    margin: 0;
+}
+
+.main-sidebar {
+    overflow-x: hidden;
+}
+
+.btn.btn-default.btn-sm.dropdown-toggle {
+    max-width: 40px;
+}
+:root {
+    --pagination-radius: 5px;
+}
+ul.pagination {
+    margin-bottom: 0 !important;
+    padding-bottom: 10px;
+}
+ul.pagination li {
+    display: flex;
+    width: 35px;
+    height: 40px;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ccc;
+    background-color: white;
+    border-right: none;
+}
+ul.pagination li a, ul.pagination li span {
+}
+ul.pagination li:first-child {
+    border-top-left-radius: var(--pagination-radius);
+    border-bottom-left-radius: var(--pagination-radius);
+}
+ul.pagination li:last-child {
+    border-top-right-radius: var(--pagination-radius);
+    border-bottom-right-radius: var(--pagination-radius);
+    border-right: 1px solid #ccc;
+}
+
+    @media (max-width: 767px) { /* Adjust breakpoint as needed for your definition of "mobile" */
+        .hide-on-mobile {
+            display: none !important;
+        }
+    }
