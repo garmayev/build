@@ -3,6 +3,8 @@
 /** @var yii\web\View $this */
 
 $this->title = \Yii::$app->name;
+$this->registerJsFile("https://api-maps.yandex.ru/2.1/?apikey=0bb42c7c-0a9c-4df9-956a-20d4e56e2b6b&lang=ru_RU");
+$this->registerJsVar('orders', \app\models\Order::find()->where(['created_by' => \Yii::$app->user->getId()])->all(), \yii\web\View::POS_HEAD );
 ?>
 <div class="site-index">
     <?php
@@ -43,4 +45,50 @@ $this->title = \Yii::$app->name;
     }
     echo \yii\helpers\Html::endTag('div');
     ?>
+    <div id="map" style="height: 500px"></div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        ymaps.ready(function(){
+            // Указывается идентификатор HTML-элемента.
+            var map = new ymaps.Map("map", {
+                center: [51.839696501195, 107.587332],
+                zoom: 10
+            });
+
+            var customItemContentLayout = ymaps.templateLayoutFactory.createClass(
+                "<h2 class=ballon_header>{{ properties.balloonContentHeader|raw }}</h2>" +
+                "<div class=ballon_body>{{ properties.balloonContentBody|raw }}</div>" +
+                "<div class=ballon_footer>{{ properties.balloonContentFooter|raw }}</div>"
+            );
+
+            var clusterer = new ymaps.Clusterer({
+                clusterDisableClickZoom: true,
+                clusterOpenBalloonOnClick: true,
+                clusterBalloonContentLayout: "cluster#balloonCarousel",
+                clusterBalloonPanelMaxMapArea: 0,
+                clusterBalloonContentLayoutWidth: 200,
+                clusterBalloonContentLayoutHeight: 130,
+            });
+
+            const getContentBody = (order) => {
+                const orderDate = new Date(order.date);
+                let result = `<div><b>Дата</b>: <i>${orderDate.toLocaleDateString()}</i></div>
+<div><b>Статус</b>: <i>${order.status}</i></div>
+<div><b>Объект</b>: <i>${order.building.title}</i></div>`;
+                let requiredCoworkers = order.requirements.reduce((sum, req) => sum + req.count, 0);
+                console.log(requiredCoworkers);
+                result += `<div><b>Сотрудники</b>: <i>${order.coworkers.length}/${requiredCoworkers}</i></div><div><b>Комментарий</b>: <i>${order.comment}</i></div>`
+                return result;
+            }
+
+            clusterer.add(orders.map(order => new ymaps.Placemark([order.building.location.latitude, order.building.location.longitude], {
+                balloonContentHeader: "Заказ #"+order.id,
+                balloonContentBody: getContentBody(order),
+                balloonContentFooter: `<a href='/order/view?id=${order.id}'>Смотреть подробности</a>`
+            })));
+
+            map.geoObjects.add(clusterer);
+        });
+    })
+</script>

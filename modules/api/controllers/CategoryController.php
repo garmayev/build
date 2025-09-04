@@ -86,7 +86,7 @@ class CategoryController extends ActiveController
     protected function verbs()
     {
         return [
-            'index' => ['GET', 'OPTIONS'],
+            'index' => ['GET', 'POST', 'OPTIONS'],
             'view' => ['GET', 'OPTIONS'],
             'create' => ['POST', 'OPTIONS'],
             'update' => ['POST', 'PUT', 'OPTIONS'],

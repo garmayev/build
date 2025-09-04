@@ -12,7 +12,14 @@ class OrderCallback extends BaseCallback implements CommandInterface
         parse_str($args[0] ?? '', $data);
         $id = $data["id"] ?? null;
 
+        $session = \Yii::$app->session;
+        if (!$session->isActive) {
+            \Yii::error('session is not active');
+            $session->open($query->from['id']);
+        }
+        \Yii::error(session_id());
         \Yii::$app->session->set('order_id', $id);
+        \Yii::error($id);
 
         $telegram->sendMessage([
             'chat_id' => $query->from['id'],

@@ -70,7 +70,7 @@ class HoursController extends \yii\rest\Controller {
                     // Guests
                     [ 'allow' => true, 'roles' => ['?'], 'actions' => ['images', 'status', 'create', 'get-hours', 'quick'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today', 'close-workday', 'start-workday', 'is-opened', 'is-closed', 'by-date', 'quick'] ],
+                    [ 'allow' => true, 'roles' => ['@'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today', 'close-workday', 'start-workday', 'is-opened', 'is-closed', 'by-date', 'quick', 'paid'] ],
             ],
         ];
 
@@ -94,7 +94,8 @@ class HoursController extends \yii\rest\Controller {
             'is-opened' => ['POST', 'OPTIONS'],
             'is-closed' => ['POST', 'OPTIONS'],
             'by-date' => ['GET', 'OPTIONS'],
-            'quick' => ['POST', 'OPTIONS']
+            'quick' => ['POST', 'OPTIONS'],
+            'paid' => ['POST', 'OPTIONS']
         ];
     }
 
@@ -251,5 +252,17 @@ class HoursController extends \yii\rest\Controller {
             ];
         }
         return $result;
+    }
+
+    public function actionPaid()
+    {
+        $data = \Yii::$app->request->post();
+        $hour = \app\models\Hours::find()
+            ->where(['user_id' => $data['user_id']])
+            ->andWhere(['order_id' => $data['order_id']])
+            ->andWhere(['date' => $data['date']])
+            ->one();
+        $hour->is_payed = 1;
+        return ['ok' => $hour->save(), 'model' => $hour, 'message' => $hour->errors];
     }
 }

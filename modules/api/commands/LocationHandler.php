@@ -9,12 +9,15 @@ class LocationHandler extends BaseCommand implements CommandInterface
 
     public function handle($telegram, $args)
     {
-        $session = \Yii::$app->session;
         $message = $telegram->input->message;
         $location = $message->location;
+        $user = \app\models\User::findByChatId($message->from->id);
+        $session = \Yii::$app->session;
+        session_id($message->from->id);
+        session_start();
         $orderId = $session->get("order_id");
-        $user = \app\models\User::findByChatId( $message->from->id );
         $order = \app\models\Order::findOne( $orderId );
+        \Yii::error(session_id());
         if ( empty($orderId) || empty($order) ) {
             $telegram->sendMessage([
                 'chat_id' => $message->from->id,
@@ -40,7 +43,7 @@ class LocationHandler extends BaseCommand implements CommandInterface
                     'text' => \Yii::t("telegram", "command_hours_created"),
                     'reply_markup' => json_encode([
                         'inline_keyboard' => [
-                            [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']]
+                            [['text' => \Yii::t('telegram', 'button_menu'), 'callback_data' => '/menu']]
                         ]
                     ])
                 ]);
@@ -50,7 +53,7 @@ class LocationHandler extends BaseCommand implements CommandInterface
                     'text' => \Yii::t("telegram", "command_hours_errors"),
                     'reply_markup' => json_encode([
                         'inline_keyboard' => [
-                            [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']]
+                            [['text' => \Yii::t('telegram', 'button_menu'), 'callback_data' => '/menu']]
                         ]
                     ])
                 ]);
@@ -59,6 +62,11 @@ class LocationHandler extends BaseCommand implements CommandInterface
             $telegram->sendMessage([
                 'chat_id' => $message->from->id,
                 'text' => \Yii::t("telegram", "command_location_missing"),
+                'reply_markup' => json_encode([
+                    'inline_markup' => [
+                        [['text' => \Yii::t('telegram', 'button_menu', 'callback_data' => '/menu')]]
+                    ]
+                ])
             ]);
         }
         $session->remove('order_id');
