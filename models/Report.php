@@ -75,6 +75,27 @@ class Report extends \yii\db\ActiveRecord
             ->andWhere(['target_class' => self::class]);
     }
 
+    public function setUrl($filenames)
+    {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $this->save();
+            foreach ($filenames as $filename) {
+                $attach = new Attachment();
+                $attach->url = $filename;
+                $attach->target_id = $this->id;
+                $attach->target_class = self::class;
+                if (!$attach->save()) {
+                    \Yii::error($attach->errors);
+                }
+            }
+            $transaction->commit();
+        } catch (\Exception $exception) {
+            \Yii::error($exception->message);
+            $transaction->rollback();
+        }
+    }
+
     public function upload()
     {
         $transaction = Yii::$app->db->beginTransaction();
@@ -106,7 +127,7 @@ class Report extends \yii\db\ActiveRecord
         ]);
         if ($attach->upload() && $attach->save()) {
             \Yii::error('attach file');
-            $this->link('attachments', $attach, ['target_class' => Report::class]);
+            $this->link('attachments', $attach, ['target_class' => self::class]);
         } else {
             \Yii::error('attach file error');
             \Yii::error($attach->errors);

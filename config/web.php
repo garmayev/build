@@ -23,7 +23,7 @@ $config = [
         ],
         'session' => [
             'name' => 'build',
-//            'savePath' => '../runtime/sessions',
+            'savePath' => '../runtime/sessions',
         ],
         'user' => [
             'identityClass' => 'app\models\User',

@@ -18,6 +18,9 @@ class StartDayCallback extends BaseCallback implements CommandInterface
             ->andWhere(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])
             ->all();
 
+        \Yii::$app->session->setId($telegram->input->callback_query->from['id']);
+        \Yii::$app->session->open();
+
         foreach ($user->getOrders()->andWhere(['not', ['order.id' => \yii\helpers\ArrayHelper::getColumn($hour, 'order_id')]])->all() as $order) {
             $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id=' . $order->id]];
         }

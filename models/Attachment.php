@@ -25,7 +25,7 @@ class Attachment extends ActiveRecord
         return [
             [['url', 'target_class'], 'string'],
             [['target_id'], 'integer'],
-            [['file'], 'file', 'skipOnEmpty' => false]
+            [['file'], 'file', 'skipOnEmpty' => true]
         ];
     }
 

@@ -3,6 +3,7 @@
 namespace app\modules\api\controllers;
 
 use app\modules\api\commands\callback\AcceptCallback;
+use app\modules\api\commands\callback\AttachReportCallback;
 use app\modules\api\commands\callback\DayListCallback;
 use app\modules\api\commands\callback\DayViewCallback;
 use app\modules\api\commands\callback\DayDetailCallback;
@@ -18,7 +19,8 @@ use app\modules\api\commands\callback\StopDayCallback;
 use app\modules\api\commands\Command;
 use app\modules\api\commands\command\MyCommand;
 use app\modules\api\commands\command\OrderListCommand;
-use app\modules\api\commands\command\ReportCommand;
+use app\modules\api\commands\command\StopReportCommand;
+use app\modules\api\commands\command\StartReportCommand;
 use app\modules\api\commands\command\StartDayCommand;
 use app\modules\api\commands\command\DayListCommand;
 use app\modules\api\commands\command\HelloCommand;
@@ -67,12 +69,13 @@ class TelegramController extends \yii\web\Controller
         Command::onMessage('/hello', HelloCommand::class);
         Command::onMessage('/clear', ClearCommand::class);
         Command::onMessage('/show_data', ShowDataCommand::class);
-        Command::onMessage('/report', ReportCommand::class);
+        Command::onMessage('/stop_report', StopReportCommand::class);
+        Command::onMessage('/start_report', StartReportCommand::class);
 
-        $update = $telegram->input;
-        if (Command::handleContextResponse($update)) {
-            return ;
-        }
+//        $update = $telegram->input;
+//        if (Command::handleContextResponse($update)) {
+//            return ;
+//        }
 
         Command::onCallback('/order', OrderCallback::class);
         Command::onCallback('/my', MyCallback::class);
@@ -91,6 +94,7 @@ class TelegramController extends \yii\web\Controller
         Command::onCallback('/day_list', DayListCallback::class);
         Command::onCallback('/day_view', DayViewCallback::class);
         Command::onCallback('/day_detail', DayDetailCallback::class);
+        Command::onCallback('/attach_report_to_order', AttachReportCallback::class);
     }
 
     public function actionBuilder()

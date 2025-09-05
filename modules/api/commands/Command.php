@@ -15,9 +15,9 @@ class Command extends Component
 
     /**
      * Инициализация сессии
-     * @param int $chatId
+     * @param int|null $chatId
      */
-    private static function initSession(int $chatId)
+    private static function initSession(int|null $chatId = null)
     {
         if (self::$session === null) {
             self::$session = \Yii::$app->session;
@@ -45,8 +45,13 @@ class Command extends Component
         try {
             $text = $telegram->input->message->text ?? '';
             $chatId = $telegram->input->message->chat->id;
+            if (isset($telegram->input->message)) {
+                \Yii::$app->session->close();
+                \Yii::$app->session->setId($telegram->input->message->from->id);
+                \Yii::$app->session->open();
+            }
 
-            self::initSession($chatId);
+            self::initSession();
             $currentContext = self::$session->get('command_context_' . $chatId, null);
 
             // Если есть активный контекст
@@ -211,19 +216,23 @@ class Command extends Component
 
         if (!isset($telegram->input->callback_query)) {
             return;
+        } else {
+            \Yii::$app->session->close();
+            \Yii::$app->session->setId($telegram->input->callback_query->from['id']);
+            \Yii::$app->session->open();
         }
 
         try {
-        $data = $telegram->input->callback_query->data ?? '';
+            $data = $telegram->input->callback_query->data ?? '';
 
-        if (!empty($data)) {
-            $args = explode(' ', $data);
-            $inputCallback = array_shift($args);
+            if (!empty($data)) {
+                $args = explode(' ', $data);
+                $inputCallback = array_shift($args);
 
-            if ($inputCallback === $callbackData) {
-                return static::callHandler($handler, $telegram, $args);
+                if ($inputCallback === $callbackData) {
+                    return static::callHandler($handler, $telegram, $args);
+                }
             }
-        }
         } catch (\Exception $e) {
 //            \Yii::error(json_decode(file_get_contents("php://input"), true));
             \Yii::error($e);
@@ -259,6 +268,12 @@ class Command extends Component
     {
         $telegram = \Yii::$app->telegram;
 
+        if (isset($telegram->input->message)) {
+            \Yii::$app->session->close();
+            \Yii::$app->session->setId($telegram->input->message->from->id);
+            \Yii::$app->session->open();
+        }
+
         if (!isset($telegram->input->message) || !isset($telegram->input->message->location)) {
             return;
         }
@@ -269,6 +284,12 @@ class Command extends Component
     public static function onPhoto($handler)
     {
         $telegram = \Yii::$app->telegram;
+
+        if (isset($telegram->input->message)) {
+            \Yii::$app->session->close();
+            \Yii::$app->session->setId($telegram->input->message->from->id);
+            \Yii::$app->session->open();
+        }
 
         if (!isset($telegram->input->message) || !isset($telegram->input->message->photo)) {
             return;

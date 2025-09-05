@@ -19,7 +19,6 @@ class StopDayCallback extends BaseCallback implements CommandInterface
             ->andWhere(['not', ['start_time' => null]])
             ->one();
 
-//        \Yii::error($hour);
         if (empty($hour)) {
             $keyboard[] = [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']];
             $telegram->editMessageText([

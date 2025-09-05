@@ -17,7 +17,7 @@ class LocationHandler extends BaseCommand implements CommandInterface
         session_start();
         $orderId = $session->get("order_id");
         $order = \app\models\Order::findOne( $orderId );
-        \Yii::error(session_id());
+
         if ( empty($orderId) || empty($order) ) {
             $telegram->sendMessage([
                 'chat_id' => $message->from->id,
