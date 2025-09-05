@@ -74,7 +74,10 @@ echo DetailView::widget([
                 foreach ($model->attachments as $attachment) {
                     $result[] = Html::tag('p', Html::a($attachment->url, $attachment->url, ['target' => '_blank']));
                 }
-                return implode(", ", $result);
+                if ($result) {
+                    return implode(", ", $result);
+                }
+                return null;
             }
         ],
     ],
@@ -200,7 +203,11 @@ echo DetailView::widget([
                             $images[] = $attachment->getLink(false);
                         }
                         $result .= implode("\n", $images) . "</div>";
-                        return $result;
+                        if (count($images)) {
+                            return $result;
+                        } else {
+                            return null;
+                        }
                     }
                 ],
                 [
