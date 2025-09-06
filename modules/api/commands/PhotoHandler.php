@@ -61,5 +61,6 @@ class PhotoHandler extends BaseCommand implements CommandInterface
         } catch (\Exception $e) {
             \Yii::error($e->getMessage());
         }
+        return "";
     }
 }
