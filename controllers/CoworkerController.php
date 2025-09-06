@@ -33,7 +33,7 @@ class CoworkerController extends Controller
                     [
                         'allow' => true,
                         'actions' => ['index', 'view', 'create', 'update', 'delete', 'calendar'],
-                        'roles' => ['director'],
+                        'roles' => ['director', 'admin'],
                     ],
                 ],
             ],
