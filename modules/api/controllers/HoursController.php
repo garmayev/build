@@ -29,7 +29,7 @@ class HoursController extends \yii\rest\Controller {
                     // Guests
                     [ 'allow' => true, 'roles' => ['@'], 'actions' => ['images', 'status', 'create', 'get-hours'] ],
                     // Users
-                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today'] ],
+                    [ 'allow' => true, 'roles' => ['?'], 'actions' => ['index', 'view', 'update', 'create', 'delete', 'set-hours', 'get-hours', 'close', 'detail', 'by-coworker', 'check-today', 'paid'] ],
                 ],
             ],
             'authenticator' => [
@@ -51,6 +51,7 @@ class HoursController extends \yii\rest\Controller {
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
             'check-today' => ['GET', 'OPTIONS'],
+            'paid' => ['POST', 'OPTIONS'],
         ];
     }
 
@@ -103,5 +104,17 @@ class HoursController extends \yii\rest\Controller {
     {
         $hours = \app\models\Hours::find()->where(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->andWhere(['user_id' => \Yii::$app->user->getId()])->one();
         return $hours;
+    }
+
+    public function actionPaid()
+    {
+        $raw = $_POST;
+        $hours = Hours::findOne($raw);
+        if ($hours) {
+            $hours->is_payed = 1;
+            $hours->save();
+            return ['ok' => true];
+        }
+        return ['ok' => false];
     }
 }

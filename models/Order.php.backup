@@ -29,11 +29,9 @@ use yii\helpers\ArrayHelper;
  * @property int $priority_level
  * @property int $created_at
  * @property int $mode
- * @property double $price
  *
  * @property string $statusTitle
  * @property array $statusList
- * @property array $modes
  * @property array $details
  *
  * @property Building $building
@@ -108,7 +106,7 @@ class Order extends \yii\db\ActiveRecord
      *
      * @return array Array of behaviors
      */
-    public function behaviors(): array
+    public function behaviors()
     {
         return [
             [
@@ -140,7 +138,7 @@ class Order extends \yii\db\ActiveRecord
      * @return bool Whether the deletion should continue
      * @throws \Exception if deletion fails
      */
-    public function beforeDelete(): bool
+    public function beforeDelete()
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
@@ -164,9 +162,12 @@ class Order extends \yii\db\ActiveRecord
      *
      * @return bool Whether validation should continue
      */
-    public function beforeValidate(): bool
+    public function beforeValidate()
     {
         $this->date = $this->date ?? Yii::$app->formatter->asTimestamp($this->datetime);
+        if (!empty($this->files)) {
+            $this->attachments = $this->files;
+        }
         return parent::beforeValidate();
     }
 
@@ -201,9 +202,6 @@ class Order extends \yii\db\ActiveRecord
             [['datetime', 'attachments', 'requirements'], 'safe'],
             [['created_at'], 'default', 'value' => time()],
             [['price'], 'safe'],
-            [['price'], 'filter', 'filter' => function($value) {
-                return str_replace(' ', '', $value);
-            }],
             [['price'], 'match', 'pattern' => '/^[0-9]{1,12}(\.[0-9]{0,2})?$/'],
             [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg','jpeg','png','svg','bmp'], 'maxFiles' => 10],
         ];
@@ -275,15 +273,6 @@ class Order extends \yii\db\ActiveRecord
         return $this->hasOne(Building::class, ['id' => 'building_id']);
     }
 
-    public function getModes()
-    {
-        return [
-            Order::MODE_SINGLE_FIXED => \Yii::t('app', 'mode_single_fixed'),
-            Order::MODE_LONG_FIXED => \Yii::t('app', 'mode_long_fixed'),
-            Order::MODE_LONG_DAILY => \Yii::t('app', 'mode_long_daily')
-        ];
-    }
-
     /**
      * Получение вложений
      *
@@ -301,127 +290,40 @@ class Order extends \yii\db\ActiveRecord
      * @param array $data Array of attachment data
      * @throws \Exception if setting attachments fails
      */
-    public function setAttachments($data): bool
+    public function setAttachments($data)
     {
-        // Валидация входных данных
-        if (empty($data) && empty($this->files)) {
-            return true;
-        }
-
         $transaction = Yii::$app->db->beginTransaction();
         try {
-            $attachments = [];
-            // Обработка загруженных файлов
+            $this->save(false);
             if (!empty($this->files)) {
-                \Yii::error("process Uploaded Files");
-                $attachments = $this->processUploadedFiles();
-            }
-            \Yii::error($attachments);
-            // Обработка URL вложений
-            if (!empty($attachments)) {
-                \Yii::error("process Url Attachments");
-                $this->processUrlAttachments($attachments);
+                \Yii::error($this->files);
+                foreach ($this->files as $item) {
+                    $attach = new Attachment();
+                    $attach->file = $item;
+                    $attach->target_class = Order::class;
+                    if ($attach->upload() && $attach->save()) {
+                        $this->link('attachments', $attach, ['target_class' => Order::class]);
+                    }
+                }
+            } else if ($data) {
+                foreach ($this->attachments as $attachment) {
+                    $this->unlink('attachments', $attachment, true);
+                }
+                foreach ($data as $item) {
+                    $attach = new Attachment();
+                    $attach->url = $item;
+                    $attach->target_class = Order::class;
+                    if ($attach->save()) {
+                        $this->link('attachments', $attach, ['target_class' => Order::class]);
+                    }
+                }
             }
 
             $transaction->commit();
-            return true;
         } catch (\Exception $e) {
             $transaction->rollBack();
             Yii::error('Error setting attachments: ' . $e->getMessage());
             throw $e;
-        }
-    }
-
-    /**
-     * Обработка загруженных файлов
-     *
-     * @throws \Exception
-     */
-    private function processUploadedFiles(): array
-    {
-        $attachments = [];
-        \Yii::error($this->files);
-        foreach ($this->files as $file) {
-            if (!$file instanceof \yii\web\UploadedFile) {
-                continue;
-            }
-            
-            $attachment = new Attachment([
-                'file' => $file,
-                'target_class' => self::class,
-            ]);
-            
-            if ($attachment->upload() && $attachment->save()) {
-                Yii::error('Attachment saved');
-                $attachments[] = $attachment;
-            } else {
-                Yii::error('Failed to upload file: ' . $file->name);
-                Yii::error($attachment->errors);
-            }
-        }
-
-        \Yii::error($attachments);
-
-        // Массовое связывание
-        if (!empty($attachments)) {
-            $this->linkMultiple('attachments', $attachments, ['target_class' => Order::class]);
-        }
-        return $attachments;
-    }
-
-    /**
-     * Обработка URL вложений
-     *
-     * @param array $data
-     * @throws \Exception
-     */
-    private function processUrlAttachments(array $data)
-    {
-        // Получаем существующие вложения одним запросом
-        $existingAttachments = $this->getAttachments()->all();
-        
-        // Удаляем существующие вложения одним запросом
-        if (!empty($existingAttachments)) {
-            $attachmentIds = ArrayHelper::getColumn($existingAttachments, 'id');
-            Attachment::deleteAll(['id' => $attachmentIds]);
-        }
-        
-        // Подготавливаем данные для массовой вставки
-        $attachments = [];
-        foreach (ArrayHelper::getColumn($data, 'url') as $link) {
-            if (empty($link)) continue;
-
-            $attachments[] = [
-                'url' => "$link",
-                'target_class' => self::class,
-                'target_id' => $this->id,
-            ];
-        }
-        
-        // Массовая вставка
-        if (!empty($attachments)) {
-            Yii::$app->db->createCommand()
-                ->batchInsert("attachment", ["url", "target_class", "target_id"], $attachments)
-                ->execute();
-        }
-    }
-
-    /**
-     * Массовое связывание моделей
-     *
-     * @param string $relationName
-     * @param array $models
-     * @param array $extraColumns
-     * @throws \Exception
-     */
-    private function linkMultiple(string $relationName, array $models, array $extraColumns = [])
-    {
-        if (empty($models)) {
-            return;
-        }
-
-        foreach ($models as $model) {
-            $this->link($relationName, $model, $extraColumns);
         }
     }
 
@@ -433,31 +335,6 @@ class Order extends \yii\db\ActiveRecord
     public function getHours()
     {
         return $this->hasMany(Hours::class, ['order_id' => 'id']);
-    }
-
-    /**
-     * Получение деталей заказа
-     *
-     * @return array Array of order details
-     */
-    public function getDetails(): array
-    {
-        return [
-            'id' => $this->id,
-            'status' => $this->statusTitle,
-            'type' => $this->typeName,
-            'date' => $this->date,
-            'comment' => $this->comment,
-            'building' => $this->building,
-            'attachments' => $this->attachments,
-            'coworkers' => $this->coworkers,
-            'requirements' => $this->requirements,
-            'hours' => $this->hours,
-            'requiredCoworkers' => $this->requiredCoworkers,
-            'issetCoworkers' => $this->issetCoworkers,
-            'isFull' => $this->isFull(),
-            'owner' => $this->owner,
-        ];
     }
 
     /**
@@ -503,7 +380,7 @@ class Order extends \yii\db\ActiveRecord
      * @param int|null $type Optional type code
      * @return string Localized type name
      */
-    public function getTypeName(int $type = null): string
+    public function getTypeName($type = null)
     {
         $list = [
             self::TYPE_COWORKER => Yii::t('app', 'Coworker'),
@@ -511,6 +388,16 @@ class Order extends \yii\db\ActiveRecord
             self::TYPE_TECHNIQUE => Yii::t('app', 'Technique'),
         ];
         return $list[$type ?? $this->type] ?? Yii::t('app', 'Unknown Type');
+    }
+
+    /**
+     * Gets related Notification models
+     *
+     * @return ActiveQuery Query for related Notifications
+     */
+    public function getNotifications()
+    {
+        return $this->hasMany(Notification::class, ['order_id' => 'id']);
     }
 
     /**
@@ -542,6 +429,7 @@ class Order extends \yii\db\ActiveRecord
             foreach ($data as $item) {
                 $requirement = new Requirement($item);
                 if ($requirement->save()) {
+//                    \Yii::error($requirement->attributes);
                     $this->link('requirements', $requirement);
                 } else {
                     \Yii::error($requirement->errors);
@@ -553,6 +441,11 @@ class Order extends \yii\db\ActiveRecord
             $transaction->rollBack();
             throw $exception;
         }
+    }
+
+    public function getOderUsers()
+    {
+        return $this->hasMany(OrderUser::class, ['order_id' => 'id']);
     }
 
     /**
@@ -570,7 +463,7 @@ class Order extends \yii\db\ActiveRecord
      *
      * @return int Total number of required coworkers
      */
-    public function getRequiredCoworkers(): int
+    public function getRequiredCoworkers()
     {
         /**
          * @var Requirement $requirement
@@ -587,7 +480,7 @@ class Order extends \yii\db\ActiveRecord
      *
      * @return int Number of assigned coworkers
      */
-    public function getIssetCoworkers(): int
+    public function getIssetCoworkers()
     {
         return count($this->coworkers);
     }
@@ -650,7 +543,7 @@ class Order extends \yii\db\ActiveRecord
      * @param User $coworker The coworker to assign
      * @throws Exception
      */
-    public function assignCoworker(User $coworker): bool
+    public function assignCoworker($coworker)
     {
         $coworkersIds = \yii\helpers\ArrayHelper::getColumn($this->coworkers, 'id');
         if (!in_array($coworker->id, $coworkersIds)) {
@@ -667,7 +560,7 @@ class Order extends \yii\db\ActiveRecord
      * @return bool
      * @throws Exception
      */
-    public function revokeCoworker(User $coworker): bool
+    public function revokeCoworker(User $coworker)
     {
         $coworkersIds = \yii\helpers\ArrayHelper::getColumn($this->coworkers, 'id');
         if (in_array($coworker->id, $coworkersIds)) {

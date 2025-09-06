@@ -12,17 +12,16 @@ class RbacController extends Controller
     {
         $auth = Yii::$app->authManager;
 
+        $auth->removeAll();
+
         $employee = $auth->createRole('employee');
         $auth->add($employee);
 
         $director = $auth->createRole('director');
         $auth->add($director);
-        $auth->addChild($director, $employee);
 
         $admin = $auth->createRole('admin');
         $auth->add($admin);
-        $auth->addChild($admin, $director);
-        $auth->addChild($admin, $employee);
     }
 
     public function actionAssign($username, $role)

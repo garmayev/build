@@ -3,12 +3,14 @@
 namespace app\models;
 
 use yii\db\ActiveRecord;
-use yii\helpers\Url;
+use yii\web\UploadedFile;
 
 /**
  * @property string $url
  * @property string $target_class
  * @property int $target_id
+ *
+ * @property UploadedFile $file
  */
 class Attachment extends ActiveRecord
 {
@@ -28,10 +30,16 @@ class Attachment extends ActiveRecord
         ];
     }
 
+    public function beforeDelete()
+    {
+        unlink(\Yii::getAlias("@webroot").$this->url);
+        return parent::beforeDelete();
+    }
+
     public function upload()
     {
         $name = md5($this->file->baseName);
-        $filename = "{$name}.{$this->file->extension}";
+        $filename = "$name.{$this->file->extension}";
         $this->url = "/upload/$filename";
         return $this->file->saveAs(\Yii::getAlias('@webroot')."/upload/$filename");
     }

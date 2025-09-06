@@ -8,4 +8,4 @@ use yii\web\View;
 
 $this->title = \Yii::t('app', 'Calendar');
 $this->registerJs('window.token = "'.\Yii::$app->user->identity->access_token.'"', View::POS_HEAD);
-echo \yii\helpers\Html::tag("div", "", ["class" => "calendar", "data-lang" => \Yii::$app->language]);
+echo \yii\helpers\Html::tag("div", "", ["class" => "calendar", "data-lang" => \Yii::$app->language, "data-auth-token" => \Yii::$app->user->identity->access_token]);

@@ -21,7 +21,7 @@ class OrderController extends BaseController
                     [
                         'allow' => true,
                         'actions' => ['index', 'view', 'delete', 'coworker', 'material'],
-                        'roles' => ['employee'],
+                        'roles' => ['@'],
                     ],
                     [
                         'allow' => true,
@@ -30,6 +30,12 @@ class OrderController extends BaseController
                     ]
                 ],
             ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'delete' => ['POST'],
+                ]
+            ]
         ]);
     }
 
@@ -78,6 +84,7 @@ class OrderController extends BaseController
     public function actionDelete($id)
     {
         $model = Order::findOne($id);
+        $model->unlinkAll('attachments', true);
         $model->delete();
         return $this->redirect(['/order/index']);
     }
@@ -86,14 +93,17 @@ class OrderController extends BaseController
     {
         if ($id) {
             $model = Order::findOne($id);
+            $this->view->title = \Yii::t('app', 'Update Order #{id}', ['id' => $id]);
         } else {
             $model = new Order();
+            $this->view->title = \Yii::t('app', 'Order coworker');
         }
 
         if (\Yii::$app->request->isPost) {
-            $model->files = UploadedFile::getInstances($model, 'files');
+            $uploadedFiles = UploadedFile::getInstances($model, 'files');
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
-//                \Yii::error($model->attributes);
+                $model->files = $uploadedFiles;
+                $model->setAttachments($uploadedFiles);
                 $result = $model->sendAndUpdateTelegramNotifications();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');

@@ -101,33 +101,33 @@ echo GridView::widget([
     ]
 ]);
 
-    echo GridView::widget([
-        'dataProvider' => new ArrayDataProvider([
-            'allModels' => $model->coworkers
-        ]),
-        'summary' => false,
-        'columns' => [
-            [
-                'attribute' => 'name',
-                'label' => \Yii::t('app', 'Coworkers'),
-                'value' => function (\app\models\User  $model) {
-                    return "{$model->profile->family} {$model->profile->name} {$model->profile->surname}";
-                }
-            ], [
-                'attribute' => 'coworkerProperties',
-                'label' => \Yii::t('app', 'Properties'),
-                'format' => 'raw',
-                'value' => function (app\models\User  $model) {
-                    $result = "";
-                    foreach ($model->userProperties as $userProperty) {
+echo GridView::widget([
+    'dataProvider' => new ArrayDataProvider([
+        'allModels' => $model->coworkers
+    ]),
+    'summary' => false,
+    'columns' => [
+        [
+            'attribute' => 'name',
+            'label' => \Yii::t('app', 'Coworkers'),
+            'value' => function (\app\models\User $model) {
+                return "{$model->profile->family} {$model->profile->name} {$model->profile->surname}";
+            }
+        ], [
+            'attribute' => 'coworkerProperties',
+            'label' => \Yii::t('app', 'Properties'),
+            'format' => 'raw',
+            'value' => function (app\models\User $model) {
+                $result = "";
+                foreach ($model->userProperties as $userProperty) {
 //                        $type = \Yii::t('app', $userProperty->type);
-                        $result .= Html::tag("p", "{$userProperty->property->title} {$userProperty->value} {$userProperty->dimension->title}");
-                    }
-                    return $result;
+                    $result .= Html::tag("p", "{$userProperty->property->title} {$userProperty->value} {$userProperty->dimension->title}");
                 }
-            ],
+                return $result;
+            }
         ],
-        'tableOptions' => [
-            'class' => 'table table-striped'
-        ]
-    ]);
+    ],
+    'tableOptions' => [
+        'class' => 'table table-striped'
+    ]
+]);

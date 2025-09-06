@@ -6,8 +6,7 @@ return [
     'interactive' => true,
     'translator' => ['\Yii::t', 'Yii::t'],
     'sort' => true,
-    'removeUnused' => false,
-    'markUnused' => true,
+    'removeUnused' => true,
     'only' => ['*.php'],
     'except' => [
         '.*',
