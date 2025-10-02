@@ -109,13 +109,13 @@ $config = [
         ],
         'messenger' => [
             'class' => \app\modules\messenger\MessengerModule::class,
-            'telegram_bot_id' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
+            'telegram_bot_id' => '8461352654:AAGxgiJVcy2ScgSO6p5akN4gzzSEC25ZlQM',
             'use_database' => true,
         ],
         'notifications' => [
             'class' => \app\modules\notifications\Module::class,
             'telegramConfig' => [
-                'botToken' => '922790224:AAHG6WJNmj8-0qmjOYZAeNL3Ag0nNPT8rcE',
+                'botToken' => '8461352654:AAGxgiJVcy2ScgSO6p5akN4gzzSEC25ZlQM',
                 'webhookUrl' => '',
                 'commandMap' => [
                     'start' => \app\modules\notifications\handlers\StartHandler::class,
