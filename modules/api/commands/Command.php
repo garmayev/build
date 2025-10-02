@@ -38,7 +38,6 @@ class Command extends Component
     public static function onMessage(string $command, $handler, $contextKey = null)
     {
         $telegram = \Yii::$app->telegram;
-
         if (!isset($telegram->input->message)) {
             return;
         }
@@ -72,7 +71,6 @@ class Command extends Component
             if (!empty($text)) {
                 $args = explode(' ', $text);
                 $inputCommand = array_shift($args);
-    
                 if ($inputCommand === $command) {
                     return static::callHandler($handler, $telegram, $args);
                 }

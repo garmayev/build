@@ -14,8 +14,7 @@ class AttachReportCallback extends BaseCallback implements CommandInterface
         parse_str($args[0] ?? '', $data);
         $orderId = $data["order_id"] ?? null;
         $reportId = $data["report_id"] ?? null;
-        \Yii::error($orderId);
-        \Yii::error($reportId);
+
         if (isset($orderId) && isset($reportId)) {
             $order = \app\models\Order::findOne($orderId);
             $report = \app\models\Report::findOne($reportId);
@@ -25,7 +24,7 @@ class AttachReportCallback extends BaseCallback implements CommandInterface
             ];
             $telegram->editMessageText([
                 'chat_id' => $query->from['id'],
-                'text' => \Yii::t('telegram', 'message_report_attached'),
+                'text' => \Yii::t('telegram', 'message_report_{id}_attached_to_{order_id}', ['id' => $reportId, 'order_id' => $orderId]),
                 'message_id' => $query->message['message_id'],
                 'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
             ]);

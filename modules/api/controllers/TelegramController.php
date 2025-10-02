@@ -14,6 +14,8 @@ use app\modules\api\commands\callback\OrderViewCallback;
 use app\modules\api\commands\callback\OrderListCallback;
 use app\modules\api\commands\callback\OrderStatusProcess;
 use app\modules\api\commands\callback\OrderRejectCallback;
+use app\modules\api\commands\callback\ReportStartCallback;
+use app\modules\api\commands\callback\ReportStopCallback;
 use app\modules\api\commands\callback\StartDayCallback;
 use app\modules\api\commands\callback\StopDayCallback;
 use app\modules\api\commands\Command;
@@ -95,6 +97,8 @@ class TelegramController extends \yii\web\Controller
         Command::onCallback('/day_view', DayViewCallback::class);
         Command::onCallback('/day_detail', DayDetailCallback::class);
         Command::onCallback('/attach_report_to_order', AttachReportCallback::class);
+        Command::onCallback('/report_start', ReportStartCallback::class);
+        Command::onCallback('/report_stop', ReportStopCallback::class);
     }
 
     public function actionBuilder()

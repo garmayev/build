@@ -53,7 +53,7 @@ class CategoryController extends ActiveController
             'class' => \yii\filters\Cors::class,
             'cors' => [
                 'Origin' => ['*'],
-//                'Origin' => ['http://localhost:3000', 'http://build.local', 'https://build.amgcompany.ru'],
+                'Origin' => ['http://localhost:3000', 'http://build.local', 'https://build.amgcompany.ru'],
                 'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
                 'Access-Control-Request-Headers' => ['*'],
                 'Access-Control-Allow-Credentials' => false,

@@ -41,7 +41,7 @@ echo Html::a(\Yii::t('app', 'Add Report'), ["order/report", "id" => $model->id],
 
 echo DetailView::widget([
     'model' => $model,
-    'template' => "<tr><th class='col-5 col-md-4'>{label}</th><td class='col-7 col-md-8 text-break'>{value}.</td></tr>",
+    'template' => "<tr><th class='col-5 col-md-4'>{label}</th><td class='col-7 col-md-8 text-break'>{value}</td></tr>",
     'attributes' => [
         'building.title',
         [
@@ -71,13 +71,22 @@ echo DetailView::widget([
             'format' => 'raw',
             'value' => function (Order $model) {
                 $result = [];
+                $images = [];
                 foreach ($model->attachments as $attachment) {
-                    $result[] = Html::tag('p', Html::a($attachment->url, $attachment->url, ['target' => '_blank']));
+                    if (preg_match('/\.jpg|\.png|\.jpeg|\.svg/', $attachment->url, $matches)) {
+                        $images[] = $attachment->getLink(false);
+                    } else {
+                        $result[] = Html::tag('p', Html::a($attachment->url, $attachment->url, ['target' => '_blank']));
+                    }
                 }
+<<<<<<< HEAD
                 if ($result) {
                     return implode(", ", $result);
                 }
                 return null;
+=======
+                return implode("", $result).Html::tag('div', implode('', $images), ['class' => 'light-gallery']);
+>>>>>>> 7d2b156 (Fixes)
             }
         ],
     ],
@@ -184,11 +193,13 @@ echo DetailView::widget([
                 [
                     'attribute' => 'created_at',
                     'format' => 'datetime',
+                    'label' => \Yii::t('app', 'Created At'),
                     'headerOptions' => ['class' => 'col-md-2 col-2']
                 ],
                 [
                     'attribute' => 'comment',
                     'format' => 'html',
+                    'label' => \Yii::t('app', 'Comment'),
                     'headerOptions' => ['class' => 'col-md-2 col-2'],
                 ],
                 [
@@ -236,3 +247,9 @@ Array.from(galleries).forEach(gallery => {
 })
 JS
 );
+
+$this->registerCss(<<<CSS
+.image-container {
+    margin-right: 10px;
+}
+CSS);

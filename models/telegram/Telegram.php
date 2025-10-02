@@ -7,7 +7,7 @@ use yii\base\Model;
 class Telegram extends Model
 {
     private $curl;
-    private $bit_id;
+    private $bot_id;
 
     public function init()
     {

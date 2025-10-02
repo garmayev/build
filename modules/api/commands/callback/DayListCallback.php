@@ -52,7 +52,8 @@ class DayListCallback extends BaseCallback implements CommandInterface
             ->andWhere(['<=', 'date', "$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year)])
             ->groupBy(['date'])
             ->all();
-        $text = "<b>".\Yii::t('app', 'Stats per {eq}', ['eq' => 'месяц'])."</b>\n\n";
+        $dateMonth = \DateTime::createFromFormat('m', $month);
+        $text = "<b>".\Yii::t('app', 'Stats per {eq}', ['eq' => \Yii::t('app', $dateMonth->format('F'))])." {$year}</b>\n\n";
 //        \Yii::error(count($hours));
         foreach ($hours as $hour) {
             $keyboard[] = [

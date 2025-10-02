@@ -96,7 +96,7 @@ $actionButtons = [
                 'headerOptions' => ['class' => 'col-md-1 hide-on-mobile'],
                 'contentOptions' => ['class' => 'col-md-1 hide-on-mobile'],
                 'filterOptions' => ['class' => 'col-md-1 hide-on-mobile'],
-                'filterInputOptions' => ['class' => 'form-control masked-input'],
+                'filterInputOptions' => ['class' => 'form-control'],
                 'value' => function (User $model) {
                     return !empty($model->profile->phone) ? $model->profile->phone : Html::tag('span', \Yii::t('yii', '(not set)'), ['class' => 'not-set']);
                 }

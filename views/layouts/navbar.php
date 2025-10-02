@@ -16,7 +16,7 @@ use yii\helpers\Html;
             </a>
             <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
                 <li><a href="#" class="dropdown-item"><i class="fas fa-crop mr-3"></i><?= \Yii::t('app', 'Material') ?></a></li>
-                <li><a href="/order/coworker" class="dropdown-item"><i class="fas fa-splotch mr-3"></i><?= \Yii::t('app', 'Coworker') ?></a></li>
+                <li><a href="/order/coworker" class="dropdown-item"><i class="fas fa-splotch mr-3"></i><?= \Yii::t('app', 'works') ?></a></li>
                 <li><a href="#" class="dropdown-item"><i class="fas fa-cube mr-3"></i><?= \Yii::t('app', 'Technique') ?></a></li>
             </ul>
         </li>

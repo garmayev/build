@@ -48,11 +48,11 @@ class User extends ActiveRecord implements IdentityInterface
     public function behaviors()
     {
         return [
-            'blameable' => [
-                'class' => BlameableBehavior::className(),
-                'createdByAttribute' => 'referrer_id',
-                'updatedByAttribute' => false,
-            ]
+//            'blameable' => [
+//                'class' => BlameableBehavior::className(),
+//                'createdByAttribute' => 'referrer_id',
+//                'updatedByAttribute' => false,
+//            ]
         ];
     }
 
@@ -107,6 +107,7 @@ class User extends ActiveRecord implements IdentityInterface
         $transaction = Yii::$app->db->beginTransaction();
         try {
             if ($insert) {
+//                \Yii::error($this->id);
                 $profile = new Profile(['id' => $this->id]);
                 if ($profile->save()) {
                     $transaction->commit();
@@ -396,7 +397,13 @@ class User extends ActiveRecord implements IdentityInterface
             $this->password_hash = \Yii::$app->security->generatePasswordHash($data['password']);
             $this->auth_key = \Yii::$app->security->generateRandomString();
             $this->access_token = \Yii::$app->security->generateRandomString();
-            if ($this->validate() && $this->save()) {
+//            \Yii::error(\Yii::$app->user->isGuest);
+            if (!\Yii::$app->user->isGuest) {
+                $this->referrer_id = \Yii::$app->user->getId();
+            } else {
+                $this->referrer_id = 54;
+            }
+            if ($this->save()) {
                 $transaction->commit();
                 $authManager = \Yii::$app->authManager;
                 $role = $authManager->getRole($data['role']);

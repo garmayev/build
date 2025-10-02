@@ -38,15 +38,24 @@ class CoworkerSearch extends User
     public function search($params)
     {
         if (\Yii::$app->user->can('admin')) {
-            $query = User::find();
+            $query = User::find()->joinWith('profile');
         } else if (\Yii::$app->user->can('director')) {
-            $query = User::find()->where(['referrer_id' => \Yii::$app->user->getId()]);
+            $query = User::find()->joinWith('profile')->where(['referrer_id' => \Yii::$app->user->getId()]);
         } else {
-            $query = User::find()->where(['id' => \Yii::$app->user->getId()]);
+            $query = User::find()->joinWith('profile')->where(['id' => \Yii::$app->user->getId()]);
         }
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort' => [
+                'defaultOrder' => [
+                    'id' => SORT_DESC
+                ],
+                'attributes' => [
+                    'id',
+//                    'name'
+                ],
+            ]
         ]);
 
         $this->load($params);

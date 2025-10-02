@@ -22,7 +22,7 @@ $form = ActiveForm::begin([
     ]
 ]);
 
-$this->title = \Yii::t('app', 'Order coworker');
+$this->title = \Yii::t('app', 'Order works');
 
 $this->params['breadcrumbs'][] = [
     'label' => \Yii::t('app', 'Orders'),
