@@ -13,8 +13,6 @@ class LocationHandler extends BaseCommand implements CommandInterface
         $location = $message->location;
         $user = \app\models\User::findByChatId($message->from->id);
         $session = \Yii::$app->session;
-        session_id($message->from->id);
-        session_start();
         $orderId = $session->get("order_id");
         $order = \app\models\Order::findOne( $orderId );
 

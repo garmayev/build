@@ -26,15 +26,21 @@ class Helper extends Component
         if ($order->comment) {
             $message .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
         }
+        $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
         if ($order->attachments) {
             $message .= \Yii::t("app", "<b>Attachments</b>")."\n";
             foreach ($order->attachments as $attachment) {
-                $message .= \Yii::t("app", "--- {$attachment->getLink(true)}") . "\n";
+                $message .= \Yii::t("app", "--- {<a href='https://build.amgcompany.ru{$attachment->url}'>$attachment->url</a>}") . "\n";
             }
         }
         $currentCount = $order->issetCoworkers;
         $totalRequired = $order->requiredCoworkers;
-        $message .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
+        if ($order->requirements[0]) {
+            $name = $order->requirements[0]->category->title;
+        } else {
+            $name = \Yii::t("app", "Coworkers");
+        }
+        $message .= "\n" . \Yii::t("app", "<b>{name}</b>: <i>{current}/{total}</i>", ["name" => $name, "current" => $currentCount, "total" => $totalRequired]) . "\n";
 /*        foreach ($order->requirements as $requirement) {
             $eq = Helper::equals[$requirement->type];
             $message .= "--- {$requirement->property->title} {$eq} {$requirement->value} {$requirement->dimension->title}\n";
@@ -57,6 +63,7 @@ class Helper extends Component
         $currentCount = $order->issetCoworkers;
         $totalRequired = $order->requiredCoworkers;
         $message .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
+        $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
         return $message;
     }
 
@@ -70,10 +77,11 @@ class Helper extends Component
         if ($order->comment) {
             $text .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
         }
+        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
         if ($order->attachments) {
             $text .= \Yii::t("app", "<b>Attachments</b>")."\n";
             foreach ($order->attachments as $attachment) {
-                $text .= \Yii::t("app", "--- {$attachment->getLink(true)}") . "\n";
+                $text .= \Yii::t("app", "--- {<a href='https://build.amgcompany.ru{$attachment->url}'>$attachment->url</a>}") . "\n";
             }
         }
         $currentCount = $order->issetCoworkers;
@@ -89,6 +97,7 @@ class Helper extends Component
         $text .= \Yii::t("app", "Building: {building}", ['building' => $building->title]) . "\n";
         $text .= \Yii::t("app", "Address: {address}", ['address' => $building->location->address]) . "\n";
         $text .= \Yii::t("app", "Date: {date}", ['date' => \Yii::$app->formatter->asDate($order->date)]) . "\n";
+        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->name} (<a href='tel:+{$order->owner->profile->phone}'>{$order->owner->profile->phone}</a>)\n";
         return $text;
     }
 

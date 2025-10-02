@@ -59,7 +59,7 @@
                                 'url' => ['#'],
                                 'active' => \Yii::$app->controller->id === 'material',
                             ], [
-                                'label' => \Yii::t('app', 'Coworkers'),
+                                'label' => \Yii::t('app', 'works'),
                                 'icon' => 'splotch',
                                 'url' => ['/coworker/index'],
                                 'active' => \Yii::$app->controller->id === 'coworker',

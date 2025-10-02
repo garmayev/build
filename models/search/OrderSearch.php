@@ -20,7 +20,7 @@ class OrderSearch extends Order
             $query = $user->getSuitableOrders();
         }
 
-        \Yii::error($params);
+//        \Yii::error($params);
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [

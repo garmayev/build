@@ -10,7 +10,7 @@ class UserController extends \yii\rest\Controller
 {
     public $modelClass = User::class;
 
-    public function behaviors()
+/*    public function behaviors()
     {
         return [
             'corsFilter' => [
@@ -45,7 +45,7 @@ class UserController extends \yii\rest\Controller
                         'create-account',
                     ]],
                     // Users
-                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login', 'get-roles']],
+                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login']],
                 ],
             ],
             'authenticator' => [
@@ -54,7 +54,7 @@ class UserController extends \yii\rest\Controller
             ],
         ];
     }
-
+*/
     protected function verbs()
     {
         return [
@@ -67,6 +67,7 @@ class UserController extends \yii\rest\Controller
             'check' => ['POST', 'OPTIONS'],
             'login' => ['POST', 'OPTIONS'],
             'set-token' => ['POST', 'OPTIONS'],
+            'get-roles' => ['GET', 'OPTIONS'],
             'change-password' => ['POST', 'OPTIONS'],
             'check-password' => ['POST', 'OPTIONS'],
             'update-account' => ['POST', 'OPTIONS'],
@@ -213,7 +214,7 @@ class UserController extends \yii\rest\Controller
     public function actionCreateAccount()
     {
         $model = new User();
-        if ($model->loadApi(\Yii::$app->request->post())) {
+        if ($model->loadApi(array_merge(\Yii::$app->request->post(), ['referrer_id' => \Yii::$app->user->getId()]))) {
             return ["ok" => true, "message" => \Yii::t("app", "Account created successfully"), 'model' => $model];
         }
         return ["ok" => false, "message" => $model->errors];

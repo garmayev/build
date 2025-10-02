@@ -714,7 +714,7 @@ class Order extends \yii\db\ActiveRecord
                     ]
                 ]
             ]);
-
+//            \Yii::error($formattedMessage);
             // 1. Обновление существующих сообщений
             foreach ($this->telegramMessages as $message) {
                 $message->editMessageText($formattedMessage, $coworkerKeyboard);

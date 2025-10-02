@@ -24,20 +24,27 @@ class OrderController extends Controller
         session_start();
         $models = Order::find()->where(['status' => Order::STATUS_NEW])->all();
         echo "[" . \Yii::$app->formatter->asDatetime(time(), "php:Y-m-d H:i:s") . "]\n";
-        foreach ($models as $model) {
-            $priority = $this->getPriority($model, isset($model->priority_level) ? $model->priority_level - 1 : User::PRIORITY_HIGH);
-            $_SESSION['__id'] = $model->created_by;
-            if ($model->priority_level >= 0) {
-                echo "Order #{$model->id}\n";
-                if ($this->checkTime($model->notify_date, $model)) {
-                    echo "\tOrder {$model->id} is needle to notify\n";
-                    echo "\tPriority: $priority\n";
-                    $model->priority_level = $model->priority_level--;
-                    $model->notify_date = time();
-                    $model->save();
-                    $model->sendAndUpdateTelegramNotifications();
+        try {
+            foreach ($models as $model) {
+                $priority = $this->getPriority($model, isset($model->priority_level) ? $model->priority_level - 1 : User::PRIORITY_HIGH);
+                $_SESSION['__id'] = $model->created_by;
+                if ($model->priority_level >= 0) {
+                    echo "Order #{$model->id}\n";
+                    if ($this->checkTime($model->notify_date, $model)) {
+                        echo "\tOrder {$model->id} is needle to notify\n";
+                        echo "\tPriority: $priority\n";
+                        $model->priority_level = $model->priority_level--;
+                        $model->notify_date = time();
+                        if ($model->save()) {
+                            $model->sendAndUpdateTelegramNotifications();
+                        } else {
+                            \Yii::error($model->errors);
+                        }
+                    }
                 }
             }
+        } catch (\Exception $e) {
+            
         }
     }
 

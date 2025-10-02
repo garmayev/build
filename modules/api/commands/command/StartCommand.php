@@ -14,6 +14,7 @@ class StartCommand extends BaseCommand implements CommandInterface
         $profile = \app\models\User::findByChatId($message->from->id);
 
         if ($profile) {
+//            \Yii::error($telegram->botToken);
             $telegram->sendMessage([
                 'chat_id' => $message->from->id,
                 'text' => \Yii::t('telegram', 'command_already_registered'),

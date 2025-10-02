@@ -35,6 +35,7 @@ class ContactHandler extends BaseCommand implements CommandInterface
                 'chat_id' => $telegram->input->message->from->id,
                 'text' => \Yii::t('telegram', 'command_contact_not_found'),
             ]);
+            return ;
         }
 
         if ($model->can("director")) {
