@@ -184,4 +184,14 @@ class TelegramMessage extends ActiveRecord
             return $result;
         }
     }
+
+    public function sendPhoto()
+    {
+        \Yii::error("Photo");
+    }
+
+    public function sendMediaGroup()
+    {
+        \Yii::error("Media group");
+    }
 }
