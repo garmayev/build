@@ -79,14 +79,7 @@ echo DetailView::widget([
                         $result[] = Html::tag('p', Html::a($attachment->url, $attachment->url, ['target' => '_blank']));
                     }
                 }
-<<<<<<< HEAD
-                if ($result) {
-                    return implode(", ", $result);
-                }
-                return null;
-=======
                 return implode("", $result).Html::tag('div', implode('', $images), ['class' => 'light-gallery']);
->>>>>>> 7d2b156 (Fixes)
             }
         ],
     ],

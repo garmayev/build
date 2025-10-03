@@ -70,8 +70,9 @@ echo GridView::widget([
             'headerOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
             'contentOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
             'value' => function (Order $model) {
-                return $model->owner->name;
-            }
+                return $model->owner->fullName ?? null;
+            },
+            'visible' => \Yii::$app->user->can('admin'),
         ], [
             'class' => \yii\grid\ActionColumn::class,
             'headerOptions' => ['class' => 'text-center col-md-1 col-3'],

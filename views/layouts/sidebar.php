@@ -21,7 +21,7 @@
             <div class="info">
                 <a href="#" class="d-block">
                     <?php
-                    echo \Yii::$app->user->identity->name;
+                    echo \Yii::$app->user->identity->fullName;
                     ?>
                 </a>
             </div>
@@ -63,6 +63,7 @@
                                 'icon' => 'splotch',
                                 'url' => ['/coworker/index'],
                                 'active' => \Yii::$app->controller->id === 'coworker',
+                                'visitble' => \Yii::$app->user->can('director')
                             ], [
                                 'label' => \Yii::t('app', 'Technique'),
                                 'icon' => 'cube',

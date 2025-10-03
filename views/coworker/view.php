@@ -1,10 +1,11 @@
 <?php
 
+use yii\bootstrap4\Nav;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
 /** @var app\models\User $model */
-$this->title = $model->name;
+$this->title = $model->fullName;
 $this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Coworkers'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 $invite_link = "https://t.me/" . \Yii::$app->params["bot_name"] . "?start=" . $model->id;

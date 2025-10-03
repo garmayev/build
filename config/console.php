@@ -44,17 +44,11 @@ $config = [
         ],
         'urlManager' => [
             'enablePrettyUrl' => true,
-            'baseUrl' => 'https://build.amgcompany.ru/',
-            'hostInfo' => 'https://build.amgcompany.ru',
-            'scriptUrl' => 'https://build.amgcompany.ru',
         ],
         'authManager' => [
             'class' => 'yii\rbac\DbManager',
         ],
         'db' => $db,
-        'notificationService' => [
-            'class' => \app\modules\notifications\components\NotificationService::class,
-        ],
     ],
     'controllerMap' => [
         'migrate' => [
@@ -67,26 +61,6 @@ $config = [
         ]
     ],
     'modules' => [
-        'notifications' => [
-            'class' => \app\modules\notifications\Module::class,
-            'telegramConfig' => [
-                'botToken' => '8461352654:AAGxgiJVcy2ScgSO6p5akN4gzzSEC25ZlQM',
-                'webhookUrl' => '',
-                'commandMap' => [
-                    'start' => \app\modules\notifications\handlers\StartHandler::class,
-                    'accept' => \app\modules\notifications\handlers\AcceptHandler::class,
-                    'decline' => \app\modules\notifications\handlers\DeclineHandler::class,
-                ],
-            ],
-            'fcmConfig' => [
-                'apiKey' => '1:523783308536:android:bf22707b654015434aa70d',
-                'senderId' => '523783308536'
-            ],
-            'apnConfig' => [
-                'passphrase' => '',
-                'environment' => YII_ENV_DEV ? 'development' : 'production',
-            ],
-        ]
     ],
     'params' => $params,
 ];

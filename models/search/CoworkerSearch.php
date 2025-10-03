@@ -2,6 +2,7 @@
 
 namespace app\models\search;
 
+use app\models\Coworker;
 use app\models\User;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
@@ -12,7 +13,7 @@ use yii\data\ActiveDataProvider;
  * @property int $category_id
  * @property string $text
  */
-class CoworkerSearch extends User
+class CoworkerSearch extends Coworker
 {
     public string $name = "";
     public string $phone = "";
@@ -38,11 +39,11 @@ class CoworkerSearch extends User
     public function search($params)
     {
         if (\Yii::$app->user->can('admin')) {
-            $query = User::find()->joinWith('profile');
+            $query = Coworker::find()->joinWith('profile');
         } else if (\Yii::$app->user->can('director')) {
-            $query = User::find()->joinWith('profile')->where(['referrer_id' => \Yii::$app->user->getId()]);
+            $query = Coworker::find()->joinWith('profile')->where(['referrer_id' => \Yii::$app->user->getId()]);
         } else {
-            $query = User::find()->joinWith('profile')->where(['id' => \Yii::$app->user->getId()]);
+            $query = Coworker::find()->joinWith('profile')->where(['id' => \Yii::$app->user->getId()]);
         }
 
         $dataProvider = new ActiveDataProvider([
