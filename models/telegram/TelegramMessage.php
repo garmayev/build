@@ -5,6 +5,7 @@ namespace app\models\telegram;
 use app\models\Coworker;
 use app\models\Order;
 use yii\db\ActiveRecord;
+use yii\helpers\Url;
 
 /**
  * @property string|null $chat_id
@@ -87,40 +88,95 @@ class TelegramMessage extends ActiveRecord
         }
     }
 
-    public function send($text = null, $test = false)
+    public function send()
     {
-        $curl = curl_init();
-        $bot_id = \Yii::$app->params['bot_id'];
-
-        $data = [
-            "chat_id" => $this->chat_id,
-            "text" => $text ?? $this->text,
-            "parse_mode" => "html",
-            "reply_markup" => $this->reply_markup,
-        ];
-
-        curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/sendMessage");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_HEADER, false);
-
-        if (($result = curl_exec($curl)) === false) {
-            \Yii::error(curl_error($curl));
+        if (YII_DEBUG) {
+            return null;
         }
-        $raw = json_decode($result, true);
-        if ($raw["ok"]) {
-            $this->id = $raw["result"]["message_id"];
-            $this->message_id = $raw["result"]["message_id"];
-            if ( !$this->save() ) {
-                \Yii::error($this->errors);
+
+        $order = $this->order_id ? Order::findOne($this->order_id) : null;
+        $telegram = \Yii::$app->telegram;
+        $response = null;
+
+        try {
+            $attachments = $order ? $order->attachments : [];
+            $attachmentsCount = is_array($attachments) ? count($attachments) : 0;
+
+            if ($attachmentsCount === 0) {
+                $response = $telegram->sendMessage([
+                    'chat_id' => $this->chat_id,
+                    'text' => $this->text,
+                    'parse_mode' => 'html',
+                    'reply_markup' => !empty($this->reply_markup) ? $this->reply_markup : null,
+                ]);
+
+                if (isset($response->ok) && $response->ok) {
+                    $this->id = $response->result->message_id;
+                    $this->message_id = $response->result->message_id;
+                    if (!$this->save()) {
+                        \Yii::error($this->errors);
+                    }
+                }
+                return $response;
             }
-            curl_close($curl);
-            return $result;
-        } else {
-            \Yii::error($raw);
-            curl_close($curl);
-            return "Something wrong";
+
+            if ($attachmentsCount === 1) {
+                $photoUrl = Url::to($attachments[0]->url, true);
+                $response = $telegram->sendPhoto([
+                    'chat_id' => $this->chat_id,
+                    'photo' => $photoUrl,
+                    'caption' => $this->text,
+                    'parse_mode' => 'html',
+                    'reply_markup' => !empty($this->reply_markup) ? $this->reply_markup : null,
+                ]);
+
+                if (isset($response->ok) && $response->ok) {
+                    $this->id = $response->result->message_id;
+                    $this->message_id = $response->result->message_id;
+                    if (!$this->save()) {
+                        \Yii::error($this->errors);
+                    }
+                }
+                return $response;
+            }
+
+            // 2+ вложений — отправляем медиагруппу
+            $media = [];
+            foreach ($attachments as $index => $attachment) {
+                $item = [
+                    'type' => 'photo',
+                    'media' => Url::to($attachment->url, true),
+                ];
+                $media[] = $item;
+            }
+
+            $telegram->sendMediaGroup([
+                'chat_id' => $this->chat_id,
+                'media' => json_encode($media),
+            ]);
+            $response = $telegram->sendMessage([
+                'chat_id' => $this->chat_id,
+                'text' => $this->text,
+                'parse_mode' => 'html',
+                'reply_markup' => $this->reply_markup ?? null,
+            ]);
+
+            // В ответе на медиагруппу приходит массив сообщений; сохраняем первый message_id
+            if (isset($response->ok) && $response->ok) {
+                $first = $response->result[0] ?? null;
+                if ($first && isset($first->message_id)) {
+                    $this->id = $first->message_id;
+                    $this->message_id = $first->message_id;
+                    if (!$this->save()) {
+                        \Yii::error($this->errors);
+                    }
+                }
+            }
+
+            return $response;
+        } catch (\Throwable $e) {
+            \Yii::error($e->getMessage());
+            return null;
         }
     }
 

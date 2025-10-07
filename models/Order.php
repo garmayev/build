@@ -30,6 +30,7 @@ use yii\helpers\ArrayHelper;
  * @property int $created_at
  * @property int $mode
  * @property double $price
+ * @property string $summary
  *
  * @property string $statusTitle
  * @property array $statusList
@@ -199,6 +200,8 @@ class Order extends \yii\db\ActiveRecord
             [['mode'], 'default', 'value' => self::MODE_LONG_DAILY],
             [['status'], 'default', 'value' => self::STATUS_NEW],
             [['comment'], 'string'],
+            [['summary'], 'string', 'max' => 11],
+            [['summary'], 'default', 'value' => ''],
             [['datetime', 'attachments', 'requirements'], 'safe'],
             [['created_at'], 'default', 'value' => time()],
             [['price'], 'safe'],
@@ -206,6 +209,7 @@ class Order extends \yii\db\ActiveRecord
                 return str_replace(' ', '', $value);
             }],
             [['price'], 'match', 'pattern' => '/^[0-9]{1,12}(\.[0-9]{0,2})?$/'],
+            [['price'], 'default', 'value' => 0],
             [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg','jpeg','png','svg','bmp'], 'maxFiles' => 10],
         ];
     }
@@ -226,7 +230,9 @@ class Order extends \yii\db\ActiveRecord
             'comment' => Yii::t('app', 'Comment'),
             'attachments' => Yii::t('app', 'Attachments'),
             'mode' => Yii::t('app', 'Mode'),
-            'price' => Yii::t('app', 'Price')
+            'price' => Yii::t('app', 'Price'),
+            'summary' => Yii::t('app', 'Summary'),
+            'priority_level' => Yii::t('app', 'Priority'),
         ];
     }
 
@@ -717,7 +723,7 @@ class Order extends \yii\db\ActiveRecord
 //            \Yii::error($formattedMessage);
             // 1. Обновление существующих сообщений
             foreach ($this->telegramMessages as $message) {
-                $message->editMessageText($formattedMessage, $coworkerKeyboard);
+                $message->editText($formattedMessage, $coworkerKeyboard);
             }
 
             // 2. Подготовка данных для массовой проверки

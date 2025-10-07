@@ -18,7 +18,7 @@ class StartDayCommand extends BaseCommand implements CommandInterface
             ->one();
         if (empty($hour)) {
             foreach ($user->orders as $order) {
-                $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id=' . $order->id]];
+                $keyboard[] = [['text' => !empty($order->summary) ? "#{$order->id} " . $order->summary : \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id=' . $order->id]];
             }
             $telegram->sendMessage([
                 'chat_id' => $message->from->id,

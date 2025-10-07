@@ -16,11 +16,11 @@ class MyCallback extends BaseCallback implements CommandInterface
         if ($user->can("director")) {
             $text = \Yii::t("telegram", 'command_orders_my');
             foreach (\app\models\Order::findAll(["created_by" => $user->id]) as $order) {
-                $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
+                $keyboard[] = [[ 'text' => !empty($order->summary) ? "#{$order->id} " . $order->summary : \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
             }
         } else if ($user->can("employee")) {
             foreach ($user->orders as $order) {
-                $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
+                $keyboard[] = [[ 'text' => !empty($order->summary) ? "#{$order->id} " . $order->summary : \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
             }
             $text = (empty($keyboard)) ? \Yii::t('telegram', 'command_empty') : \Yii::t('telegram', 'command_order_list');
         }

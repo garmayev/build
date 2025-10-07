@@ -15,7 +15,7 @@ class OrderListCallback extends BaseCallback implements CommandInterface
         $keyboard = [];
         $orders = $user->getSuitableOrders()->all();
         foreach ($orders as $order) {
-            $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=list&id=' . $order->id]];
+            $keyboard[] = [['text' => !empty($order->summary) ? "#{$order->id} " . $order->summary : \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=list&id=' . $order->id]];
         };
         $keyboard[] = [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']];
         $telegram->editMessageText([

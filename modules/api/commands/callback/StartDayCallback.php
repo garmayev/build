@@ -22,7 +22,7 @@ class StartDayCallback extends BaseCallback implements CommandInterface
         \Yii::$app->session->open();
 
         foreach ($user->getOrders()->andWhere(['not', ['order.id' => \yii\helpers\ArrayHelper::getColumn($hour, 'order_id')]])->all() as $order) {
-            $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id=' . $order->id]];
+            $keyboard[] = [['text' => !empty($order->summary) ? "#{$order->id} " . $order->summary : \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order id=' . $order->id]];
         }
         $keyboard[] = [['text' => \Yii::t('telegram', 'button_back'), 'callback_data' => '/menu']];
         $telegram->editMessageText([

@@ -93,8 +93,12 @@ class OrderController extends BaseController
                 $result = $model->sendAndUpdateTelegramNotifications();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
+            } else {
+                \Yii::error($model->errors);
+                \Yii::$app->session->setFlash('danger', \Yii::t('app', 'Order is not saved'));
             }
-            \Yii::$app->session->setFlash('danger', \Yii::t('app', 'Order is not saved'));
+        } else {
+            $model->loadDefaultValues();
         }
 
         return $this->render('coworker', [

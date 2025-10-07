@@ -35,7 +35,8 @@
     "bower-asset/font-awesome": "^6.3",
     "microinginer/yii2-dropdown-action-column": "dev-master",
     "aki/yii2-bot-telegram": "*",
-    "ext-calendar": "*"
+    "ext-calendar": "*",
+    "kartik-v/yii2-widget-datepicker": "dev-master"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",

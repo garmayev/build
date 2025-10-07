@@ -10,7 +10,7 @@ class UserController extends \yii\rest\Controller
 {
     public $modelClass = User::class;
 
-/*    public function behaviors()
+    public function behaviors()
     {
         return [
             'corsFilter' => [
@@ -45,16 +45,16 @@ class UserController extends \yii\rest\Controller
                         'create-account',
                     ]],
                     // Users
-                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login']],
+                    ['allow' => true, 'roles' => ['@'], 'actions' => ['check', 'list', 'login', 'create-profile', 'create-account', 'update-account', 'update-profile']],
                 ],
             ],
             'authenticator' => [
                 'class' => \yii\filters\auth\HttpBearerAuth::class,
-                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login', 'register', 'check-username', 'check-email', 'set-token'],
+                'except' => ['OPTIONS', 'PREFLIGHT', 'HEAD', 'login', 'register', 'check-username', 'check-email', 'set-token', 'create-profile', 'create-account', 'update-profile', 'update-account'],
             ],
         ];
     }
-*/
+
     protected function verbs()
     {
         return [
@@ -72,6 +72,8 @@ class UserController extends \yii\rest\Controller
             'check-password' => ['POST', 'OPTIONS'],
             'update-account' => ['POST', 'OPTIONS'],
             'update-profile' => ['POST', 'OPTIONS'],
+            'create-account' => ['POST', 'OPTIONS'],
+            'create-profile' => ['POST', 'OPTIONS'],
         ];
     }
 

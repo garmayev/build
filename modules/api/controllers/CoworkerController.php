@@ -268,9 +268,9 @@ class CoworkerController extends ActiveController
         $model = User::findOne($id);
         try {
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
-                return ['ok' => true, 'model' => $model];
+                return ['ok' => true, 'model' => $model, 'message' => \Yii::t('app', 'Advanced settings is saved')];
             }
-            return ["ok" => false];
+            return ["ok" => false, 'message' => $model->errors];
         } catch (\Exception $exception) {
             \Yii::error($exception->getMessage());
             throw $exception;

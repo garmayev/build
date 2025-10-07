@@ -17,7 +17,7 @@ class StopReportCommand extends Command implements CommandInterface
         $keyboard = [];
         \Yii::error($report_id);
         foreach ($user->orders as $order) {
-                $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/attach_report_to_order order_id=' . $order->id . '&report_id=' . $report_id]];
+                $keyboard[] = [['text' => !empty($order->summary) ? "#{$order->id} " . $order->summary : \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/attach_report_to_order order_id=' . $order->id . '&report_id=' . $report_id]];
         }
         \Yii::$app->session->remove('report_id');
         $keyboard[] = [['text' => \Yii::t('telegram', 'button_menu'), 'callback_data' => '/menu']];

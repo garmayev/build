@@ -30,7 +30,7 @@ class DayViewCallback extends BaseCallback implements CommandInterface
                 $unPaidHours += $hour->count;
             }
             $workedHours += $hour->count;
-            $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $hour->order_id]), 'callback_data' => '/day_detail date='.$hour->date.'&order_id='.$hour->order_id]];
+            $keyboard[] = [['text' => !empty($hour->order->summary) ? '#73 ' . $hour->order->summary : \Yii::t('app', 'Order #{id}', ['id' => $hour->order_id]), 'callback_data' => '/day_detail date='.$hour->date.'&order_id='.$hour->order_id]];
         }
         $date_array = explode('-', $date);
         $text .= "<b>".\Yii::t('app', 'Orders count')."</b>: <i>".count($hours)."</i>\n\n";

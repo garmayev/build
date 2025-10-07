@@ -41,7 +41,6 @@ echo Html::a(\Yii::t('app', 'Add Report'), ["order/report", "id" => $model->id],
 
 echo DetailView::widget([
     'model' => $model,
-    'template' => "<tr><th class='col-5 col-md-4'>{label}</th><td class='col-7 col-md-8 text-break'>{value}</td></tr>",
     'attributes' => [
         'building.title',
         [
@@ -79,14 +78,7 @@ echo DetailView::widget([
                         $result[] = Html::tag('p', Html::a($attachment->url, $attachment->url, ['target' => '_blank']));
                     }
                 }
-<<<<<<< HEAD
-                if ($result) {
-                    return implode(", ", $result);
-                }
-                return null;
-=======
                 return implode("", $result).Html::tag('div', implode('', $images), ['class' => 'light-gallery']);
->>>>>>> 7d2b156 (Fixes)
             }
         ],
     ],

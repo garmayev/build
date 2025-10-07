@@ -16,9 +16,9 @@ class ReportStopCallback extends BaseCallback implements CommandInterface
         $report = new \app\models\Report();
         if ($report->save()) {
             \Yii::$app->session->set('report_id', $report->id);
-            \Yii::error($report->id);
+//            \Yii::error($report->id);
         } else {
-            \Yii::error($report->errors);
+//            \Yii::error($report->errors);
             return ;
         }
 
