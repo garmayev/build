@@ -147,16 +147,18 @@ class TelegramMessage extends ActiveRecord
                     'type' => 'photo',
                     'media' => Url::to($attachment->url, true),
                 ];
-                if ($index === 0 && !empty($this->text)) {
-                    $item['caption'] = $this->text;
-                    $item['parse_mode'] = 'html';
-                }
                 $media[] = $item;
             }
 
-            $response = $telegram->sendMediaGroup([
+            $telegram->sendMediaGroup([
                 'chat_id' => $this->chat_id,
                 'media' => json_encode($media),
+            ]);
+            $response = $telegram->sendMessage([
+                'chat_id' => $this->chat_id,
+                'text' => $this->text,
+                'parse_mode' => 'html',
+                'reply_markup' => $this->reply_markup ?? null,
             ]);
 
             // В ответе на медиагруппу приходит массив сообщений; сохраняем первый message_id

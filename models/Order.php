@@ -30,6 +30,7 @@ use yii\helpers\ArrayHelper;
  * @property int $created_at
  * @property int $mode
  * @property double $price
+ * @property string $summary
  *
  * @property string $statusTitle
  * @property array $statusList
@@ -199,6 +200,8 @@ class Order extends \yii\db\ActiveRecord
             [['mode'], 'default', 'value' => self::MODE_LONG_DAILY],
             [['status'], 'default', 'value' => self::STATUS_NEW],
             [['comment'], 'string'],
+            [['summary'], 'string', 'max' => 11],
+            [['summary'], 'default', 'value' => ''],
             [['datetime', 'attachments', 'requirements'], 'safe'],
             [['created_at'], 'default', 'value' => time()],
             [['price'], 'safe'],
@@ -206,6 +209,7 @@ class Order extends \yii\db\ActiveRecord
                 return str_replace(' ', '', $value);
             }],
             [['price'], 'match', 'pattern' => '/^[0-9]{1,12}(\.[0-9]{0,2})?$/'],
+            [['price'], 'default', 'value' => 0],
             [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg','jpeg','png','svg','bmp'], 'maxFiles' => 10],
         ];
     }
@@ -226,7 +230,9 @@ class Order extends \yii\db\ActiveRecord
             'comment' => Yii::t('app', 'Comment'),
             'attachments' => Yii::t('app', 'Attachments'),
             'mode' => Yii::t('app', 'Mode'),
-            'price' => Yii::t('app', 'Price')
+            'price' => Yii::t('app', 'Price'),
+            'summary' => Yii::t('app', 'Summary'),
+            'priority_level' => Yii::t('app', 'Priority'),
         ];
     }
 
@@ -474,7 +480,7 @@ class Order extends \yii\db\ActiveRecord
      */
     public function getCoworkers(): ActiveQuery
     {
-        return $this->hasMany(Coworker::class, ['coworker.id' => 'user_id'])
+        return $this->hasMany(User::class, ['id' => 'user_id'])
             ->viaTable('order_user', ['order_id' => 'id']);
     }
 
@@ -648,7 +654,7 @@ class Order extends \yii\db\ActiveRecord
      */
     public function getOwner(): ActiveQuery
     {
-        return $this->hasOne(Director::class, ['id' => 'created_by']);
+        return $this->hasOne(User::class, ['id' => 'created_by']);
     }
 
     /**
@@ -703,83 +709,82 @@ class Order extends \yii\db\ActiveRecord
     public function sendAndUpdateTelegramNotifications()
     {
         try {
-            if (!YII_DEBUG) {
-                // Генерация данных сообщения один раз
-                $messageText = Helper::generateTelegramMessage($this->id);
-                $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $this->id]) . "</b>\n" . $messageText;
-                $coworkerKeyboard = json_encode([
-                    'inline_keyboard' => [
-                        [
-                            ['text' => Yii::t('app', 'Accept'), 'callback_data' => "/accept order_id={$this->id}"],
-                            ['text' => Yii::t('app', 'Decline'), 'callback_data' => "/decline order_id={$this->id}"]
-                        ]
+            // Генерация данных сообщения один раз
+            $messageText = Helper::generateTelegramMessage($this->id);
+            $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $this->id]) . "</b>\n" . $messageText;
+            $coworkerKeyboard = json_encode([
+                'inline_keyboard' => [
+                    [
+                        ['text' => Yii::t('app', 'Accept'), 'callback_data' => "/accept order_id={$this->id}"],
+                        ['text' => Yii::t('app', 'Decline'), 'callback_data' => "/decline order_id={$this->id}"]
                     ]
-                ]);
- 
-                // 1. Обновление существующих сообщений
-                foreach ($this->telegramMessages as $message) {
-                    $message->editMessageText($formattedMessage, $coworkerKeyboard);
-                }
-
-                // 2. Подготовка данных для массовой проверки
-                $assignedCoworkerIds = ArrayHelper::getColumn($this->coworkers, 'id');
-                $existingChatIds = ArrayHelper::getColumn($this->telegramMessages, 'chat_id');
-
-                // 3. Отправка уведомлений подходящим сотрудникам
-                foreach ($this->suitableCoworkers as $coworker) {
-                    if ($coworker->status !== User::STATUS_ACTIVE ||
-                        in_array($coworker->id, $assignedCoworkerIds)) {
-                        continue;
-                    }
-
-                    $profile = $coworker->profile;
-                    if (!$profile) continue;
-
-                    // Telegram сообщения
-                    if ($profile->chat_id) {
-                        if (!in_array($profile->chat_id, $existingChatIds)) {
-                            $telegramMsg = new TelegramMessage([
-                                'chat_id' => $profile->chat_id,
-                                'order_id' => $this->id,
-                                'text' => $formattedMessage,
-                                'reply_markup' => $coworkerKeyboard,
-                                'created_at' => time(),
-                                'updated_at' => time(),
-                            ]);
-                            $telegramMsg->send();
-                        }
-                    }
-                    // Push-уведомления
-    /*                elseif ($profile->device_id) {
-                        $expoMessage = (new ExpoMessage())
-                            ->setTitle(\Yii::t('app', 'New Order') . ' #' . $this->id)
-                            ->setBody(Helper::orderDetailsPlain($this))
-                            ->setTo($profile->device_id)
-                            ->setData(['url' => 'build://amgcompany.ru/--/order/' . $this->id, 'id' => $this->id])
-                            ->setChannelId('new-order')
-                            ->setCategoryId('new-order')
-                            ->playSound();
-                        (new Expo())->send($expoMessage)->push();
-                    } */
-                }
-
-                // 4. Уведомление владельца
-                if (!$this->isOwnerNotified()) {
-                    $telegramMsg = new TelegramMessage([
-                        'chat_id' => $this->owner->profile->chat_id,
-                        'order_id' => $this->id,
-                        'text' => "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $messageText,
-                        'reply_markup' => json_encode([
-                            'inline_keyboard' => [
-                                [['text' => \Yii::t('app', 'Set order to status process'), 'callback_data' => "/order_status_process order_id={$this->id}"]],
-                            ]
-                        ]),
-                        'created_at' => time(),
-                        'updated_at' => time(),
-                    ]);
-                    $telegramMsg->send();
-                }
+                ]
+            ]);
+//            \Yii::error($formattedMessage);
+            // 1. Обновление существующих сообщений
+            foreach ($this->telegramMessages as $message) {
+                $message->editText($formattedMessage, $coworkerKeyboard);
             }
+
+            // 2. Подготовка данных для массовой проверки
+            $assignedCoworkerIds = ArrayHelper::getColumn($this->coworkers, 'id');
+            $existingChatIds = ArrayHelper::getColumn($this->telegramMessages, 'chat_id');
+
+            // 3. Отправка уведомлений подходящим сотрудникам
+            foreach ($this->suitableCoworkers as $coworker) {
+                if ($coworker->status !== User::STATUS_ACTIVE ||
+                    in_array($coworker->id, $assignedCoworkerIds)) {
+                    continue;
+                }
+
+                $profile = $coworker->profile;
+                if (!$profile) continue;
+
+                // Telegram сообщения
+                if ($profile->chat_id) {
+                    if (!in_array($profile->chat_id, $existingChatIds)) {
+                        $telegramMsg = new TelegramMessage([
+                            'chat_id' => $profile->chat_id,
+                            'order_id' => $this->id,
+                            'text' => $formattedMessage,
+                            'reply_markup' => $coworkerKeyboard,
+                            'created_at' => time(),
+                            'updated_at' => time(),
+                        ]);
+                        $telegramMsg->send();
+                    }
+                }
+                // Push-уведомления
+/*                elseif ($profile->device_id) {
+                    $expoMessage = (new ExpoMessage())
+                        ->setTitle(\Yii::t('app', 'New Order') . ' #' . $this->id)
+                        ->setBody(Helper::orderDetailsPlain($this))
+                        ->setTo($profile->device_id)
+                        ->setData(['url' => 'build://amgcompany.ru/--/order/' . $this->id, 'id' => $this->id])
+                        ->setChannelId('new-order')
+                        ->setCategoryId('new-order')
+                        ->playSound();
+                    (new Expo())->send($expoMessage)->push();
+                } */
+            }
+
+            // 4. Уведомление владельца
+            if (!$this->isOwnerNotified()) {
+                $telegramMsg = new TelegramMessage([
+                    'chat_id' => $this->owner->profile->chat_id,
+                    'order_id' => $this->id,
+                    'text' => "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $messageText,
+                    'reply_markup' => json_encode([
+                        'inline_keyboard' => [
+                            [['text' => \Yii::t('app', 'Set order to status process'), 'callback_data' => "/order_status_process order_id={$this->id}"]],
+                        ]
+                    ]),
+                    'created_at' => time(),
+                    'updated_at' => time(),
+                ]);
+                $telegramMsg->send();
+            }
+
         } catch (\Exception $e) {
             Yii::error('Error in sendAndUpdateTelegramNotifications: ' . $e->getMessage());
         }
