@@ -83,7 +83,7 @@ class OrderController extends \yii\rest\ActiveController
         // Добавляем аутентификатор ПОСЛЕ CORS
         $behaviors['authenticator'] = [
             'class' => \yii\filters\auth\HttpBearerAuth::class,
-            'except' => ['options', 'images', 'status', 'index', 'view'],
+            'except' => ['options'],
         ];
 
         // Настройка контроля доступа
@@ -91,7 +91,7 @@ class OrderController extends \yii\rest\ActiveController
             'class' => \yii\filters\AccessControl::class,
             'rules' => [
                 ['allow' => true, 'roles' => ['?'], 'actions' => ['images', 'status', 'view']],
-                ['allow' => true, 'roles' => ['?'], 'actions' => [
+                ['allow' => true, 'roles' => ['@'], 'actions' => [
                     'index',
                     'view',
                     'update',
