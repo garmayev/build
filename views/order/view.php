@@ -106,24 +106,13 @@ echo DetailView::widget([
                         'headerOptions' => ['class' => 'col-md-2 col-2'],
                     ],
                     [
-                        'attribute' => 'property.title',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
-                    ],
-                    [
                         'attribute' => 'type',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
+                        'label' => \Yii::t('app', 'Properties'),
+                        'headerOptions' => ['class' => 'col-md-8 col-8'],
                         'value' => function (\app\models\Requirement $model) {
-                            return \Yii::t('app', $model->type);
+                            return $model->property->title .' '.\Yii::t('app', $model->type).' '.$model->value.' '.$model->dimension->title;
                         }
                     ],
-                    [
-                        'attribute' => 'value',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
-                    ],
-                    [
-                        'attribute' => 'dimension.title',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
-                    ]
                 ],
                 'tableOptions' => [
                     'class' => 'table table-striped'

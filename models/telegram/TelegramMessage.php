@@ -163,13 +163,10 @@ class TelegramMessage extends ActiveRecord
 
             // В ответе на медиагруппу приходит массив сообщений; сохраняем первый message_id
             if (isset($response->ok) && $response->ok) {
-                $first = $response->result[0] ?? null;
-                if ($first && isset($first->message_id)) {
-                    $this->id = $first->message_id;
-                    $this->message_id = $first->message_id;
-                    if (!$this->save()) {
-                        \Yii::error($this->errors);
-                    }
+                $this->id = $response->result->message_id;
+                $this->message_id = $response->result->message_id;
+                if (!$this->save()) {
+                    \Yii::error($this->errors);
                 }
             }
 

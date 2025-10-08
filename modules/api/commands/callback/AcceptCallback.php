@@ -26,6 +26,7 @@ class AcceptCallback extends BaseCallback implements CommandInterface
             }
 
             $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $order->id])->all();
+
             if (count($messages)) {
                 if ($order->isFull()) {
                     $order->status = \app\models\Order::STATUS_PROCESS;
@@ -36,9 +37,6 @@ class AcceptCallback extends BaseCallback implements CommandInterface
                         } else {
                             $message->remove();
                         }
-                    }
-                    if ($order->owner->profile->chat_id) {
-                        $message->editMessageText(\app\components\Helper::generateTelegramHiddenMessage($order->id), null);
                     }
                 } else {
                     foreach ($messages as $message) {
@@ -65,6 +63,18 @@ class AcceptCallback extends BaseCallback implements CommandInterface
                     'text' => \app\components\Helper::orderDetails($order),
                     'reply_markup' => null,
                 ]);
+            }
+        } else {
+            $order->status = \app\models\Order::STATUS_PROCESS;
+            $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $order->id])->all();
+            $order->save();
+            \Yii::error(count($messages));
+            foreach ($messages as $message) {
+                if (in_array($message->chat_id, array_merge(\yii\helpers\ArrayHelper::map($order->coworkers, 'profile.chat_id', 'profile.chat_id'), [$order->owner->profile->chat_id => $order->owner->profile->chat_id]))) {
+                    $message->editMessageText(\app\components\Helper::generateTelegramHiddenMessage($order->id), null);
+                } else {
+                    $message->remove();
+                }
             }
         }
     }

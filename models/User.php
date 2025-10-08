@@ -48,11 +48,11 @@ class User extends ActiveRecord implements IdentityInterface
     public function behaviors()
     {
         return [
-//            'blameable' => [
-//                'class' => BlameableBehavior::className(),
-//                'createdByAttribute' => 'referrer_id',
-//                'updatedByAttribute' => false,
-//            ]
+            'blameable' => [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'referrer_id',
+                'updatedByAttribute' => false,
+            ]
         ];
     }
 
