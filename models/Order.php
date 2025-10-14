@@ -210,7 +210,7 @@ class Order extends \yii\db\ActiveRecord
             }],
             [['price'], 'match', 'pattern' => '/^[0-9]{1,12}(\.[0-9]{0,2})?$/'],
             [['price'], 'default', 'value' => 0],
-            [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg','jpeg','png','svg','bmp'], 'maxFiles' => 10],
+            [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg','jpeg','png','svg','bmp', 'gif'], 'maxFiles' => 10],
         ];
     }
 
@@ -352,7 +352,6 @@ class Order extends \yii\db\ActiveRecord
     private function processUploadedFiles(): array
     {
         $attachments = [];
-        \Yii::error($this->files);
         foreach ($this->files as $file) {
             if (!$file instanceof \yii\web\UploadedFile) {
                 continue;
@@ -364,15 +363,12 @@ class Order extends \yii\db\ActiveRecord
             ]);
             
             if ($attachment->upload() && $attachment->save()) {
-                Yii::error('Attachment saved');
                 $attachments[] = $attachment;
             } else {
                 Yii::error('Failed to upload file: ' . $file->name);
                 Yii::error($attachment->errors);
             }
         }
-
-        \Yii::error($attachments);
 
         // Массовое связывание
         if (!empty($attachments)) {
