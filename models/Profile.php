@@ -47,6 +47,23 @@ class Profile extends ActiveRecord
         ];
     }
 
+    public function fields()
+    {
+        return [
+            'id',
+            'family',
+            'name',
+            'surname',
+            'birthday',
+            'phone',
+            'chat_id',
+            'device_id',
+            'priority' => function (Profile $model) {
+                return $model->user->priority_level;
+            }
+        ];
+    }
+
     public function getFullName(): string
     {
         return trim("$this->family $this->name $this->surname");

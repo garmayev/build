@@ -50,9 +50,10 @@ class AcceptCallback extends BaseCallback implements CommandInterface
                         } else {
                             $replyMarkup = $message->reply_markup;
                         }
-                        $text = "";
+                        $text = $header . \app\components\Helper::generateTelegramMessage($order->id);
+//                        \Yii::error($text);
                         $message->editMessageText(
-                            $header . \app\components\Helper::generateTelegramMessage($order->id),
+                            $text,
                             $replyMarkup
                         );
                     }
@@ -68,7 +69,7 @@ class AcceptCallback extends BaseCallback implements CommandInterface
             $order->status = \app\models\Order::STATUS_PROCESS;
             $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $order->id])->all();
             $order->save();
-            \Yii::error(count($messages));
+//            \Yii::error(count($messages));
             foreach ($messages as $message) {
                 if (in_array($message->chat_id, array_merge(\yii\helpers\ArrayHelper::map($order->coworkers, 'profile.chat_id', 'profile.chat_id'), [$order->owner->profile->chat_id => $order->owner->profile->chat_id]))) {
                     $message->editMessageText(\app\components\Helper::generateTelegramHiddenMessage($order->id), null);

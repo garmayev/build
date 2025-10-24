@@ -738,6 +738,7 @@ class Order extends \yii\db\ActiveRecord
 
                 // Telegram сообщения
                 if ($profile->chat_id) {
+                    \Yii::error($profile->id);
                     if (!in_array($profile->chat_id, $existingChatIds)) {
                         $telegramMsg = new TelegramMessage([
                             'chat_id' => $profile->chat_id,
