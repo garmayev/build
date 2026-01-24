@@ -64,7 +64,10 @@ JS
                     'class' => 'form-control',
                 ],
                 'value' => function (Coworker $model) {
-                    $profileName = ltrim("{$model->profile->family} {$model->profile->name} {$model->profile->surname}");
+                    $profileName = "";
+                    if (isset($model->profile)) {
+                        $profileName = ltrim("{$model->profile->family} {$model->profile->name} {$model->profile->surname}");
+                    }
                     return strlen($profileName) ? $profileName : $model->username;
                 }
             ],
@@ -72,9 +75,9 @@ JS
                 'attribute' => 'email',
                 'format' => 'email',
                 'label' => Yii::t('app', 'Email'),
-                'headerOptions' => ['class' => 'col-md-2 hide-on-mobile'],
-                'contentOptions' => ['class' => 'col-md-2 hide-on-mobile'],
-                'filterOptions' => ['class' => 'col-md-2 hide-on-mobile'],
+                'headerOptions' => ['class' => 'col-md-1 hide-on-mobile'],
+                'contentOptions' => ['class' => 'col-md-1 hide-on-mobile'],
+                'filterOptions' => ['class' => 'col-md-1 hide-on-mobile'],
             ],
             [
                 'attribute' => 'phone',
@@ -97,9 +100,10 @@ JS
                 'contentOptions' => ['class' => 'col-md-1 hide-on-mobile'],
                 'filterInputOptions' => ['type' => 'date', 'class' => 'form-control'],
                 'value' => function (User $model) {
-                    return Yii::$app->formatter->asDate($model->profile->birthday);
+                    return Yii::$app->formatter->asDate($model->profile ? $model->profile->birthday : "");
                 }
             ],
+            'priority',
             [
                 'format' => 'raw',
                 'label' => \Yii::t('app', 'Devices'),
@@ -107,9 +111,12 @@ JS
                 'filterOptions' => ['class' => 'col-md-2 hide-on-mobile'],
                 'contentOptions' => ['class' => 'col-md-2 hide-on-mobile'],
                 'value' => function (User $model) {
-                    $result = $model->profile->chat_id ? Html::tag('span', "", ['class' => 'fab fa-telegram mx-2']) : '';
-                    $result .= $model->profile->device_id ? Html::tag('span', "", ['class' => 'fas fa-mobile mx-2']) : '';
-                    return !empty($result) ? $result : Html::tag('span', \Yii::t('yii', '(not set)'), ['class' => 'not-set']);
+                    if ($model->profile) {
+                        $result = $model->profile->chat_id ? Html::tag('span', "", ['class' => 'fab fa-telegram mx-2']) : '';
+                        $result .= $model->profile->device_id ? Html::tag('span', "", ['class' => 'fas fa-mobile mx-2']) : '';
+                        return !empty($result) ? $result : Html::tag('span', \Yii::t('yii', '(not set)'), ['class' => 'not-set']);
+                    }
+                    return null;
                 }
             ],
             [

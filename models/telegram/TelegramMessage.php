@@ -91,8 +91,10 @@ class TelegramMessage extends ActiveRecord
     public function send()
     {
         if (YII_DEBUG) {
-            return null;
+//            return null;
         }
+
+        if (empty($this->chat_id)) return;
 
         $order = $this->order_id ? Order::findOne($this->order_id) : null;
         $telegram = \Yii::$app->telegram;
@@ -137,6 +139,7 @@ class TelegramMessage extends ActiveRecord
                         \Yii::error($this->errors);
                     }
                 }
+//                \Yii::error($response);
                 return $response;
             }
 

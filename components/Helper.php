@@ -26,7 +26,9 @@ class Helper extends Component
         if ($order->comment) {
             $message .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
         }
-        $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
+        if ($order->owner->profile) {
+            $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->fullName} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
+        }
         if ($order->attachments) {
             $message .= \Yii::t("app", "<b>Attachments</b>")."\n";
             foreach ($order->attachments as $attachment) {

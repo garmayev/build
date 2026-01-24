@@ -57,11 +57,12 @@ class TelegramController extends \yii\web\Controller
     public function actionCallback()
     {
         $telegram = \Yii::$app->telegram;
+//        \Yii::error($telegram->attributes);
         Command::onContact(ContactHandler::class);
         Command::onLocation(LocationHandler::class);
         Command::onPhoto(PhotoHandler::class);
 
-        Command::onMessage('waiting_for_name', NameHandler::class, 'name');
+//        Command::onMessage('waiting_for_name', NameHandler::class, 'name');
         Command::onMessage('/start', StartCommand::class);
         Command::onMessage('/start_day', StartDayCommand::class);
         Command::onMessage('/menu', MenuCommand::class);

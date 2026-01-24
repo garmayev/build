@@ -44,6 +44,7 @@ $config = [
         ],
         'urlManager' => [
             'enablePrettyUrl' => true,
+            'hostInfo' => 'https://test-build.amgcompany.ru',
         ],
         'authManager' => [
             'class' => 'yii\rbac\DbManager',

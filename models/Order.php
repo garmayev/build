@@ -361,7 +361,7 @@ class Order extends \yii\db\ActiveRecord
     private function processUploadedFiles(): array
     {
         $attachments = [];
-        \Yii::error($this->files);
+//        \Yii::error($this->files);
         foreach ($this->files as $file) {
             if (!$file instanceof \yii\web\UploadedFile) {
                 continue;
@@ -381,7 +381,7 @@ class Order extends \yii\db\ActiveRecord
             }
         }
 
-        \Yii::error($attachments);
+//        \Yii::error($attachments);
 
         // Массовое связывание
         if (!empty($attachments)) {
@@ -816,6 +816,7 @@ class Order extends \yii\db\ActiveRecord
             // Генерация данных сообщения один раз
             $messageText = Helper::generateTelegramMessage($this->id);
             $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $this->id]) . "</b>\n" . $messageText;
+//            \Yii::error($formattedMessage);
             $coworkerKeyboard = json_encode([
                 'inline_keyboard' => [
                     [
@@ -843,10 +844,11 @@ class Order extends \yii\db\ActiveRecord
 
                 $profile = $coworker->profile;
                 if (!$profile) continue;
-
                 // Telegram сообщения
                 if ($profile->chat_id) {
-                    if (!in_array($profile->chat_id, $existingChatIds)) {
+                    $message = TelegramMessage::find()->where(['chat_id' => $profile->chat_id])->andWhere(['order_id' => $this->id])->one();
+//                    \Yii::error($coworkerKeyboard);
+                    if (!in_array($profile->chat_id, $existingChatIds) && empty($message)) {
                         $telegramMsg = new TelegramMessage([
                             'chat_id' => $profile->chat_id,
                             'order_id' => $this->id,
@@ -873,7 +875,7 @@ class Order extends \yii\db\ActiveRecord
             }
 
             // 4. Уведомление владельца
-            if (!$this->isOwnerNotified()) {
+            if (!$this->isOwnerNotified() && $this->owner->profile) {
                 $telegramMsg = new TelegramMessage([
                     'chat_id' => $this->owner->profile->chat_id,
                     'order_id' => $this->id,
@@ -891,6 +893,7 @@ class Order extends \yii\db\ActiveRecord
 
         } catch (\Exception $e) {
             Yii::error('Error in sendAndUpdateTelegramNotifications: ' . $e->getMessage());
+            \Yii::error($e);
         }
         return [];
     }

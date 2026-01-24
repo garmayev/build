@@ -90,6 +90,11 @@ class User extends ActiveRecord implements IdentityInterface
         return self::findOne(['username' => $username]);
     }
 
+    public static function findByChatId($chat_id)
+    {
+        return self::find()->joinWith('profile')->where(['chat_id' => $chat_id])->one();
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -121,7 +126,9 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function getFullName()
     {
-        $name = ltrim("{$this->profile->family} {$this->profile->name} {$this->profile->surname}");
+        if ($this->profile) {
+            $name = ltrim("{$this->profile->family} {$this->profile->name} {$this->profile->surname}");
+        }
         return $name ?? $this->username;
     }
 
@@ -153,5 +160,12 @@ class User extends ActiveRecord implements IdentityInterface
             throw $e;
         }
     }
-
+    public function getStatusList()
+    {
+        return [
+            self::STATUS_DISABLED => \Yii::t('app', 'Disabled'),
+            self::STATUS_ACTIVE => \Yii::t('app', 'Active'),
+            self::STATUS_INACTIVE => \Yii::t('app', 'Inactive'),
+        ];
+    }
 }

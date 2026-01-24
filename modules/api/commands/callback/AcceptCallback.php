@@ -10,6 +10,7 @@ class AcceptCallback extends BaseCallback implements CommandInterface
 
     public function handle($telegram, $args)
     {
+        \Yii::error($args);
         $query = $telegram->input->callback_query;
         parse_str($args[0] ?? '', $data);
         $orderId = $data["order_id"] ?? null;

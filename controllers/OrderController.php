@@ -103,7 +103,7 @@ class OrderController extends BaseController
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
                 $model->files = $uploadedFiles;
                 $model->setAttachments($uploadedFiles);
-//                $result = $model->sendAndUpdateTelegramNotifications();
+                $result = $model->sendAndUpdateTelegramNotifications();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             } else {
@@ -150,7 +150,7 @@ class OrderController extends BaseController
     public function actionResendNotify($id)
     {
         $model = Order::findOne($id);
-//        $result = $model->sendAndUpdateTelegramNotifications();
+        $result = $model->sendAndUpdateTelegramNotifications();
         return $this->redirect(['view', 'id' => $id]);
     }
 

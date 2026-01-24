@@ -97,7 +97,7 @@ $config = [
         ],
         'telegram' => [
             'class' => \aki\telegram\Telegram::class,
-            'botToken' => '8461352654:AAGxgiJVcy2ScgSO6p5akN4gzzSEC25ZlQM',
+            'botToken' => '8461352654:AAH8H-eUi25aI3yg6RSvAEkcKbmqy_4W-Zk',
         ],
         'max' => [
             'class' => 'garmayev\max\Max',

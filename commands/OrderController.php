@@ -35,12 +35,12 @@ class OrderController extends Controller
                         echo "\tOrder {$model->id} is needle to notify\n";
                         echo "\tPriority: $priority\n";
                         $model->priority_level = $model->priority_level--;
-//                        $model->notify_date = time();
+                        $model->notify_date = time();
                         if ($model->save()) {
                             foreach ($model->suitableCoworkers as $key => $coworker) {
                                 echo $key + 1 . " {$coworker->name}\n";
                             }
-//                            $model->sendAndUpdateTelegramNotifications();
+                            $model->sendAndUpdateTelegramNotifications();
                         } else {
                             \Yii::error($model->errors);
                         }
