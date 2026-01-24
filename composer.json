@@ -17,7 +17,7 @@
     "irc": "ircs://irc.libera.chat:6697/yii",
     "source": "https://github.com/yiisoft/yii2"
   },
-  "minimum-stability": "stable",
+  "minimum-stability": "dev",
   "require": {
     "php": ">=7.4.0",
     "ext-curl": "*",
@@ -36,7 +36,8 @@
     "aki/yii2-bot-telegram": "*",
     "ext-calendar": "*",
     "yiisoft/yii2-jui": "^2.0",
-    "npm-asset/chart.js": "^4.5"
+    "npm-asset/chart.js": "^4.5",
+    "garmayev/yii2-max": "@dev"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",
@@ -95,9 +96,6 @@
     }, {
       "type": "composer",
       "url": "https://repo.amgcompany.ru"
-    }, {
-      "type": "path",
-      "url": "./runtime/tmp-extensions/yii2-date-selector/"
     }
   ]
 }

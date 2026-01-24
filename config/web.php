@@ -99,6 +99,10 @@ $config = [
             'class' => \aki\telegram\Telegram::class,
             'botToken' => '8461352654:AAGxgiJVcy2ScgSO6p5akN4gzzSEC25ZlQM',
         ],
+        'max' => [
+            'class' => 'garmayev\max\Max',
+            'access_token' => 'f9LHodD0cOIbxuflLLlF7HO87PtWH3dbYwH3wWRfpbxG4aUDugs9z_UparqnigVraeG-zmkBlV_XAZn5aIyr',
+        ],
         'response' => [
             'class' => 'yii\web\Response',
             'on beforeSend' => function ($event) {
