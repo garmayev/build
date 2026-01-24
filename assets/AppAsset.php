@@ -24,12 +24,16 @@ class AppAsset extends AssetBundle
     public $baseUrl = '@web';
     public $css = [
         '/css/site.css',
-        '/react/css/main.3113935e.css',
+        '/components/dateSelector/dateSelector.css',
+        '/components/calendar/calendar.css',
+//        '/react/css/main.3113935e.css',
     ];
     public $js = [
-        'https://cdn.jsdelivr.net/npm/jquery.maskedinput@1.4.1/src/jquery.maskedinput.min.js',
-        '/react/js/453.abd1f321.chunk.js',
-        '/react/js/main.7dfe99c0.js',
+        '/components/DateUtils.js',
+        '/components/dateSelector/dateSelector.js',
+        '/components/calendar/calendar.js',
+//        '/react/js/453.abd1f321.chunk.js',
+//        '/react/js/main.ff9963a6.js',
     ];
     public $depends = [
         YiiAsset::class,

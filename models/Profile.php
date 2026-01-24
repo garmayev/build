@@ -29,6 +29,7 @@ class Profile extends ActiveRecord
     {
         return [
             [['family', 'name', 'surname', 'birthday', 'phone', 'chat_id', 'device_id'], 'string'],
+            [['user_id'], 'exist', 'targetClass' => User::class, 'targetAttribute' => 'id'],
             [['phone'], PhoneValidator::class],
         ];
     }
@@ -54,6 +55,6 @@ class Profile extends ActiveRecord
 
     public function getUser(): ActiveQuery
     {
-        return $this->hasOne(User::class, ['id' => 'id']);
+        return $this->hasOne(User::class, ['id' => 'user_id']);
     }
 }

@@ -2,11 +2,18 @@
 
 namespace app\controllers;
 
+use app\models\Category;
+use app\models\Coworker;
+use app\models\Hours;
 use app\models\Order;
 use app\models\Report;
+use app\models\Requirement;
+use app\models\User;
+use Yii;
 use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\UploadedFile;
 
@@ -26,7 +33,7 @@ class OrderController extends BaseController
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['get-list'],
+                        'actions' => ['list'],
                         'roles' => ['?']
                     ]
                 ],
@@ -62,6 +69,12 @@ class OrderController extends BaseController
     {
         $model = Order::findOne($id);
 
+        if (\Yii::$app->request->isAjax) {
+            return $this->renderAjax('view', [
+                'model' => $model,
+            ]);
+        }
+
         return $this->render('view', [
             'model' => $model
         ]);
@@ -90,11 +103,14 @@ class OrderController extends BaseController
             if ($model->load(\Yii::$app->request->post()) && $model->save()) {
                 $model->files = $uploadedFiles;
                 $model->setAttachments($uploadedFiles);
-                $result = $model->sendAndUpdateTelegramNotifications();
+//                $result = $model->sendAndUpdateTelegramNotifications();
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
+            } else {
+                \Yii::$app->session->setFlash('danger', \Yii::t('app', 'Order is not saved'));
+                \Yii::error($model->getErrors());
+                \Yii::error($model->attributes);
             }
-            \Yii::$app->session->setFlash('danger', \Yii::t('app', 'Order is not saved'));
         }
 
         return $this->render('coworker', [
@@ -134,7 +150,7 @@ class OrderController extends BaseController
     public function actionResendNotify($id)
     {
         $model = Order::findOne($id);
-        $result = $model->sendAndUpdateTelegramNotifications();
+//        $result = $model->sendAndUpdateTelegramNotifications();
         return $this->redirect(['view', 'id' => $id]);
     }
 
@@ -167,5 +183,46 @@ class OrderController extends BaseController
         }
         $report->delete();
         return $this->redirect(['view', 'id' => $report->order_id]);
+    }
+
+    public function actionList()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $user = User::findOne(\Yii::$app->user->id);
+
+        // Находим заказы, в которых есть сотрудники с referrer_id = $user->id
+        $orders = Order::find()
+            ->joinWith('coworkers')
+            ->where(['coworker.referrer_id' => $user->id])
+            ->all();
+
+        $hours = Hours::find()
+            ->joinWith('order')
+            ->where(['order.id' => ArrayHelper::getColumn($orders, 'id')])
+            ->all();
+
+        return $hours;
+    }
+
+    public function actionCreateRequirement($id = null, $index = null)
+    {
+        $itemData = [
+            'category_id' => \Yii::$app->request->get('category_id'),
+            'count' => \Yii::$app->request->get('count'),
+            'property_id' => \Yii::$app->request->get('property_id'),
+            'type' => \Yii::$app->request->get('type'),
+            'value' => \Yii::$app->request->get('value'),
+            'dimension_id' => \Yii::$app->request->get('dimension_id'),
+        ];
+
+        // Фильтруем пустые значения
+        $itemData = array_filter($itemData, function($value) {
+            return $value !== null && $value !== '';
+        });
+
+        return $this->renderAjax('_requirements', [
+            'item' => $itemData,
+        ]);
     }
 }

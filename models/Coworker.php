@@ -4,6 +4,45 @@ namespace app\models;
 
 use \yii\behaviors\BlameableBehavior;
 
+/**
+ * Class Coworker
+ *
+ * @property int $id
+ * @property string $username
+ * @property string $email
+ * @property string $password_hash
+ * @property string $auth_key
+ * @property string $access_token
+ * @property int $status
+ * @property int $referrer_id
+ * @property int $priority_level
+ * @property int $created_at
+ * @property int $updated_at
+ *
+ * @property string $name
+ * @property string $statusName
+ * @property array $statusList
+ * @property float $price
+ * @property float $debitAmount
+ * @property float $creditAmount
+ * @property int $debitHours
+ * @property int $creditHours
+ *
+ * @property User $referrer
+ * @property Profile $profile
+ * @property Price[] $prices
+ * @property Price $currentPrice
+ * @property UserProperty[] $userProperties
+ * @property Property[] $properties
+ * @property Hours[] $hours
+ * @property Order[] $allOrders
+ * @property Order[] $activeOrders
+ * @property Order[] $completedOrders
+ * @property Order[] $orders
+ * @property Order[] $suitableOrders
+ * @property User[] $referrals
+ * @property array $roles
+ */
 class Coworker extends User 
 {
     const PRIORITY_LOW = 0;
@@ -31,7 +70,7 @@ class Coworker extends User
         return array_merge(parent::rules(), [
             [['priority_level'], 'default', 'value' => self::PRIORITY_HIGH],
             [['userProperties', 'price'], 'safe'],
-            [['referrer_id'], 'exist', 'targetClass' => self::class, 'targetAttribute' => 'id'],
+            [['referrer_id'], 'exist', 'targetClass' => User::class, 'targetAttribute' => 'id'],
         ]);
     }
 
@@ -50,6 +89,7 @@ class Coworker extends User
             'access_token',
             'status',
             'auth_key',
+            'name',
             'price' => function (User $model) {
                 $price = Price::find()
                     ->where(['user_id' => $model->id])
@@ -65,7 +105,10 @@ class Coworker extends User
                 return $model->userProperties;
             },
             'hours',
-            'roles'
+            'roles',
+            'active_orders' => function (User $model) {
+                return $model->activeOrders;
+            }
         ];
     }
 
@@ -141,6 +184,54 @@ class Coworker extends User
             ->andWhere(["or", ["order.created_by" => $this->referrer_id], ["order.created_by" => $this->id]]);
     }
 
+    public function getSuitableOrders()
+    {
+        /**
+         * @var Requirement[] $requirements
+         */
+        $userId = $this->id;
+        return Order::find()
+            ->joinWith(['requirements' => function ($query) use ($userId) {
+                $query->alias('req');
+            }])
+            ->leftJoin(
+                'user_property up',
+                'up.property_id = req.property_id 
+             AND up.dimension_id = req.dimension_id 
+             AND up.user_id = :userId',
+                [':userId' => $userId]
+            )
+            ->groupBy('order.id')
+            ->having([
+                'or',
+                [
+                    'and',
+                    'COUNT(req.id) > 0', // Есть требования
+                    'SUM(CASE 
+                        WHEN (req.type = \'less\' AND up.value <= req.value) THEN 0
+                        WHEN (req.type = \'more\' AND up.value >= req.value) THEN 0
+                        WHEN (req.type = \'equal\' AND up.value = req.value) THEN 0
+                        WHEN (req.type = \'not-equal\' AND up.value != req.value) THEN 0
+                        ELSE 1 
+                    END) = 0'
+                ],
+                [
+                    'and',
+                    'COUNT(req.id) = 0' // Нет требований
+                ]
+            ])
+            ->andWhere(['status' => Order::STATUS_NEW])
+            ->andWhere(['not in', 'order.id', \yii\helpers\ArrayHelper::map($this->orders, 'id', 'id')])
+            ->andWhere(['or', ['order.created_by' => $this->referrer_id], ['order.created_by' => $this->id]]);
+    }
+
+    public function getActiveOrders()
+    {
+        return $this->hasMany(Order::class, ['id' => 'order_id'])
+            ->viaTable('order_user', ['user_id' => 'id'])
+            ->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]]);
+    }
+
     public function setUserProperties($data)
     {
         foreach ($this->userProperties as $property) {
@@ -148,11 +239,17 @@ class Coworker extends User
         }
         $db = \Yii::$app->db;
         $transaction = $db->beginTransaction();
+        $this->save(false);
         try {
-            foreach ($data as $item) {
-                $property = new UserProperty();
-                if ($property->load(['UserProperty' => $item]) && $property->save()) {
-                    $this->link('userProperties', $property);
+            if ($data) {
+                foreach ($data as $item) {
+                    $item['user_id'] = $this->id;
+                    $property = new UserProperty();
+                    if ($property->load(['UserProperty' => $item]) && $property->save()) {
+                        $this->link('userProperties', $property);
+                    } else {
+                        \Yii::error($property->errors);
+                    }
                 }
             }
             $transaction->commit();
@@ -194,7 +291,7 @@ class Coworker extends User
     {
         return User::find()
             ->where(['referrer_id' => $this->id])
-            ->orWhere(['priority_level' => User::PRIORITY_LOW])
+            ->orWhere(['priority_level' => Coworker::PRIORITY_HIGH])
             ->all();
     }
 
@@ -253,47 +350,7 @@ class Coworker extends User
         return false;
     }
 
-    public function getSuitableOrders()
-    {
-        /**
-         * @var Requirement[] $requirements
-         */
-        $userId = $this->id;
-        return Order::find()
-            ->joinWith(['requirements' => function ($query) use ($userId) {
-                $query->alias('req');
-            }])
-            ->leftJoin(
-                'user_property up',
-                'up.property_id = req.property_id 
-             AND up.dimension_id = req.dimension_id 
-             AND up.user_id = :userId',
-                [':userId' => $userId]
-            )
-            ->groupBy('order.id')
-            ->having([
-                'or',
-                [
-                    'and',
-                    'COUNT(req.id) > 0', // Есть требования
-                    'SUM(CASE 
-                        WHEN (req.type = \'less\' AND up.value <= req.value) THEN 0
-                        WHEN (req.type = \'more\' AND up.value >= req.value) THEN 0
-                        WHEN (req.type = \'equal\' AND up.value = req.value) THEN 0
-                        WHEN (req.type = \'not-equal\' AND up.value != req.value) THEN 0
-                        ELSE 1 
-                    END) = 0'
-                ],
-                [
-                    'and',
-                    'COUNT(req.id) = 0' // Нет требований
-                ]
-            ])
-            ->andWhere(['status' => Order::STATUS_NEW])
-            ->andWhere(['not in', 'order.id', \yii\helpers\ArrayHelper::map($this->orders, 'id', 'id')])
-            ->andWhere(['or', ['order.created_by' => $this->referrer_id], ['order.created_by' => $this->id]]);
-    }
-
+    // Оплачено
     public function getDebitAmount($startDate, $finishDate)
     {
         $result = 0;
@@ -311,6 +368,7 @@ class Coworker extends User
         return $result;
     }
 
+    // Не Оплачено
     public function getCreditAmount($startDate, $finishDate)
     {
         $result = 0;
@@ -362,4 +420,171 @@ class Coworker extends User
         return $result;
     }
 
+    /**
+     * Получает статистику по месяцам
+     *
+     * @param int|null $year Год (null - текущий)
+     * @return array
+     */
+    public function getMonthlyStatistics(int $year = null): array
+    {
+        if ($year === null) {
+            $year = date('Y');
+        }
+
+        $months = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $startDate = date('Y-m-01', strtotime("$year-$month-01"));
+            $endDate = date('Y-m-t', strtotime("$year-$month-01"));
+
+            $months[$month] = [
+                'month' => $month,
+                'monthName' => date('F', strtotime("$year-$month-01")),
+                'debitAmount' => $this->getDebitAmount($startDate, $endDate),
+                'creditAmount' => $this->getCreditAmount($startDate, $endDate),
+                'debitHours' => $this->getDebitHours($startDate, $endDate),
+                'creditHours' => $this->getCreditHours($startDate, $endDate),
+                'ordersCount' => $this->getCompletedOrdersCount($startDate, $endDate),
+                'reportsCount' => $this->getReportsCount($startDate, $endDate),
+            ];
+        }
+
+        return $months;
+    }
+
+    /**
+     * Получает количество завершенных заказов за период
+     *
+     * @param string $startDate
+     * @param string $endDate
+     * @return int
+     */
+    public function getCompletedOrdersCount(string $startDate, string $endDate): int
+    {
+        return $this->getOrders()
+            ->alias('o')
+            ->innerJoinWith('hours h')
+            ->where(['o.status' => Order::STATUS_COMPLETE])
+            ->andWhere(['>=', 'h.date', $startDate])
+            ->andWhere(['<=', 'h.date', $endDate])
+            ->count();
+    }
+
+    /**
+     * Получает количество отчетов за период
+     *
+     * @param string $startDate
+     * @param string $endDate
+     * @return int
+     */
+    public function getReportsCount(string $startDate, string $endDate): int
+    {
+        return Report::find()
+            ->alias('r')
+            ->innerJoin(['o' => Order::tableName()], 'o.id = r.order_id')
+            ->innerJoin(['ou' => 'order_user'], 'ou.order_id = o.id')
+            ->where(['ou.user_id' => $this->id])
+            ->andWhere(['>=', 'r.created_at', strtotime($startDate)])
+            ->andWhere(['<', 'r.created_at', strtotime($endDate . ' +1 day')])
+            ->count();
+    }
+
+    /**
+     * Получает сводную статистику за год
+     *
+     * @param int|null $year
+     * @return array
+     */
+    public function getYearSummary(int $year = null): array
+    {
+        if ($year === null) {
+            $year = date('Y');
+        }
+
+        $startDate = "$year-01-01";
+        $endDate = "$year-12-31";
+
+        return [
+            'year' => $year,
+            'totalDebitAmount' => $this->getDebitAmount($startDate, $endDate),
+            'totalCreditAmount' => $this->getCreditAmount($startDate, $endDate),
+            'totalDebitHours' => $this->getDebitHours($startDate, $endDate),
+            'totalCreditHours' => $this->getCreditHours($startDate, $endDate),
+            'totalOrders' => $this->getCompletedOrdersCount($startDate, $endDate),
+            'totalReports' => $this->getReportsCount($startDate, $endDate),
+            'monthlyData' => $this->getMonthlyStatistics($year),
+        ];
+    }
+
+    /**
+     * Получает детализацию по заказам за период
+     *
+     * @param string $startDate
+     * @param string $endDate
+     * @return array
+     */
+    public function getOrdersDetails(string $startDate, string $endDate): array
+    {
+        $orders = $this->getOrders()
+            ->alias('o')
+            ->with(['building', 'hours', 'reports'])
+            ->where(['o.status' => Order::STATUS_COMPLETE])
+            ->andWhere(['exists',
+                (new \yii\db\Query())
+                    ->select('*')
+                    ->from(['h' => Hours::tableName()])
+                    ->where('h.order_id = o.id')
+                    ->andWhere(['>=', 'h.date', $startDate])
+                    ->andWhere(['<=', 'h.date', $endDate])
+            ])
+            ->all();
+
+        $result = [];
+        foreach ($orders as $order) {
+            $orderHours = 0;
+            $orderAmount = 0;
+
+            foreach ($order->hours as $hour) {
+                if ($hour->date >= $startDate && $hour->date <= $endDate) {
+                    $orderHours += $hour->count;
+                    $orderAmount += $hour->is_payed ? $hour->debit : $hour->credit;
+                }
+            }
+
+            $result[] = [
+                'id' => $order->id,
+                'title' => $order->title,
+                'date' => date('Y-m-d', $order->date),
+                'building' => $order->building ? $order->building->address : null,
+                'mode' => $order->getModes()[$order->mode] ?? 'Unknown',
+                'price' => $order->calculateTotalPrice(),
+                'hours' => $orderHours,
+                'amount' => $orderAmount,
+                'reports' => count($order->reports),
+                'status' => $order->statusTitle,
+            ];
+        }
+
+        return $result;
+    }
+
+    public function getPriority()
+    {
+        $priorityList = [
+            self::PRIORITY_LOW => \Yii::t('app', 'Priority low'),
+            self::PRIORITY_NORMAL => \Yii::t('app', 'Priority normal'),
+            self::PRIORITY_HIGH => \Yii::t('app', 'Priority high'),
+        ];
+        return $priorityList[$this->priority_level];
+    }
+
+    public static function getPriorityList()
+    {
+        return [
+            self::PRIORITY_LOW => \Yii::t('app', 'Priority low'),
+            self::PRIORITY_NORMAL => \Yii::t('app', 'Priority normal'),
+            self::PRIORITY_HIGH => \Yii::t('app', 'Priority high'),
+        ];
+    }
 }

@@ -33,9 +33,10 @@
     "ctwillie/expo-server-sdk-php": "^2.1",
     "yiisoft/yii2-authclient": "^2.2",
     "bower-asset/font-awesome": "^6.3",
-    "microinginer/yii2-dropdown-action-column": "dev-master",
     "aki/yii2-bot-telegram": "*",
-    "ext-calendar": "*"
+    "ext-calendar": "*",
+    "yiisoft/yii2-jui": "^2.0",
+    "npm-asset/chart.js": "^4.5"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",
@@ -91,6 +92,12 @@
     {
       "type": "composer",
       "url": "https://asset-packagist.org"
+    }, {
+      "type": "composer",
+      "url": "https://repo.amgcompany.ru"
+    }, {
+      "type": "path",
+      "url": "./runtime/tmp-extensions/yii2-date-selector/"
     }
   ]
 }

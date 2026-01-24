@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\Category;
 use app\models\Property;
 use app\models\search\PropertySearch;
 use yii\filters\AccessControl;
@@ -25,13 +26,17 @@ class PropertyController extends BaseController
                     'class' => AccessControl::class,
                     'rules' => [
                         [
-                            'actions' => ['index', 'view', 'update', 'create', 'delete'],
+                            'actions' => ['index', 'view', 'update', 'create', 'delete', 'by-category'],
                             'allow' => true,
                             'roles' => ['@'],
-                        ],
+                        ], [
+                            'actions' => ['by-category'],
+                            'allow' => true,
+                            'roles' => ['?'],
+                        ]
                     ],
                     'denyCallback' => function () {
-                        return $this->redirect(['/site/login']);
+                        return $this->redirect(['/user/login']);
                     }
                 ],
                 'verbs' => [
@@ -127,6 +132,26 @@ class PropertyController extends BaseController
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    public function actionByCategory()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $out = [];
+        if (isset($_POST['depdrop_parents'])) {
+            $ids = $_POST['depdrop_parents'];
+            $cat_id = empty($ids[0]) ? null : $ids[0];
+            if ($cat_id != null) {
+                $category = Category::findOne($cat_id);
+                foreach ($category->properties as $property) {
+                    $out[] = ['id' => $property->id, 'name' => $property->title];
+                }
+                return ['output' => $out, 'selected' => ''];
+            }
+        }
+        return ['output'=>'', 'selected'=>''];
+
     }
 
     /**

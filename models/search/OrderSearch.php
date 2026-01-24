@@ -2,6 +2,7 @@
 
 namespace app\models\search;
 
+use app\models\Coworker;
 use app\models\Order;
 use Yii;
 use yii\data\ActiveDataFilter;
@@ -13,11 +14,8 @@ class OrderSearch extends Order
     {
         if (\Yii::$app->user->can('admin')) {
             $query = Order::find();
-        } else if (\Yii::$app->user->can('director')) {
-            $query = Order::find()->where(['created_by' => \Yii::$app->user->identity->getId()]);
         } else {
-            $user = \Yii::$app->user->identity;
-            $query = $user->getSuitableOrders();
+            $query = Order::find()->where(['created_by' => \Yii::$app->user->identity->getId()]);
         }
 
 //        \Yii::error($params);

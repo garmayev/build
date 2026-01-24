@@ -55,6 +55,11 @@ $config = [
                     'enabled' => true,
                     'enableRotation' => true,
                     'levels' => ['error', 'warning'],
+                    'except' => [
+                        'yii\web\NotFoundHttpException', // Исключаем саму категорию
+                        'yii\base\InvalidRouteException', // Исключаем и другие маршруты, которые могут быть 404
+                        'yii\web\HttpException:404',
+                    ],
                     'logFile' => '@runtime/logs/app.log',
                 ],
             ],
@@ -83,7 +88,11 @@ $config = [
                     'fileMap' => [
                         'telegram' => 'telegram.php'
                     ]
-                ]
+                ],
+                'calendar' => [
+                    'class' => 'yii\i18n\PhpMessageSource',
+                    'basePath' => '@garmayev/calendar/messages',
+                ],
             ],
         ],
         'telegram' => [

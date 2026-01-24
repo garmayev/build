@@ -30,26 +30,10 @@ $this->registerJs(<<<JS
 $('.masked-input').mask('+7 (999) 999-99-99');
 JS
 );
-$actionButtons = [
-    [
-        'label' => \Yii::t('app', 'View'),
-        'url' => ['view'],
-    ], [
-        'label' => \Yii::t('app', 'Update'),
-        'url' => ['update'],
-    ], [
-        'label' => \Yii::t('app', 'Delete'),
-        'url' => ['delete'],
-        'linkOptions' => [
-            'data-method' => 'post',
-            'class' => 'dropdown-item'
-        ],
-    ],
-];
 ?>
 <div class="coworker-index">
     <p>
-        <?= Html::a(Yii::t('app', 'Create Coworker'), ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a(Yii::t('app', 'Create Coworker'), ['account'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?= GridView::widget([
@@ -57,6 +41,9 @@ $actionButtons = [
         'summary' => false,
         'tableOptions' => [
             'class' => 'table table-striped',
+        ],
+        'pager' => [
+            'class' => \yii\bootstrap5\LinkPager::class
         ],
         'filterModel' => $searchModel,
         'columns' => [
@@ -76,7 +63,7 @@ $actionButtons = [
                 'filterInputOptions' => [
                     'class' => 'form-control',
                 ],
-                'value' => function (User $model) {
+                'value' => function (Coworker $model) {
                     $profileName = ltrim("{$model->profile->family} {$model->profile->name} {$model->profile->surname}");
                     return strlen($profileName) ? $profileName : $model->username;
                 }
@@ -141,12 +128,8 @@ $actionButtons = [
                 }
             ],
             [
-                'class' => \microinginer\dropDownActionColumn\DropDownActionColumn::className(),
-                'items' => $actionButtons,
-                'headerOptions' => ['class' => 'col-md-1 col-3'],
-                'filterOptions' => ['class' => 'col-md-1 col-3'],
-                'contentOptions' => ['class' => 'col-md-1 col-3'],
-            ],
+                'class' => ActionColumn::class
+            ]
         ],
     ]); ?>
 

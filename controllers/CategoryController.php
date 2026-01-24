@@ -26,13 +26,17 @@ class CategoryController extends BaseController
                     'class' => AccessControl::class,
                     'rules' => [
                         [
-                            'actions' => ['index', 'view', 'update', 'create', 'delete'],
+                            'actions' => ['index', 'view', 'update', 'create', 'delete', 'ajax-list'],
                             'allow' => true,
                             'roles' => ['@'],
-                        ],
+                        ], [
+                            'actions' => ['ajax-list'],
+                            'allow' => true,
+                            'roles' => ['?'],
+                        ]
                     ],
                     'denyCallback' => function () {
-                        return $this->redirect(['/site/login']);
+                        return $this->redirect(['/user/login']);
                     }
                 ],
                 'verbs' => [
@@ -133,6 +137,38 @@ class CategoryController extends BaseController
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    public function actionAjaxList($query = null, $id = null)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (!is_null($query)) {
+            $result = [];
+            $categories = Category::find()->where(['like', 'title', $query])->limit(10)->all();
+            foreach ($categories as $category) {
+                $result[] = ['id' => $category->id, 'text' => $category->title];
+            }
+            if (count($result)) {
+                return ['results' => $result];
+            } else {
+                return ['results' => ['id' => '', 'text' => '']];
+            }
+        } elseif (!is_null($id)) {
+            $model = Category::findOne($id);
+            return ['results' => ['id' => $id, 'text' => $model->title]];
+        } else {
+            $result = [];
+            $categories = Category::find()->limit(10)->all();
+            foreach ($categories as $category) {
+                $result[] = ['id' => $category->id, 'text' => $category->title];
+            }
+            if (count($result)) {
+                return ['results' => $result];
+            } else {
+                return ['results' => ['id' => '', 'text' => '']];
+            }
+        }
+        return $out;
     }
 
     /**

@@ -19,6 +19,9 @@ $this->params['breadcrumbs'][] = $this->title;
 echo GridView::widget([
     'dataProvider' => $dataProvider,
     'summary' => false,
+    'pager' => [
+        'class' => yii\bootstrap5\LinkPager::className(),
+    ],
     'tableOptions' => [
         'class' => 'table table-striped'
     ],
@@ -27,38 +30,54 @@ echo GridView::widget([
             'attribute' => 'id',
             'label' => '#',
             'headerOptions' => ['class' => 'text-center col-md-1 col-1'],
-            'contentOptions' => ['class' => 'text-center col-md-1 col-1'],
+            'contentOptions' => ['class' => 'text-center col-md-1 col-1 align-middle'],
             'value' => function (Order $model) {
                 return "#{$model->id}";
             }
         ],
         [
-            'attribute' => 'status',
+            'attribute' => 'title',
             'headerOptions' => ['class' => 'text-center col-md-2 col-4'],
-            'contentOptions' => ['class' => 'text-center col-md-2 col-4'],
-            'value' => function (Order $model) {
-                return $model->statusTitle;
-            }
+            'contentOptions' => ['class' => 'text-center col-md-2 col-4 align-middle'],
         ], [
             'attribute' => 'building_id',
             'label' => \Yii::t('app', 'Building'),
-            'headerOptions' => ['class' => 'text-center col-md-2 col-4'],
-            'contentOptions' => ['class' => 'text-center col-md-2 col-4'],
+            'headerOptions' => ['class' => 'text-center col-md-1 col-4'],
+            'contentOptions' => ['class' => 'text-center col-md-1 col-4 align-middle'],
             'value' => function (Order $model) {
                 return $model->building->title;
             }
         ],
+        [
+            'attribute' => 'mode',
+            'headerOptions' => ['class' => 'text-center col-md-2 col-4'],
+            'contentOptions' => ['class' => 'text-center col-md-2 col-4 align-middle'],
+            'value' => function (Order $model) {
+                return $model->modes[$model->mode];
+            }
+        ],
         [ 
-            'attribute' => 'date', 
-            'format' => 'date',
-            'headerOptions' => ['class' => 'text-center col-md-2 hide-on-mobile'],
-            'contentOptions' => ['class' => 'text-center col-md-2 hide-on-mobile'],
+            'attribute' => 'start_datetime',
+            'format' => 'raw',
+            'label' => \Yii::t('app', 'Date'),
+            'headerOptions' => ['class' => 'text-center col-md-1 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-1 hide-on-mobile align-middle'],
+            'value' => function (Order $model) {
+                if ($model->mode !== Order::MODE_SINGLE_FIXED) {
+                    $start = \Yii::$app->formatter->asDate($model->start_datetime, 'php:d.m.Y');
+                    $finish = \Yii::$app->formatter->asDate($model->finish_datetime, 'php:d.m.Y');
+                    return Html::tag('span', "{$start} - {$finish}");
+                } else {
+                    $start = \Yii::$app->formatter->asDate($model->start_datetime, 'php:d.m.Y ');
+                    return Html::tag('span', $start);
+                }
+            }
         ],
         [
             'label' => \Yii::t("app", 'Full'),
             'format' => 'raw',
-            'headerOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
-            'contentOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
+            'headerOptions' => ['class' => 'text-center col-md-1 col-0 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-1 col-0 hide-on-mobile align-middle'],
             'value' => function (Order $model) {
                 $totalCount = 0;
                 foreach ( $model->requirements as $requirement) { $totalCount += $requirement->count; }
@@ -68,7 +87,7 @@ echo GridView::widget([
             'attribute' => 'owner',
             'label' => \Yii::t("app", 'Owner'),
             'headerOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
-            'contentOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile align-middle'],
             'value' => function (Order $model) {
                 return $model->owner->fullName ?? null;
             },
@@ -76,7 +95,7 @@ echo GridView::widget([
         ], [
             'class' => \yii\grid\ActionColumn::class,
             'headerOptions' => ['class' => 'text-center col-md-1 col-3'],
-            'contentOptions' => ['class' => 'text-center col-md-1 col-3'],
+            'contentOptions' => ['class' => 'text-center col-md-1 col-3 align-middle'],
             'buttons' => [
                 'view' => function ($url, $model, $key) {
                     return Html::a('<svg aria-hidden="true" style="display:inline-block;font-size:inherit;height:1em;overflow:visible;vertical-align:-.125em;width:1.125em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path fill="currentColor" d="M573 241C518 136 411 64 288 64S58 136 3 241a32 32 0 000 30c55 105 162 177 285 177s230-72 285-177a32 32 0 000-30zM288 400a144 144 0 11144-144 144 144 0 01-144 144zm0-240a95 95 0 00-25 4 48 48 0 01-67 67 96 96 0 1092-71z"></path></svg>',$url);
@@ -92,15 +111,14 @@ echo GridView::widget([
                     }
                 },
                 'delete' => function ($url, $model, $key) {
-                    return Html::a('<svg aria-hidden="true" style="display:inline-block;font-size:inherit;height:1em;overflow:visible;vertical-align:-.125em;width:.875em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M32 464a48 48 0 0048 48h288a48 48 0 0048-48V128H32zm272-256a16 16 0 0132 0v224a16 16 0 01-32 0zm-96 0a16 16 0 0132 0v224a16 16 0 01-32 0zm-96 0a16 16 0 0132 0v224a16 16 0 01-32 0zM432 32H312l-9-19a24 24 0 00-22-13H167a24 24 0 00-22 13l-9 19H16A16 16 0 000 48v32a16 16 0 0016 16h416a16 16 0 0016-16V48a16 16 0 00-16-16z"></path></svg>',$url);
+                    return Html::a('<svg aria-hidden="true" style="display:inline-block;font-size:inherit;height:1em;overflow:visible;vertical-align:-.125em;width:.875em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M32 464a48 48 0 0048 48h288a48 48 0 0048-48V128H32zm272-256a16 16 0 0132 0v224a16 16 0 01-32 0zm-96 0a16 16 0 0132 0v224a16 16 0 01-32 0zm-96 0a16 16 0 0132 0v224a16 16 0 01-32 0zM432 32H312l-9-19a24 24 0 00-22-13H167a24 24 0 00-22 13l-9 19H16A16 16 0 000 48v32a16 16 0 0016 16h416a16 16 0 0016-16V48a16 16 0 00-16-16z"></path></svg>', $url, [
+                        'data' => [
+                            'method' => 'POST',
+                            'confirm' => \Yii::t('app', 'Are you sure you want to delete this item?'),
+                        ]
+                    ]);
                 },
             ]
         ]
-    ],
-    'pager' => [
-        'class' => \yii\widgets\LinkPager::class, // Explicitly specify LinkPager
-        'options' => [
-            'class' => 'pagination pagination-sm no-margin pull-right', // AdminLTE pagination styling
-        ],
     ],
 ]);

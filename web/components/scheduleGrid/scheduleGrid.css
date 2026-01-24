@@ -1,0 +1,370 @@
+/* scheduleGrid.css - дополнения */
+
+.calendar-container {
+    overflow-x: auto;
+}
+
+.calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.calendar-header {
+    background: #f8f9fa;
+    font-weight: bold;
+}
+
+.nav-button {
+    padding: 5px 10px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+}
+
+.nav-button:hover {
+    background: #f8f9fa;
+}
+
+.employee-cell {
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+    cursor: pointer;
+}
+
+.employee-cell.disabled {
+    color: #adb5bd;
+    cursor: not-allowed;
+    background: #e9ecef;
+}
+
+.employee-cell.free {
+    background: #f8f9fa;
+}
+
+.employee-cell.has-data {
+    background: #d1ecf1;
+}
+
+.employee-cell:hover:not(.disabled) {
+    background: #c6e0f5;
+}
+
+.summary-cell {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+}
+
+.paid-amount {
+    color: green;
+    font-weight: bold;
+}
+
+.unpaid-amount {
+    color: darkred;
+    font-weight: bold;
+}
+
+.total-amount {
+    font-weight: bold;
+}
+
+.calendar-error {
+    padding: 20px;
+    text-align: center;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    color: #721c24;
+    margin: 20px 0;
+}
+
+.retry-button {
+    padding: 8px 16px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.retry-button:hover {
+    background: #c82333;
+}
+
+.calendar-controls {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.calendar-controls label {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.calendar-controls input[type="checkbox"] {
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+/* Стили для разных типов ячеек */
+.employee-cell {
+    transition: all .3s;
+}
+.employee-cell.type-order {
+    /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);*/
+    color: black;
+    font-weight: bold;
+}
+
+.employee-cell.type-hour {
+    /*background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);*/
+    color: black;
+    font-weight: bold;
+}
+
+.employee-cell.type-mixed {
+    /*background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);*/
+    color: black;
+    font-weight: bold;
+}
+
+.employee-cell.payed {
+    opacity: 0.8;
+    position: relative;
+}
+
+.employee-cell.payed::after {
+    content: '✓';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+    color: #28a745;
+}
+
+.employee-cell.free {
+    background: #e9ecef;
+    color: #495057;
+    cursor: pointer;
+}
+
+.employee-cell.free:hover {
+    background: #d6d8db;
+}
+
+.employee-cell.disabled {
+    background: #f8f9fa;
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
+/* Стили для модального окна */
+.calendar-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.calendar-modal .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.calendar-modal h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.calendar-modal h4 {
+    color: #495057;
+    margin: 15px 0 10px 0;
+}
+
+.order-item, .hour-item {
+    background: #f8f9fa;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 4px;
+    border-left: 4px solid #007bff;
+}
+
+.order-item {
+    border-left-color: #667eea;
+}
+
+.hour-item {
+    border-left-color: #f5576c;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.modal-actions button {
+    padding: 8px 16px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.modal-actions .close-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.modal-actions .add-btn {
+    background: #007bff;
+    color: white;
+}
+
+.pay-order-btn, .pay-hour-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.pay-order-btn:hover, .pay-hour-btn:hover {
+    background: #218838;
+}
+
+/* Стили для наложения заказов */
+.employee-cell.overlapping {
+    background: repeating-linear-gradient(
+            45deg,
+            #d1ecf1,
+            #d1ecf1 5px,
+            #b8dfe8 5px,
+            #b8dfe8 10px
+    );
+}
+
+.employee-cell.overlapping.type-order {
+    background: repeating-linear-gradient(
+            45deg,
+            #d1ecf1,
+            #d1ecf1 5px,
+            #b8dfe8 5px,
+            #b8dfe8 10px
+    );
+}
+
+.employee-cell.overlapping.type-mixed {
+    background: repeating-linear-gradient(
+            45deg,
+            #d4edda,
+            #d4edda 5px,
+            #c3e6cb 5px,
+            #c3e6cb 10px
+    );
+}
+
+/* Стили для счетчика заказов */
+.cell-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.order-counter {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    z-index: 1;
+}
+
+.cell-value {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* Стили для модального окна с наложенными заказами */
+.overlap-details {
+    background: #f8f9fa;
+    border-left: 3px solid #007bff;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 4px;
+}
+
+.overlap-details h5 {
+    margin: 0 0 5px 0;
+    color: #007bff;
+    font-size: 14px;
+}
+
+.overlap-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 10px 0;
+    color: #856404;
+    font-size: 12px;
+}
+
+/* Стили для модального окна */
+.order-item.overlap-item {
+    border-left: 3px solid #dc3545;
+    padding-left: 10px;
+    margin: 5px 0;
+    background: rgba(220, 53, 69, 0.05);
+}
+
+/* Эффект при наведении на ячейку с наложением */
+.employee-cell.overlapping:hover {
+    box-shadow: 0 0 0 2px #dc3545;
+    z-index: 10;
+    position: relative;
+}
+
+/* Индикатор наложения в тултипе */
+.employee-cell[data-has-overlap="true"]::after {
+    content: "⚠️";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 10px;
+}
+

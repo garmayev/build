@@ -61,6 +61,7 @@ class Hours extends ActiveRecord
             'price' => function (Hours $model) {
                 return $model->getPrice();
             },
+            'order',
             'debit',
             'credit',
             'start_time',

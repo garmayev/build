@@ -37,6 +37,7 @@ CSS
 );
 
 echo Html::a(\Yii::t('app', 'Notify'), ["order/resend-notify", "id" => $model->id], ["class" => "btn btn-success mb-3 mr-3"]);
+echo Html::a(\Yii::t('app', 'Update'), ["order/coworker", "id" => $model->id], ["class" => "btn btn-primary mb-3 mr-3"]);
 echo Html::a(\Yii::t('app', 'Add Report'), ["order/report", "id" => $model->id], ["class" => "btn btn-primary mb-3"]);
 
 echo DetailView::widget([
@@ -52,9 +53,21 @@ echo DetailView::widget([
             }
         ],
         [
-            'attribute' => 'date',
+            'attribute' => 'start_datetime',
+            'format' => 'raw',
             'value' => function ($model) {
-                return Yii::$app->formatter->asDate($model->date, 'php:d m Y');
+                return Yii::$app->formatter->asDate($model->start_datetime, 'php:d F Y');
+            }
+        ],
+        [
+            'attribute' => 'finish_datetime',
+            'format' => 'raw',
+            'visible' => $model->mode !== Order::MODE_SINGLE_FIXED,
+            'value' => function ($model) {
+                if ($model->mode !== Order::MODE_SINGLE_FIXED) {
+                    return Yii::$app->formatter->asDate($model->finish_datetime, 'php:d F Y');
+                }
+                return null;
             }
         ],
         [
@@ -63,7 +76,19 @@ echo DetailView::widget([
                 return $model->statusTitle;
             }
         ],
-        'typeName',
+        [
+            'attribute' => 'mode',
+            'value' => function (Order $model) {
+                switch ($model->mode) {
+                    case Order::MODE_SINGLE_FIXED:
+                        return Yii::t('app', 'mode_single_fixed');
+                    case Order::MODE_LONG_FIXED:
+                        return Yii::t('app', 'mode_long_fixed');
+                    case Order::MODE_LONG_DAILY:
+                        return Yii::t('app', 'mode_long_daily');
+                }
+            }
+        ],
         'comment',
         [
             'attribute' => 'attachments',
@@ -79,7 +104,7 @@ echo DetailView::widget([
                         $result[] = Html::tag('p', Html::a($attachment->url, $attachment->url, ['target' => '_blank']));
                     }
                 }
-                return implode("", $result).Html::tag('div', implode('', $images), ['class' => 'light-gallery']);
+                return implode("", $result) . Html::tag('div', implode('', $images), ['class' => 'light-gallery']);
             }
         ],
     ],
@@ -88,8 +113,8 @@ echo DetailView::widget([
     ]
 ]);
 ?>
-    <div class="row">
-        <div class="col-6">
+    <div class="row px-2">
+        <div class='<?= \Yii::$app->request->isAjax ? "col-12" : "col-6" ?>'>
             <h4><?= \Yii::t('app', 'Requirements') ?></h4>
             <?php
             echo GridView::widget([
@@ -114,7 +139,13 @@ echo DetailView::widget([
                         'attribute' => 'type',
                         'headerOptions' => ['class' => 'col-md-2 col-2'],
                         'value' => function (\app\models\Requirement $model) {
-                            return \Yii::t('app', $model->type);
+                            $data = [
+                                'more' => \Yii::t('app', 'More'),
+                                'less' => \Yii::t('app', 'Less'),
+                                'equal' => \Yii::t('app', 'Equal'),
+                                'not-equal' => \Yii::t('app', 'Not Equal'),
+                            ];
+                            return $data[$model->type];
                         }
                     ],
                     [
@@ -132,7 +163,7 @@ echo DetailView::widget([
             ]);
             ?>
         </div>
-        <div class="col-6">
+        <div class="<?= \Yii::$app->request->isAjax ? "col-12" : "col-6" ?>">
             <h4><?= \Yii::t('app', 'Coworkers') ?></h4>
             <?php
             echo GridView::widget([
@@ -144,22 +175,34 @@ echo DetailView::widget([
                     [
                         'attribute' => 'name',
                         'label' => \Yii::t('app', 'Coworkers'),
-                        'headerOptions' => ['class' => 'text-center col-md-3 col-6'],
-                        'contentOptions' => ['class' => 'text-center col-md-3 col-6'],
+                        'headerOptions' => ['class' => 'text-center col-md-3 col-3'],
+                        'contentOptions' => ['class' => 'text-center col-md-3 col-3'],
                         'value' => function (\app\models\User $model) {
                             return "{$model->profile->family} {$model->profile->name} {$model->profile->surname}";
                         }
+                    ], [
+                        'headerOptions' => ['class' => 'text-center col-md-3 col-3'],
+                        'contentOptions' => ['class' => 'text-center col-md-3 col-3'],
+                        'attribute' => 'priority',
+                    ], [
+                        'attribute' => 'referrer_id',
+                        'label' => \Yii::t('app', 'Referrer'),
+                        'value' => function (\app\models\Coworker $model) {
+                            return $model->referrer ? $model->referrer->profile->name : \Yii::t('app', 'No referrer');
+                        },
+                        'headerOptions' => ['class' => 'text-center col-md-3 col-3'],
+                        'contentOptions' => ['class' => 'text-center col-md-3 col-3'],
+                        'format' => 'raw'
                     ], [
                         'attribute' => 'coworkerProperties',
                         'label' => \Yii::t('app', 'Properties'),
                         'format' => 'raw',
                         'headerOptions' => ['class' => 'text-center col-md-9 col-6'],
                         'contentOptions' => ['class' => 'text-center col-md-9 col-6'],
-                        'value' => function (app\models\User $model) {
+                        'value' => function (app\models\Coworker $model) {
                             $result = "";
                             foreach ($model->userProperties as $userProperty) {
-//                        $type = \Yii::t('app', $userProperty->type);
-                                $result .= Html::tag("p", "{$userProperty->property->title} {$userProperty->value} {$userProperty->dimension->title}");
+                                $result .= Html::tag("span", "{$userProperty->property->title} {$userProperty->value} {$userProperty->dimension->title}");
                             }
                             return $result;
                         }
@@ -172,7 +215,7 @@ echo DetailView::widget([
             ?>
         </div>
     </div>
-    <div class="row">
+    <div class="col-lg-12 col-md-12">
         <h4><?= \Yii::t('app', 'Reports') ?></h4>
         <?= GridView::widget([
             'dataProvider' => new ArrayDataProvider([
@@ -229,7 +272,7 @@ echo DetailView::widget([
     </div>
 <?php
 $this->registerJs(<<<JS
-const galleries = document.getElementsByClassName('light-gallery')
+window.galleries = document.getElementsByClassName('light-gallery')
 
 Array.from(galleries).forEach(gallery => {
     lightGallery(gallery, {
@@ -245,4 +288,5 @@ $this->registerCss(<<<CSS
 .image-container {
     margin-right: 10px;
 }
-CSS);
+CSS
+);

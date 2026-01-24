@@ -8,4 +8,14 @@ return [
     'bot_name' => 'building03_bot',
     'bsVersion' => '4.6.0',
     'notify_delay' => 1200,
+    'maskMoneyOptions' => [
+        'prefix' => '₽', // Ruble Symbol
+        'suffix' => '',
+        'affixesStay' => true, // Keeps the symbol in place
+        'thousands' => ' ', // Space for thousands separator
+        'decimal' => ',', // Comma for decimal
+        'precision' => 2,
+        'allowZero' => true,
+        'allowNegative' => false,
+    ],
 ];

@@ -2,7 +2,9 @@
 
 namespace app\controllers;
 
+use app\models\Category;
 use app\models\Dimension;
+use app\models\Property;
 use app\models\search\DimensionSearch;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -26,13 +28,17 @@ class DimensionController extends BaseController
                     'class' => AccessControl::class,
                     'rules' => [
                         [
-                            'actions' => ['index', 'view', 'update', 'create', 'delete'],
+                            'actions' => ['index', 'view', 'update', 'create', 'delete', 'by-property'],
                             'allow' => true,
                             'roles' => ['@'],
-                        ],
+                        ], [
+                            'actions' => ['by-property'],
+                            'allow' => true,
+                            'roles' => ['?'],
+                        ]
                     ],
                     'denyCallback' => function () {
-                        return $this->redirect(['/site/login']);
+                        return $this->redirect(['/user/login']);
                     }
                 ],
                 'verbs' => [
@@ -128,6 +134,27 @@ class DimensionController extends BaseController
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    public function actionByProperty()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (isset($_POST['depdrop_parents'])) {
+            $parent_ids = $_POST['depdrop_parents'];
+            $params_ids = $_POST['depdrop_params'];
+            $cat_id = empty($parent_ids[0]) ? null : $parent_ids[0];
+            if (empty($cat_id)) { $cat_id = $params_ids[0]; }
+            if ($cat_id != null) {
+                $property = Property::findOne($cat_id);
+                foreach ($property->dimensions as $dimension) {
+                    $out[] = ['id' => $dimension->id, 'name' => $dimension->title];
+                }
+                return ['output' => $out, 'selected' => ''];
+            }
+        }
+
+        return ['output' => '', 'selected' => ''];
     }
 
     /**

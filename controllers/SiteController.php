@@ -2,6 +2,9 @@
 
 namespace app\controllers;
 
+use app\models\Coworker;
+use app\models\Hours;
+use app\models\Order;
 use yii\filters\AccessControl;
 
 class SiteController extends BaseController
@@ -20,7 +23,7 @@ class SiteController extends BaseController
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['logout', 'index', 'calendar-month', 'calendar', 'builder'],
+                        'actions' => ['logout', 'index', 'calendar-month', 'calendar', 'builder', 'mark-order-paid'],
                         'roles' => ['@'],
                     ],
                 ],
@@ -40,6 +43,17 @@ class SiteController extends BaseController
         ];
     }
 
+    public function beforeAction($action)
+    {
+        switch ($action->id) {
+            case 'mark-hours-paid':
+            case 'mark-order-paid':
+                $this->enableCsrfValidation = false;
+                break;
+        }
+        return parent::beforeAction($action);
+    }
+
     /**
      * Displays homepage.
      *
@@ -51,28 +65,47 @@ class SiteController extends BaseController
         return $this->render('index');
     }
 
-    public function actionCalendar()
+    public function actionCalendar($month = null, $year = null)
     {
-        return $this->render('calendar');
+        if (!$month) $month = date('n');
+        if (!$year) $year = date('Y');
+
+        $employees = Coworker::find()->all();
+
+        return $this->render('calendar', [
+            'month' => $month,
+            'year' => $year,
+            'employees' => $employees,
+            'currentDate' => date('Y-m-d'),
+        ]);
+    }
+
+    public function actionDayInfo($employee_id, $date)
+    {
+        // Этот экшен может возвращать информацию о конкретном дне для модального окна
+        $employee = Coworker::findOne($employee_id);
+
+        return $this->renderPartial('_day_info', [
+            'employee' => $employee,
+            'date' => $date,
+        ]);
     }
 
     public function actionCalendarMonth($year, $month)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $result = [];
-        \Yii::error( \Yii::$app->user->getId() );
-        $coworkers = \app\models\Coworker::find()->where(['created_by' => \Yii::$app->user->getId()])->orWhere(['priority' => \app\models\Coworker::PRIORITY_LOW])->all();
+        $coworkers = \app\models\Coworker::find()->where(['referrer_id' => \Yii::$app->user->getId()])->orWhere(['priority_level' => \app\models\Coworker::PRIORITY_LOW])->all();
         foreach ($coworkers as $coworker) {
             $hours = \app\models\Hours::find()
                 ->where(['>=', 'date', date("$year-$month-01")])
                 ->andWhere(['<=', 'date', date("$year-$month-".cal_days_in_month(CAL_GREGORIAN, $month, $year))])
-                ->andWhere(['coworker_id' => $coworker->id])
+                ->andWhere(['user_id' => $coworker->id])
                 ->all();
             $result[] = [
-                'id' => $coworker->id,
-                'name' => $coworker->firstname.' '.$coworker->lastname,
-                'data' => $hours,
-                'total' => 0
+                'user' => $coworker,
+                'hours' => $coworker->hours,
+                'orders' => $coworker->orders,
             ];
         }
         return $result;
@@ -81,5 +114,33 @@ class SiteController extends BaseController
     public function actionBuilder()
     {
         return $this->render('builder');
+    }
+
+    public function actionMarkHoursPaid()
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $query = Hours::find();
+        foreach ($data as $key => $field) {
+            $query->andWhere([$key => $field]);
+        }
+        $model = $query->one();
+        $model->is_payed = true;
+        return $model->save();
+    }
+
+    public function actionMarkOrderPaid()
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $model = Order::findOne($data['order_id']);
+        $model->is_payed = 1;
+        if ($model->save()) {
+            \Yii::error($model->attributes);
+            return ['ok' => true];
+        } else {
+            \Yii::error($model->errors);
+        }
+        return ['ok' => false];
     }
 }

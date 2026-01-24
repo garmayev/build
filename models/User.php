@@ -85,6 +85,11 @@ class User extends ActiveRecord implements IdentityInterface
         return self::findOne(['auth_key' => $token]);
     }
 
+    public static function findByUsername($username): ?self
+    {
+        return self::findOne(['username' => $username]);
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -109,16 +114,20 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->getAuthKey() === $authKey;
     }
 
+    public function validatePassword(string $password): bool
+    {
+        return Yii::$app->security->validatePassword($password, $this->password_hash);
+    }
+
     public function getFullName()
     {
         $name = ltrim("{$this->profile->family} {$this->profile->name} {$this->profile->surname}");
         return $name ?? $this->username;
     }
 
-
     public function getProfile(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(Profile::class, ['id' => 'id']);
+        return $this->hasOne(Profile::class, ['user_id' => 'id']);
     }
 
     public function setProfile($data)

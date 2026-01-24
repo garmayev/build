@@ -36,4 +36,5 @@ class TelegramController extends Controller
         $telegramMessage = TelegramMessage::findOne($message_id);
         $telegramMessage->remove();
     }
+
 }

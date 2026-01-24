@@ -2,31 +2,45 @@
 
 namespace app\models\forms;
 
+use app\models\Coworker;
+use app\models\Order;
+use app\models\Profile;
 use app\models\User;
+use floor12\phone\PhoneValidator;
 use yii\base\Model;
 
 class UserRegisterForm extends Model
 {
     public $username;
     public $email;
-    public $new_password;
-    public $current_password;
-    public $level = User::PRIORITY_HIGH;
+    public $priority;
+
+    public $family;
+    public $name;
+    public $surname;
+    public $birthday;
+    public $phone;
+
+    public $properties;
 
     private $_user;
+    private $_profile;
     public $is_mail = false;
     public $referrer;
 
     public function rules()
     {
         return [
-            [['username', 'email', 'new_password'], 'string'],
-            [['username', 'email'], 'required'],
-            [['username', 'email'], 'trim'],
+            [['username', 'email', 'family', 'name', 'surname'], 'string'],
+            [['username', 'email', 'family', 'phone'], 'required'],
+            [['username', 'email', 'family', 'name', 'surname'], 'trim'],
             [['username'], 'unique', 'targetClass' => User::className(), 'targetAttribute' => ['username']],
             [['email'], 'email'],
             [['email'], 'unique', 'targetClass' => User::className(), 'targetAttribute' => ['email']],
-            [['current_password', 'new_password'], 'safe'],
+            [['priority'], 'in', 'range' => [Coworker::PRIORITY_LOW, Coworker::PRIORITY_NORMAL, Coworker::PRIORITY_HIGH]],
+            [['phone'], PhoneValidator::class],
+            [['birthday'], 'date', 'format' => 'php:Y-m-d'],
+            [['properties'], 'safe']
         ];
     }
 
@@ -72,8 +86,30 @@ class UserRegisterForm extends Model
     public function findUser($id)
     {
         $this->_user = User::findOne($id);
-        $this->username = $this->_user->username;
-        $this->email = $this->_user->email;
+        if ( $this->_user ) {
+            $this->username = $this->_user->username;
+            $this->email = $this->_user->email;
+        }
+    }
+
+    public function attributeLabels()
+    {
+        return [
+            'username' => \Yii::t('app', 'Username'),
+            'email' => \Yii::t('app', 'Email'),
+            'family' => \Yii::t('app', 'Family'),
+            'name' => \Yii::t('app', 'Name'),
+            'surname' => \Yii::t('app', 'Surname'),
+            'birthday' => \Yii::t('app', 'Birthday'),
+            'phone' => \Yii::t('app', 'Phone'),
+            'properties' => \Yii::t('app', 'Properties'),
+            'priority' => \Yii::t('app', 'Priority'),
+        ];
+    }
+
+    public function getIsNewRecord()
+    {
+        return !isset($this->_user);
     }
 
     public function getId()
@@ -81,22 +117,63 @@ class UserRegisterForm extends Model
         return $this->_user->id;
     }
 
-    public function register()
+    public function register($user_id)
     {
-        $this->_user = new User();
-        $this->_user->username = $this->username;
-        $this->_user->email = $this->email;
-        $this->_user->password_hash = \Yii::$app->security->generatePasswordHash($this->new_password);
-        $this->_user->auth_key = \Yii::$app->security->generateRandomString();
-        $this->_user->access_token = \Yii::$app->security->generateRandomString();
-        $this->_user->status = User::STATUS_ACTIVE;
-        $this->_user->referrer_id = $this->referrer;
+        return $this->createProfile($user_id);
+    }
+
+    private function createUser($user_id = null)
+    {
+        if (isset($user_id)) {
+            $this->_user = Coworker::findOne($user_id);
+        } else {
+            $this->_user = new Coworker();
+        }
+
+        $this->_user->load([
+            "username" => $this->username,
+            "email" => $this->email,
+            "password_hash" => \Yii::$app->security->generatePasswordHash($this->email),
+            "auth_key" => \Yii::$app->security->generateRandomString(),
+            "access_token" => \Yii::$app->security->generateRandomString(),
+            "status" => User::STATUS_ACTIVE,
+            "referrer_id" => \Yii::$app->user->id,
+            "priority_level" => $this->priority,
+            "userProperties" => $this->properties,
+        ], '');
+
         if ($this->_user->save()) {
-            if ($this->is_mail) $this->sendMail();
             return true;
         } else {
-            \Yii::error($this->_user->errors);
+            \Yii::error($this->_user->getErrors());
+            return false;
         }
+    }
+
+    private function createProfile($user_id)
+    {
+        if (!isset($this->_user)) {
+            $this->createUser($user_id);
+        } else {
+            $this->_user = User::findOne($user_id);
+        }
+        if ($this->_user->profile) {
+            $this->_profile = $this->_user->profile;
+        } else {
+            $this->_profile = new Profile();
+        }
+        $this->_profile->load([
+            'family' => $this->family,
+            'name' => $this->name,
+            'surname' => $this->surname,
+            'phone' => $this->phone,
+            'birthday' => $this->birthday,
+            'user_id' => $this->_user->id,
+        ], '');
+        if ($this->_profile->save()) {
+            return $this->_user->link('profile', $this->_profile);
+        }
+        \Yii::error($this->_profile->getErrors());
         return false;
     }
 }

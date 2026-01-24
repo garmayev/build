@@ -19,28 +19,34 @@ class OrderController extends Controller
         echo $order->isFull();
     }
 
-    public function actionNotify($order_id = null, $priority = User::PRIORITY_HIGH)
+    public function actionNotify($order_id = null, $priority = Coworker::PRIORITY_HIGH)
     {
         session_start();
         $models = Order::find()->where(['status' => Order::STATUS_NEW])->all();
         echo "[" . \Yii::$app->formatter->asDatetime(time(), "php:Y-m-d H:i:s") . "]\n";
+        echo "Count: " . count($models) . "\n";
         try {
             foreach ($models as $model) {
-                $priority = $this->getPriority($model, isset($model->priority_level) ? $model->priority_level - 1 : User::PRIORITY_HIGH);
+                $priority = $this->getPriority($model, isset($model->priority_level) ? $model->priority_level - 1 : Coworker::PRIORITY_HIGH);
                 $_SESSION['__id'] = $model->created_by;
-                if ($model->priority_level >= 0) {
+                if ($model->priority_level >= 0 && $this->checkOrderMode($model)) {
                     echo "Order #{$model->id}\n";
                     if ($this->checkTime($model->notify_date, $model)) {
                         echo "\tOrder {$model->id} is needle to notify\n";
                         echo "\tPriority: $priority\n";
                         $model->priority_level = $model->priority_level--;
-                        $model->notify_date = time();
+//                        $model->notify_date = time();
                         if ($model->save()) {
-                            $model->sendAndUpdateTelegramNotifications();
+                            foreach ($model->suitableCoworkers as $key => $coworker) {
+                                echo $key + 1 . " {$coworker->name}\n";
+                            }
+//                            $model->sendAndUpdateTelegramNotifications();
                         } else {
                             \Yii::error($model->errors);
                         }
                     }
+                } else {
+                    echo "Order #{$model->id} is not needle to notify\n";
                 }
             }
         } catch (\Exception $e) {
@@ -59,6 +65,18 @@ class OrderController extends Controller
         return ($elapsed - $delay_seconds > 0);
     }
 
+    private function checkOrderMode(Order $model)
+    {
+        $now = \Yii::$app->formatter->asDate(time(), "php:Y-m-d 00:00:00");
+        switch ($model->mode) {
+            case Order::MODE_SINGLE_FIXED:
+                return $model->start_datetime === $now;
+            case Order::MODE_LONG_FIXED:
+            case Order::MODE_LONG_DAILY:
+                return $model->finish_datetime >= $now;
+        }
+    }
+
     private function getPriority(Order $model, $priority)
     {
         for ($i = $priority; $i >= -1; $i--) {
@@ -74,14 +92,22 @@ class OrderController extends Controller
     {
         $order = Order::findOne($id);
         $coworkers = $order->getSuitableCoworkers();
+        echo "Suitable coworkers for order #{$id}\n";
+        foreach ($order->requirements as $requirement)
+        {
+            echo "\tRequirement:\n\t\tcount:{$requirement->count}\n\t\t{$requirement->property->title} {$requirement->type} {$requirement->value}\n";
+        }
         if (count($coworkers) === 0) {
             echo "Empty\n";
         }
         /**
-         * @var $coworker User
+         * @var $coworker Coworker
          */
         foreach ($coworkers as $coworker) {
-            echo $coworker->name . "\n";
+            echo $coworker->id . ":\n";
+            foreach ($coworker->userProperties as $property) {
+                echo "\t{$property->property->title}: {$property->value}\n";
+            }
         }
         echo "Total: " . count($coworkers) . "\n\n";
     }

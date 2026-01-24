@@ -69,6 +69,51 @@ class Report extends \yii\db\ActiveRecord
         ];
     }
 
+    /**
+     * @return ActiveQuery
+     */
+    public function getOrder(): ActiveQuery
+    {
+        return $this->hasOne(Order::class, ['id' => 'order_id']);
+    }
+
+    /**
+     * Проверяет, был ли уже создан отчет на эту дату
+     *
+     * @return bool
+     */
+    public function isDuplicateForDate(): bool
+    {
+        if (!$this->order_id || !$this->created_at) {
+            return false;
+        }
+
+        $date = date('Y-m-d', $this->created_at);
+
+        $existing = self::find()
+            ->where(['order_id' => $this->order_id])
+            ->andWhere(['>=', 'created_at', strtotime($date)])
+            ->andWhere(['<', 'created_at', strtotime($date . ' +1 day')])
+            ->andWhere(['!=', 'id', $this->id])
+            ->exists();
+
+        return $existing;
+    }
+
+    public function beforeValidate(): bool
+    {
+        if (parent::beforeValidate()) {
+            if ($this->isDuplicateForDate()) {
+                $this->addError('created_at',
+                    Yii::t('app', 'Report for this date already exists')
+                );
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
     public function getAttachments(): ActiveQuery
     {
         return $this->hasMany(Attachment::class, ['target_id' => 'id'])
@@ -91,7 +136,7 @@ class Report extends \yii\db\ActiveRecord
             }
             $transaction->commit();
         } catch (\Exception $exception) {
-            \Yii::error($exception->message);
+            \Yii::error($exception->getMessage());
             $transaction->rollback();
         }
     }

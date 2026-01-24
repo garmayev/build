@@ -40,10 +40,8 @@ class CoworkerSearch extends Coworker
     {
         if (\Yii::$app->user->can('admin')) {
             $query = Coworker::find()->joinWith('profile');
-        } else if (\Yii::$app->user->can('director')) {
-            $query = Coworker::find()->joinWith('profile')->where(['referrer_id' => \Yii::$app->user->getId()]);
         } else {
-            $query = Coworker::find()->joinWith('profile')->where(['id' => \Yii::$app->user->getId()]);
+            $query = Coworker::find()->joinWith('profile')->where(['referrer_id' => \Yii::$app->user->getId()]);
         }
 
         $dataProvider = new ActiveDataProvider([

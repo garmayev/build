@@ -31,6 +31,7 @@ use yii\helpers\ArrayHelper;
  * @property int $mode
  * @property double $price
  * @property string $summary
+ * @property int $is_payed
  *
  * @property string $statusTitle
  * @property array $statusList
@@ -192,25 +193,23 @@ class Order extends \yii\db\ActiveRecord
     public function rules(): array
     {
         return [
-            [['date', 'building_id', 'mode'], 'required'],
-            [['status', 'building_id', 'date', 'type', 'created_by', 'created_at', 'priority_level', 'mode'], 'integer'],
+            [['building_id', 'mode'], 'required'],
+            [['status', 'building_id', 'date', 'type', 'created_by', 'created_at', 'priority_level', 'mode', 'is_payed'], 'integer'],
             [['building_id'], 'exist', 'skipOnError' => true, 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
-            [['priority_level'], 'default', 'value' => User::PRIORITY_HIGH],
+            [['priority_level'], 'default', 'value' => Coworker::PRIORITY_HIGH],
             [['mode'], 'in', 'range' => [self::MODE_SINGLE_FIXED, self::MODE_LONG_FIXED, self::MODE_LONG_DAILY]],
             [['mode'], 'default', 'value' => self::MODE_LONG_DAILY],
             [['status'], 'default', 'value' => self::STATUS_NEW],
-            [['comment'], 'string'],
+            [['comment', 'title'], 'string'],
             [['summary'], 'string', 'max' => 11],
             [['summary'], 'default', 'value' => ''],
+            [['title'], 'string', 'max' => 255],
             [['datetime', 'attachments', 'requirements'], 'safe'],
             [['created_at'], 'default', 'value' => time()],
-            [['price'], 'safe'],
-            [['price'], 'filter', 'filter' => function($value) {
-                return str_replace(' ', '', $value);
-            }],
-            [['price'], 'match', 'pattern' => '/^[0-9]{1,12}(\.[0-9]{0,2})?$/'],
+            [['price', 'requirements'], 'safe'],
             [['price'], 'default', 'value' => 0],
-            [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg','jpeg','png','svg','bmp'], 'maxFiles' => 10],
+            [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg', 'jpeg', 'png', 'svg', 'bmp'], 'maxFiles' => 10],
+            [['start_datetime', 'finish_datetime'], 'date', 'format' => 'php:Y-m-d H:i:s']
         ];
     }
 
@@ -226,6 +225,7 @@ class Order extends \yii\db\ActiveRecord
             'status' => Yii::t('app', 'Status'),
             'building_id' => Yii::t('app', 'Building ID'),
             'date' => Yii::t('app', 'Date'),
+            'title' => Yii::t('app', 'Title'),
             'typeName' => Yii::t('app', 'Order Type'),
             'comment' => Yii::t('app', 'Comment'),
             'attachments' => Yii::t('app', 'Attachments'),
@@ -233,6 +233,8 @@ class Order extends \yii\db\ActiveRecord
             'price' => Yii::t('app', 'Price'),
             'summary' => Yii::t('app', 'Summary'),
             'priority_level' => Yii::t('app', 'Priority'),
+            'start_datetime' => Yii::t('app', 'Start Date'),
+            'finish_datetime' => Yii::t('app', 'End Date'),
         ];
     }
 
@@ -245,7 +247,8 @@ class Order extends \yii\db\ActiveRecord
     {
         return [
             'id',
-            'status' => function (Order $model) {
+            'status',
+            'statusName' => function (Order $model) {
                 return $model->statusTitle;
             },
             'type' => function (Order $model) {
@@ -262,13 +265,19 @@ class Order extends \yii\db\ActiveRecord
                     ->andWhere(['target_id' => $model->id])
                     ->all();
             },
-            'coworkers' => function (Order $model) {
-                return $model->coworkers;
-            },
+            'mode',
+            'price',
+            'start_datetime',
+            'finish_datetime',
+            'is_payed',
+            'title',
+//            'coworkers' => function (Order $model) {
+//                return $model->coworkers;
+//            },
             'requirements' => function (Order $model) {
                 return $model->requirements;
             },
-            'hours',
+//            'hours',
         ];
     }
 
@@ -357,12 +366,12 @@ class Order extends \yii\db\ActiveRecord
             if (!$file instanceof \yii\web\UploadedFile) {
                 continue;
             }
-            
+
             $attachment = new Attachment([
                 'file' => $file,
                 'target_class' => self::class,
             ]);
-            
+
             if ($attachment->upload() && $attachment->save()) {
                 Yii::error('Attachment saved');
                 $attachments[] = $attachment;
@@ -391,13 +400,13 @@ class Order extends \yii\db\ActiveRecord
     {
         // Получаем существующие вложения одним запросом
         $existingAttachments = $this->getAttachments()->all();
-        
+
         // Удаляем существующие вложения одним запросом
         if (!empty($existingAttachments)) {
             $attachmentIds = ArrayHelper::getColumn($existingAttachments, 'id');
             Attachment::deleteAll(['id' => $attachmentIds]);
         }
-        
+
         // Подготавливаем данные для массовой вставки
         $attachments = [];
         foreach (ArrayHelper::getColumn($data, 'url') as $link) {
@@ -409,7 +418,7 @@ class Order extends \yii\db\ActiveRecord
                 'target_id' => $this->id,
             ];
         }
-        
+
         // Массовая вставка
         if (!empty($attachments)) {
             Yii::$app->db->createCommand()
@@ -480,7 +489,7 @@ class Order extends \yii\db\ActiveRecord
      */
     public function getCoworkers(): ActiveQuery
     {
-        return $this->hasMany(User::class, ['id' => 'user_id'])
+        return $this->hasMany(Coworker::class, ['id' => 'user_id'])
             ->viaTable('order_user', ['order_id' => 'id']);
     }
 
@@ -624,11 +633,9 @@ class Order extends \yii\db\ActiveRecord
         $requirementSubQuery = Requirement::find()
             ->select(['property_id', 'dimension_id', 'category_id', 'type', 'value'])
             ->where(['order_id' => $this->id]);
-        $userIds = \Yii::$app->authManager->getUserIdsByRole('employee');
         // Основной запрос для поиска подходящих пользователей
-        return User::find()
+        return Coworker::find()
             ->where(['and', ['priority_level' => $this->priority_level], ['referrer_id' => $this->owner->id]])
-            ->andWhere(['id' => $userIds])
             ->andWhere(['exists', (new \yii\db\Query())
                 ->select('*')
                 ->from(['r' => $requirementSubQuery])
@@ -638,7 +645,7 @@ class Order extends \yii\db\ActiveRecord
                     'up.dimension_id = r.dimension_id',
                     'up.category_id = r.category_id'
                 ])
-                ->where('up.user_id = user.id')
+                ->where('up.user_id = coworker.id')
                 ->andWhere([
                     'or',
                     ['and', ['r.type' => 'less'], ['<=', 'up.value', new \yii\db\Expression('r.value')]],
@@ -671,6 +678,103 @@ class Order extends \yii\db\ActiveRecord
             return $this->save();
         }
         return false;
+    }
+
+    /**
+     * Рассчитывает стоимость заказа в зависимости от режима
+     *
+     * @return float
+     */
+    public function calculateTotalPrice(): float
+    {
+        switch ($this->mode) {
+            case self::MODE_SINGLE_FIXED:
+                return (float)$this->price;
+
+            case self::MODE_LONG_FIXED:
+                return (float)$this->price;
+
+            case self::MODE_LONG_DAILY:
+                $days = $this->getWorkingDaysCount();
+                return (float)$this->price * $days;
+
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * Проверяет, требуется ли ежедневный отчет для заказа
+     *
+     * @return bool
+     */
+    public function requiresDailyReports(): bool
+    {
+        return $this->mode === self::MODE_LONG_DAILY;
+    }
+
+    /**
+     * Получает все отчеты по заказу, сгруппированные по дате
+     *
+     * @return array
+     */
+    public function getReportsByDate(): array
+    {
+        $reports = $this->getReports()->with('attachments')->all();
+        $grouped = [];
+
+        foreach ($reports as $report) {
+            $date = date('Y-m-d', $report->created_at);
+            if (!isset($grouped[$date])) {
+                $grouped[$date] = [];
+            }
+            $grouped[$date][] = $report;
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * Проверяет, заполнены ли все необходимые отчеты
+     *
+     * @return bool
+     */
+    public function hasAllRequiredReports(): bool
+    {
+        if ($this->mode !== self::MODE_LONG_DAILY) {
+            return true; // Для не-ежедневных режимов отчеты не обязательны
+        }
+
+        $requiredDays = $this->getWorkingDaysCount();
+        $actualReports = count($this->reports);
+
+        return $actualReports >= $requiredDays;
+    }
+
+    /**
+     * Получает количество рабочих дней в периоде
+     *
+     * @return int
+     */
+    private function getWorkingDaysCount(): int
+    {
+        if (!$this->start_datetime || !$this->finish_datetime) {
+            return 1;
+        }
+
+        $start = new \DateTime($this->start_datetime);
+        $end = new \DateTime($this->finish_datetime);
+        $end->modify('+1 day'); // включительно
+
+        $interval = new \DateInterval('P1D');
+        $period = new \DatePeriod($start, $interval, $end);
+
+        $workingDays = 0;
+        foreach ($period as $date) {
+            $workingDays++;
+        }
+
+        return $workingDays;
     }
 
     public function isOwnerNotified()
@@ -720,7 +824,7 @@ class Order extends \yii\db\ActiveRecord
                     ]
                 ]
             ]);
-//            \Yii::error($formattedMessage);
+
             // 1. Обновление существующих сообщений
             foreach ($this->telegramMessages as $message) {
                 $message->editText($formattedMessage, $coworkerKeyboard);
@@ -755,17 +859,17 @@ class Order extends \yii\db\ActiveRecord
                     }
                 }
                 // Push-уведомления
-/*                elseif ($profile->device_id) {
-                    $expoMessage = (new ExpoMessage())
-                        ->setTitle(\Yii::t('app', 'New Order') . ' #' . $this->id)
-                        ->setBody(Helper::orderDetailsPlain($this))
-                        ->setTo($profile->device_id)
-                        ->setData(['url' => 'build://amgcompany.ru/--/order/' . $this->id, 'id' => $this->id])
-                        ->setChannelId('new-order')
-                        ->setCategoryId('new-order')
-                        ->playSound();
-                    (new Expo())->send($expoMessage)->push();
-                } */
+                /*                elseif ($profile->device_id) {
+                                    $expoMessage = (new ExpoMessage())
+                                        ->setTitle(\Yii::t('app', 'New Order') . ' #' . $this->id)
+                                        ->setBody(Helper::orderDetailsPlain($this))
+                                        ->setTo($profile->device_id)
+                                        ->setData(['url' => 'build://amgcompany.ru/--/order/' . $this->id, 'id' => $this->id])
+                                        ->setChannelId('new-order')
+                                        ->setCategoryId('new-order')
+                                        ->playSound();
+                                    (new Expo())->send($expoMessage)->push();
+                                } */
             }
 
             // 4. Уведомление владельца

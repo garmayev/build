@@ -24,6 +24,11 @@ use Yii;
  */
 class Requirement extends \yii\db\ActiveRecord
 {
+    const TYPE_MORE = 'more';
+    const TYPE_LESS = 'less';
+    const TYPE_EQUAL = 'equal';
+    const TYPE_NOT_EQUAL = 'not-equal';
+
     /**
      * {@inheritdoc}
      */
@@ -132,5 +137,20 @@ class Requirement extends \yii\db\ActiveRecord
         \Yii::error( $query->createCommand()->getRawSql() );
         \Yii::error( count($query->all()) );
         return $query->all();
+    }
+
+    public static function getTypes()
+    {
+        return [
+            self::TYPE_MORE => Yii::t('app', 'More'),
+            self::TYPE_LESS => Yii::t('app', 'Less'),
+            self::TYPE_EQUAL => Yii::t('app', 'Equal'),
+            self::TYPE_NOT_EQUAL => Yii::t('app', 'Not Equal'),
+        ];
+    }
+
+    public function getType()
+    {
+        return self::getTypes()[$this->type];
     }
 }

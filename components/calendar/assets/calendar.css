@@ -1,0 +1,252 @@
+/* @app/web/css/horizontal-calendar.css */
+.horizontal-calendar-widget {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  margin: 20px 0;
+  overflow-x: auto;
+}
+.calendar-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 5px;
+}
+.calendar-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+.calendar-nav {
+  display: flex;
+  gap: 10px;
+}
+.calendar-nav-button {
+  display: inline-block;
+  padding: 8px 15px;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.3s;
+  cursor: pointer;
+}
+.calendar-nav-button:hover {
+  background: #0056b3;
+  color: white;
+  text-decoration: none;
+}
+.calendar-table-container {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: white;
+}
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+.calendar-table th,
+.calendar-table td {
+  border: 1px solid #e0e0e0;
+  padding: 8px;
+  vertical-align: top;
+}
+.calendar-table thead th {
+  background: #f8f9fa;
+  font-weight: bold;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.employee-header {
+  background: #e9ecef !important;
+  min-width: 200px;
+  position: sticky;
+  left: 0;
+  z-index: 20;
+}
+.day-header {
+  min-width: 100px;
+  text-align: center;
+  font-size: 12px;
+}
+.day-header.weekend {
+  background: #fff5f5;
+  color: #dc3545;
+}
+.day-header.today {
+  background: #e3f2fd;
+  color: #007bff;
+  font-weight: bold;
+}
+.employee-name {
+  background: #f8f9fa;
+  font-weight: bold;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  min-width: 200px;
+  white-space: nowrap;
+}
+.day-cell {
+  height: 40px;
+  min-width: 40px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.day-cell:hover {
+  background: #f8f9fa !important;
+}
+.day-cell.weekend {
+  background: #f8f9fa;
+}
+.day-cell.today {
+  background: #e8f4fd !important;
+}
+.day-cell.empty-cell {
+  background: #fafafa;
+}
+.day-cell.has-order {
+  background: #e8f5e9;
+}
+.day-cell.has-hours {
+  background: #fff3e0;
+}
+.day-cell.merged-cell {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+}
+.day-cell.single-fixed {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+}
+.day-cell.long-fixed {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+}
+/* Статусы заказов */
+.day-cell.status-0 {
+  border-left: 3px solid #007bff;
+}
+/* STATUS_NEW */
+.day-cell.status-1 {
+  border-left: 3px solid #ffc107;
+}
+/* STATUS_PROCESS */
+.day-cell.status-2 {
+  border-left: 3px solid #17a2b8;
+}
+/* STATUS_BUILD */
+.day-cell.status-3 {
+  border-left: 3px solid #28a745;
+}
+/* STATUS_COMPLETE */
+.order-content {
+  font-size: 11px;
+  line-height: 1.3;
+}
+.order-content.merged {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.order-id {
+  font-weight: bold;
+  color: #007bff;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.order-id:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+.order-duration {
+  font-size: 10px;
+  color: #6c757d;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.order-hours {
+  color: #28a745;
+  font-weight: bold;
+}
+.order-status {
+  font-size: 10px;
+  color: #6c757d;
+  margin-top: 2px;
+}
+.hours-content {
+  font-size: 11px;
+  line-height: 1.3;
+}
+.hours-count {
+  font-weight: bold;
+  color: #fd7e14;
+}
+.hours-time {
+  color: #6c757d;
+  font-size: 10px;
+}
+.hours-order {
+  color: #007bff;
+  cursor: pointer;
+  font-size: 10px;
+}
+.hours-order:hover {
+  text-decoration: underline;
+}
+.hours-status {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 2px;
+}
+.hours-status.payed {
+  background: #d4edda;
+  color: #155724;
+}
+.hours-status.un-payed {
+  background: #f8d7da;
+  color: #721c24;
+}
+/* Адаптивность */
+@media (max-width: 768px) {
+  .calendar-table th,
+  .calendar-table td {
+    padding: 4px;
+    font-size: 11px;
+  }
+  .employee-header,
+  .employee-name {
+    min-width: 150px;
+  }
+  .day-header {
+    min-width: 40px;
+  }
+  .day-cell {
+    height: 40px;
+    min-width: 40px;
+  }
+}
+/* Скроллбар */
+.calendar-table-container::-webkit-scrollbar {
+  height: 8px;
+}
+.calendar-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+.calendar-table-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+.calendar-table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+/*# sourceMappingURL=calendar.css.map */
