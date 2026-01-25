@@ -135,7 +135,15 @@ JS
                 }
             ],
             [
-                'class' => ActionColumn::class
+                'class' => ActionColumn::class,
+                'urlCreator' => function ($action, $model, $key, $index) {
+                    // Пример: перенаправить 'view' на другой контроллер
+                    if ($action === 'update') {
+                        return \yii\helpers\Url::to(['coworker/account', 'id' => $model->id]);
+                    }
+                    // Стандартное поведение для остальных действий
+                    return \yii\helpers\Url::to([$action, 'id' => $model->id]);
+                },
             ]
         ],
     ]); ?>

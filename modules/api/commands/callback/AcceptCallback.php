@@ -41,9 +41,10 @@ class AcceptCallback extends BaseCallback implements CommandInterface
                     }
                 } else {
                     foreach ($messages as $message) {
+                        $title = !empty($order->title) ? " ({$order->title})" : "";
                         $header = $message->chat_id == $coworker->profile->chat_id ?
-                            \Yii::t('app', 'You have agreed to complete the order') . " #{$order->id}\n" :
-                            \Yii::t('app', 'New Order') . " #{$order->id}\n";
+                            "<b>".\Yii::t('app', 'You have agreed to complete the order') . " #{$order->id} {$title}</b>\n" :
+                            "<b>" . \Yii::t('app', 'New Order') . " #{$order->id} {$title}</b>\n";
 
                         // Для сотрудника, который согласился, убираем кнопки
                         if ($message->chat_id == $query->from['id']) {
@@ -52,6 +53,7 @@ class AcceptCallback extends BaseCallback implements CommandInterface
                             $replyMarkup = $message->reply_markup;
                         }
                         $text = "";
+                        \Yii::error($header);
                         $message->editMessageText(
                             $header . \app\components\Helper::generateTelegramMessage($order->id),
                             $replyMarkup

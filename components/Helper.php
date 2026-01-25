@@ -22,7 +22,17 @@ class Helper extends Component
         $building = $order->building;
         $message = \Yii::t("app", "<b>Building</b>: <i>{building}</i>", ['building' => $building->title]) . "\n";
         $message .= \Yii::t("app", "<b>Address</b>: <i>{address}</i>", ['address' => $building->location->link]) . "\n";
-        $message .= \Yii::t("app", "<b>Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->date)]) . "\n";
+        if ($order->mode !== Order::MODE_SINGLE_FIXED) {
+            $message .= \Yii::t("app", "<b>Start Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->start_datetime)]) . "\n";
+            $message .= \Yii::t("app", "<b>Finish Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->finish_datetime)]) . "\n";
+        } else {
+            $message .= \Yii::t("app", "<b>Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->start_datetime)]) . "\n";
+        }
+        if ($order->mode !== Order::MODE_LONG_DAILY) {
+            $message .= \Yii::t("app", "<b>Price</b>: <i>{price}</i>", ['price' => \Yii::$app->formatter->asCurrency($order->price)])."\n";
+        } else {
+            $message .= \Yii::t("app", "<b>Price</b>: <i>{price}</i>", ['price' => \Yii::t("app", "Daily")])."\n";
+        }
         if ($order->comment) {
             $message .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
         }
@@ -55,31 +65,61 @@ class Helper extends Component
         $order = Order::findOne($order_id);
 
         $building = $order->building;
-        $message = "<b>".\Yii::t("app", "Order #{id}", ['id' => $order->id]) . "</b>\n";
+        $message = "<b>".\Yii::t("app", "Order #{id}", ['id' => $order->id]) . "</b>";
+        if (!empty($order->title)) {
+            $message .= " <b><i>({$order->title})</i></b>\n";
+        } else {
+            $message .= "\n";
+        }
         $message .= \Yii::t("app", "<b>Building</b>: <i>{building}</i>", ['building' => $building->title]) . "\n";
         $message .= \Yii::t("app", "<b>Address</b>: <i>{address}</i>", ['address' => $building->location->link]) . "\n";
-        $message .= \Yii::t("app", "<b>Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->date)]) . "\n";
+        if ($order->mode !== Order::MODE_SINGLE_FIXED) {
+            $message .= \Yii::t("app", "<b>Start Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->start_datetime)]) . "\n";
+            $message .= \Yii::t("app", "<b>Finish Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->finish_datetime)]) . "\n";
+        } else {
+            $message .= \Yii::t("app", "<b>Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->start_datetime)]) . "\n";
+        }
+        if ($order->mode !== Order::MODE_LONG_DAILY) {
+            $message .= \Yii::t("app", "<b>Price</b>: <i>{price}</i>", ['price' => \Yii::$app->formatter->asCurrency($order->price)])."\n";
+        } else {
+            $message .= \Yii::t("app", "<b>Price</b>: <i>{price}</i>", ['price' => \Yii::t("app", "Daily")])."\n";
+        }
         if ($order->comment) {
             $message .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
         }
         $currentCount = $order->issetCoworkers;
         $totalRequired = $order->requiredCoworkers;
         $message .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
-        $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
+        $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
         return $message;
     }
 
     public static function orderDetails(Order $order)
     {
         $building = $order->building;
-        $text = "<b>" . \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "</b>\n";
+        $text = "<b>" . \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "</b>";
+        if (!empty($order->title)) {
+            $text .= " <b><i>({$order->title})</i></b>\n";
+        } else {
+            $text .= "\n";
+        }
         $text .= \Yii::t("app", "<b>Building</b>: <i>{building}</i>", ['building' => $building->title]) . "\n";
         $text .= \Yii::t("app", "<b>Address</b>: <i>{address}</i>", ['address' => $building->location->link]) . "\n";
-        $text .= \Yii::t("app", "<b>Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->date)]) . "\n";
+        if ($order->mode !== Order::MODE_SINGLE_FIXED) {
+            $text .= \Yii::t("app", "<b>Start Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->start_datetime)]) . "\n";
+            $text .= \Yii::t("app", "<b>Finish Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->finish_datetime)]) . "\n";
+        } else {
+            $text .= \Yii::t("app", "<b>Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->start_datetime)]) . "\n";
+        }
+        if ($order->mode !== Order::MODE_LONG_DAILY) {
+            $text .= \Yii::t("app", "<b>Price</b>: <i>{price}</i>", ['price' => \Yii::$app->formatter->asCurrency($order->price)])."\n";
+        } else {
+            $text .= \Yii::t("app", "<b>Price</b>: <i>{price}</i>", ['price' => \Yii::t("app", "Daily")])."\n";
+        }
         if ($order->comment) {
             $text .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
         }
-        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
+        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
         if ($order->attachments) {
             $text .= \Yii::t("app", "<b>Attachments</b>")."\n";
             foreach ($order->attachments as $attachment) {
@@ -95,11 +135,26 @@ class Helper extends Component
     public static function orderDetailsPlain(Order $order)
     {
         $building = $order->building;
-        $text = \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "\n";
+        $text = "<b>" . \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "</b>";
+        if (!empty($order->title)) {
+            $text .= " <b><i>({$order->title})</i></b>\n";
+        } else {
+            $text .= "\n";
+        }
         $text .= \Yii::t("app", "Building: {building}", ['building' => $building->title]) . "\n";
         $text .= \Yii::t("app", "Address: {address}", ['address' => $building->location->address]) . "\n";
-        $text .= \Yii::t("app", "Date: {date}", ['date' => \Yii::$app->formatter->asDate($order->date)]) . "\n";
-        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->name} (<a href='tel:+{$order->owner->profile->phone}'>{$order->owner->profile->phone}</a>)\n";
+        if ($order->mode !== Order::MODE_SINGLE_FIXED) {
+            $text .= \Yii::t("app", "<b>Start Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->start_datetime)]) . "\n";
+            $text .= \Yii::t("app", "<b>Finish Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->finish_datetime)]) . "\n";
+        } else {
+            $text .= \Yii::t("app", "<b>Date</b>: <i>{date}</i>", ['date' => \Yii::$app->formatter->asDate($order->start_datetime)]) . "\n";
+        }
+        if ($order->mode !== Order::MODE_LONG_DAILY) {
+            $text .= \Yii::t("app", "<b>Price</b>: <i>{price}</i>", ['price' => \Yii::$app->formatter->asCurrency($order->price)])."\n";
+        } else {
+            $text .= \Yii::t("app", "<b>Price</b>: <i>{price}</i>", ['price' => \Yii::t("app", "Daily")])."\n";
+        }
+        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href='tel:+{$order->owner->profile->phone}'>{$order->owner->profile->phone}</a>)\n";
         return $text;
     }
 

@@ -13,7 +13,7 @@ class OrderDetailCallback extends BaseCallback implements CommandInterface
         $query = $telegram->input->callback_query;
         $args = explode(" ", $query->data);
         parse_str($args[1] ?? '', $data);
-        $user = \app\models\User::findByChatId($query->from['id']);
+        $user = \app\models\Coworker::findByChatId($query->from['id']);
         $keyboard = [];
 
         $id = $data['id'] ?? null;

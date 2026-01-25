@@ -10,7 +10,7 @@ class OrderListCallback extends BaseCallback implements CommandInterface
     public function handle($telegram, $args)
     {
         $query = $telegram->input->callback_query;
-        $user = \app\models\User::findByChatId($query->from['id']);
+        $user = \app\models\Coworker::findByChatId($query->from['id']);
 
         $keyboard = [];
         $orders = $user->getSuitableOrders()->all();

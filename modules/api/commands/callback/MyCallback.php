@@ -11,7 +11,7 @@ class MyCallback extends BaseCallback implements CommandInterface
     {
         $telegram = \Yii::$app->telegram;
         $query = $telegram->input->callback_query;
-        $user = \app\models\User::findByChatId($query->from["id"]);
+        $user = \app\models\Coworker::findByChatId($query->from["id"]);
         $keyboard = [];
         if ($user->can("director")) {
             $text = \Yii::t("telegram", 'command_orders_my');

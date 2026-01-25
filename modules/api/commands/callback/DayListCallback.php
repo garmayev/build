@@ -11,7 +11,7 @@ class DayListCallback extends BaseCallback implements CommandInterface
     public function handle($telegram, $args)
     {
         $query = $telegram->input->callback_query;
-        $user = \app\models\User::findByChatId($query->from['id']);
+        $user = \app\models\Coworker::findByChatId($query->from['id']);
         $keyboard = [];
         $debit = $credit = $workedHours = $paidHours = $unPaidHours = $ordersCount = 0;
         if (count($args)) {

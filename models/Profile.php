@@ -13,6 +13,7 @@ use yii\db\ActiveRecord;
  * @property string $birthday
  * @property string $phone
  * @property string $chat_id
+ * @property string $max_id
  * @property string $device_id
  *
  * @property string $fullName
@@ -28,7 +29,7 @@ class Profile extends ActiveRecord
     public function rules()
     {
         return [
-            [['family', 'name', 'surname', 'birthday', 'phone', 'chat_id', 'device_id'], 'string'],
+            [['family', 'name', 'surname', 'birthday', 'phone', 'chat_id', 'device_id', 'max_id'], 'string'],
             [['user_id'], 'exist', 'targetClass' => User::class, 'targetAttribute' => 'id'],
             [['phone'], PhoneValidator::class],
         ];

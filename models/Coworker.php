@@ -80,6 +80,11 @@ class Coworker extends User
         return parent::find()->alias('coworker')->where(['in', 'coworker.id', $ids]);
     }
 
+    public static function findByPhone($phone)
+    {
+        return self::find()->joinWith(['profile'])->andWhere(['profile.phone' => $phone])->one();
+    }
+
     public function fields(): array
     {
         return [

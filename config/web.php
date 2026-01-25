@@ -102,6 +102,10 @@ $config = [
         'max' => [
             'class' => 'garmayev\max\Max',
             'access_token' => 'f9LHodD0cOIbxuflLLlF7HO87PtWH3dbYwH3wWRfpbxG4aUDugs9z_UparqnigVraeG-zmkBlV_XAZn5aIyr',
+            'secret' => 'qweasdzxcasdqwe123qwe',
+        ],
+        'vcardParser' => [
+            'class' => 'app\components\VCardParser',
         ],
         'response' => [
             'class' => 'yii\web\Response',

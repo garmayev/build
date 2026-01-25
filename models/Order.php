@@ -815,7 +815,8 @@ class Order extends \yii\db\ActiveRecord
         try {
             // Генерация данных сообщения один раз
             $messageText = Helper::generateTelegramMessage($this->id);
-            $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $this->id]) . "</b>\n" . $messageText;
+            $title = !empty($this->title) ? "({$this->title})" : "";
+            $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $this->id]) . " {$title}</b>\n" . $messageText;
 //            \Yii::error($formattedMessage);
             $coworkerKeyboard = json_encode([
                 'inline_keyboard' => [
@@ -847,7 +848,6 @@ class Order extends \yii\db\ActiveRecord
                 // Telegram сообщения
                 if ($profile->chat_id) {
                     $message = TelegramMessage::find()->where(['chat_id' => $profile->chat_id])->andWhere(['order_id' => $this->id])->one();
-//                    \Yii::error($coworkerKeyboard);
                     if (!in_array($profile->chat_id, $existingChatIds) && empty($message)) {
                         $telegramMsg = new TelegramMessage([
                             'chat_id' => $profile->chat_id,

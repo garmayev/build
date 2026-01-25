@@ -54,13 +54,24 @@ class TelegramMessage extends ActiveRecord
     public function editMessageText($text, $keyboard = "")
     {
         if ($text !== $this->text) {
-            $response = \Yii::$app->telegram->editMessageText([
-                "chat_id" => $this->chat_id,
-                "text" => $text,
-                "reply_markup" => !empty($keyboard) ? $keyboard : null,
-                "parse_mode" => "html",
-                "message_id" => $this->message_id,
-            ]);
+            if (count($this->order->attachments) !== 1) {
+                $response = \Yii::$app->telegram->editMessageText([
+                    "chat_id" => $this->chat_id,
+                    "text" => $text,
+                    "reply_markup" => !empty($keyboard) ? $keyboard : null,
+                    "parse_mode" => "html",
+                    "message_id" => $this->message_id,
+                ]);
+            } else {
+                \Yii::error($text);
+                $response = \Yii::$app->telegram->editMessageCaption([
+                    "chat_id" => $this->chat_id,
+                    "caption" => $text,
+                    "reply_markup" => !empty($keyboard) ? $keyboard : null,
+                    "message_id" => $this->message_id,
+                    "parse_mode" => "html",
+                ]);
+            }
             if ($response->ok) {
                 $this->text = $text;
                 $this->reply_markup = json_encode($keyboard);
