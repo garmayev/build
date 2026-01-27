@@ -24,7 +24,7 @@ class ReportStartCallback extends BaseCallback implements CommandInterface
 
         $telegram->editMessageText([
             'message_id' => $query->message_id,
-            'chat_id' => $message->from->id,
+            'chat_id' => $query->message->from->id,
             'text' => \Yii::t('telegram', 'message_start_report'),
         ]);
     }

@@ -14,7 +14,7 @@ $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
 
 $this->title = \Yii::t('app', 'Calendar');
 
-$current = $_GET['date'] ? strtotime($_GET['date']) : time();
+$current = isset($_GET['date']) ? strtotime($_GET['date']) : time();
 
 $firstDate = date('Y-m-06', $current);
 $lastDate = date('Y-m-05', strtotime('+1 month', $current));
