@@ -175,7 +175,7 @@ const initializeTimeline = (coworkers) => {
         })
 };
 
-const coworkersPromise = $.ajax("/coworker/list", {
+const coworkersPromise = $.ajax(`/coworker/list?month=\${DateUtils.formatDate(new Date(firstDate), "MM")}&year=\${DateUtils.formatDate(new Date(firstDate), "YYYY")}`, {
     headers: {
         Authorization: `Bearer \${token}`
     }
@@ -197,7 +197,7 @@ $.when(coworkersPromise)
 // Функция для обновления только данных событий
 const updateTimelineEvents = () => {
     $.ajax({
-        url: "/coworker/list",
+        url: `/coworker/list?month=\${DateUtils.formatDate(new Date(firstDate), "MM")}&year=\${DateUtils.formatDate(new Date(firstDate), "YYYY")}`,
         method: "GET",
         headers: {
             Authorization: `Bearer \${token}`

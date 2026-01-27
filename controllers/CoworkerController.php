@@ -306,14 +306,14 @@ class CoworkerController extends Controller
         return $this->redirect(\Yii::$app->request->referrer);
     }
 
-    public function actionList()
+    public function actionList($month = null, $year = null)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         if (\Yii::$app->user->isGuest) {
             return [];
         } else {
 //            return Order::find()->joinWith(['coworkers'])->where(['coworker.referrer_id' => \Yii::$app->user->identity->id])->all();
-            return Coworker::find()->where(['referrer_id' => \Yii::$app->user->id])->all();
+            return Coworker::findByDate($month, $year);
         }
     }
 

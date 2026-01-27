@@ -49,6 +49,22 @@ class Coworker extends User
     const PRIORITY_NORMAL = 1;
     const PRIORITY_HIGH = 2;
 
+    public static function findByDate($month, $year)
+    {
+        $result = [];
+        $coworkers = parent::find()->where(['referrer_id' => \Yii::$app->user->id])->all();
+        foreach ($coworkers as $coworker) {
+            $result[] = [
+                'id' => $coworker->id,
+                'name' => $coworker->name,
+                'email' => $coworker->email,
+                'profile' => $coworker->profile,
+                'active_orders' => $coworker->getActiveOrdersByDate($month, $year)->all(),
+            ];
+        }
+        return $result;
+    }
+
     public function behaviors()
     {
         return [
@@ -235,6 +251,49 @@ class Coworker extends User
         return $this->hasMany(Order::class, ['id' => 'order_id'])
             ->viaTable('order_user', ['user_id' => 'id'])
             ->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]]);
+    }
+
+    public function getActiveOrdersByDate($month, $year)
+    {
+        if (!isset($month)) {
+            $month = date("m", time());
+        }
+        if (!isset($year)) {
+            $year = date("Y", time());
+        }
+
+        $startDate = date("Y-m-01", strtotime("$year-$month-01"));
+        $endDate = date("Y-m-t", strtotime("$year-$month-01"));
+        $startTimestamp = strtotime($startDate);
+        $endTimestamp = strtotime($endDate);
+
+        $query = $this->hasMany(Order::class, ['id' => 'order_id'])
+            ->viaTable('order_user', ['user_id' => 'id'])
+            ->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]])
+            ->andWhere(['or',
+                // 1. Заказы с mode_long_daily, у которых есть часы в указанном месяце
+                ['and',
+                    ['order.mode' => Order::MODE_LONG_DAILY],
+                    ['exists', (new \yii\db\Query())
+                        ->select(new \yii\db\Expression('1'))
+                        ->from(['h' => Hours::tableName()])
+                        ->where('h.order_id = order.id')
+                        ->andWhere(['>=', 'h.date', $startDate])
+                        ->andWhere(['<=', 'h.date', $endDate])
+                    ]
+                ],
+                // 2. Заказы НЕ mode_long_daily, чья дата попадает в указанный месяц
+                ['and',
+                    ['or',
+                        ['<>', 'order.mode', Order::MODE_LONG_DAILY],
+                        ['order.mode' => null]
+                    ],
+                    ['>=', 'order.date', $startTimestamp],
+                    ['<=', 'order.date', $endTimestamp]
+                ]
+            ]);
+
+        return $query;
     }
 
     public function setUserProperties($data)
