@@ -27,7 +27,10 @@ $this->registerCss(<<<CSS
 CSS
 );
 $this->registerJs(<<<JS
-$('.masked-input').mask('+7 (999) 999-99-99');
+const maskedInput = $('.masked-input');
+if (maskedInput.length > 0) {
+    maskedInput.mask('+7 (999) 999-99-99');
+}
 JS
 );
 ?>
@@ -103,20 +106,23 @@ JS
                     return Yii::$app->formatter->asDate($model->profile ? $model->profile->birthday : "");
                 }
             ],
-            'priority',
+            [
+                'attribute' => 'priority',
+                'label' => \Yii::t('app', 'Priority')
+            ],
             [
                 'format' => 'raw',
                 'label' => \Yii::t('app', 'Devices'),
-                'headerOptions' => ['class' => 'col-md-2 hide-on-mobile'],
-                'filterOptions' => ['class' => 'col-md-2 hide-on-mobile'],
-                'contentOptions' => ['class' => 'col-md-2 hide-on-mobile'],
+                'headerOptions' => ['class' => 'col-md-1 hide-on-mobile'],
+                'filterOptions' => ['class' => 'col-md-1 hide-on-mobile'],
+                'contentOptions' => ['class' => 'col-md-1 hide-on-mobile'],
                 'value' => function (User $model) {
                     if ($model->profile) {
                         $result = $model->profile->chat_id ? Html::tag('span', "", ['class' => 'fab fa-telegram mx-2']) : '';
                         $result .= $model->profile->device_id ? Html::tag('span', "", ['class' => 'fas fa-mobile mx-2']) : '';
-                        return !empty($result) ? $result : Html::tag('span', \Yii::t('yii', '(not set)'), ['class' => 'not-set']);
+                        return !empty($result) ? $result : Html::tag('span', '');
                     }
-                    return null;
+                    return "";
                 }
             ],
             [
@@ -131,7 +137,7 @@ JS
                     foreach ($model->userProperties as $userProperty) {
                         $result .= "<p>{$userProperty->category->title} {$userProperty->property->title} {$userProperty->value} {$userProperty->dimension->title}</p>";
                     }
-                    return strlen($result) ? $result : "<span class='not-set'>" . \Yii::t('yii', '(not set)') . "</span>";
+                    return strlen($result) ? $result : "";
                 }
             ],
             [

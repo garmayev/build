@@ -592,4 +592,13 @@ class Coworker extends User
             self::PRIORITY_HIGH => \Yii::t('app', 'Priority high'),
         ];
     }
+
+    /**
+     * @param $id
+     * @return Hours[]
+     */
+    public function getHoursByOrder($id): array
+    {
+        return $this->hasMany(Hours::class, ['user_id' => 'id'])->andWhere(['order_id' => $id])->all();
+    }
 }

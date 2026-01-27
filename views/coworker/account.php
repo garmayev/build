@@ -11,21 +11,21 @@ $this->title = Yii::t('app', 'Create Coworker');
 $this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Coworkers'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$registerForm = new \app\models\forms\UserRegisterForm();
-
 // Подготавливаем данные свойств для JS
 $propertiesData = [];
-if (!empty($coworkerProperties)) {
-    foreach ($coworkerProperties as $property) {
-        $propertiesData[] = [
-            'property_id' => $property->property_id ?? null,
-            'dimension_id' => $property->dimension_id ?? null,
-            'value' => $property->value ?? null,
-            'property_name' => $property->property->title ?? null,
-            'dimension_name' => $property->dimension ? $property->dimension->title : null,
-        ];
-    }
+
+foreach ($registerForm->properties as $property) {
+    $propertiesData[] = [
+        'category_id' => $property->category_id ?? null,
+        'category_name' => $property->category ? $property->category->title : null,
+        'property_id' => $property->property_id ?? null,
+        'dimension_id' => $property->dimension_id ?? null,
+        'value' => $property->value ?? null,
+        'property_name' => $property->property->title ?? null,
+        'dimension_name' => $property->dimension ? $property->dimension->title : null,
+    ];
 }
+
 // Получаем все доступные свойства
 $availableProperties = \app\models\Property::find()->with('dimensions')->all();
 
@@ -197,6 +197,7 @@ $(document).ready(function() {
             
         // Отобразить таблицу
         render: function() {
+            console.log(this.data)
             const container = $('#properties-container');
                 
             if (this.data.length === 0) {
@@ -257,7 +258,7 @@ $(document).ready(function() {
         }
     };
         
-        // Инициализируем таблицу с данными из модели
+    // Инициализируем таблицу с данными из модели
     if (initialProperties && initialProperties.length > 0) {
         PropertyTable.render();
     } else {

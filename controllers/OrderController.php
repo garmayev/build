@@ -225,4 +225,13 @@ class OrderController extends BaseController
             'item' => $itemData,
         ]);
     }
+
+    public function actionSetPayed()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $post = \Yii::$app->request->post();
+        $model = Order::findOne($post['id']);
+        $model->is_payed = $post['is_payed'];
+        return ['ok' =>$model->save()];
+    }
 }

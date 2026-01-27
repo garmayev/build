@@ -18,6 +18,8 @@ use yii\db\ActiveRecord;
  * @property float $price
  * @property int $debit
  * @property int $credit
+ * @property int $autoTime
+ * @property int $roundedCount
  */
 class Hours extends ActiveRecord 
 {
@@ -89,10 +91,21 @@ class Hours extends ActiveRecord
         return $priceModel ? $priceModel->price : 0;
     }
 
+    public function getRoundedCount():int
+    {
+        $startTime = new \DateTime($this->start_time);
+        if ($this->stop_time !== null) {
+            $stopTime = new \DateTime($this->stop_time);
+            $i = $startTime->diff($stopTime);
+            return $i->h;
+        }
+        return 0;
+    }
+
     public function getDebit(): float
     {
         if ($this->is_payed) {
-            return $this->count * $this->price;
+            return $this->roundedCount * $this->price;
         }
         return 0;
     }
@@ -100,7 +113,7 @@ class Hours extends ActiveRecord
     public function getCredit(): float
     {
         if (!$this->is_payed) {
-            return $this->count * $this->price;
+            return $this->roundedCount * $this->price;
         }
         return 0;
     }

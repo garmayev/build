@@ -207,7 +207,7 @@ $(document).ready(function() {
             allowPastDates: true
         },
         onChange: (date) => {
-            $('#order-finish_datetime').val(DateUtils.formatDate(date, "YYYY-MM-DD") + " 00:00:00")
+            $('#order-finish_datetime').val(DateUtils.formatDate(date, "YYYY-MM-DD") + " 23:59:59")
         }
     })
         

@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\Coworker;
 use app\models\forms\UserRegisterForm;
+use app\models\Hours;
 use app\models\Order;
 use app\models\Profile;
 use app\models\search\CoworkerSearch;
@@ -256,6 +257,8 @@ class CoworkerController extends Controller
                 \Yii::error($registerForm->getErrors());
                 Yii::$app->session->setFlash('error', Yii::t('app', 'Please fix the errors below'));
             }
+        } else {
+            $registerForm->restore($id);
         }
 
         return $this->render('account', [
@@ -328,5 +331,16 @@ class CoworkerController extends Controller
         }
 
         throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
+    }
+
+    public function actionSetHours()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $post = \Yii::$app->request->post();
+        $model = Hours::findOne(['user_id' => $post['user_id'], 'order_id' => $post['order_id'], 'date' => $post['date']]);
+        if ($model) {
+            $model->is_payed = $post['is_payed'];
+            return ['ok' => $model->save()];
+        }
     }
 }

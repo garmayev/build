@@ -15,6 +15,8 @@ use yii\widgets\DetailView;
 
 \app\assets\GalleryAsset::register($this);
 
+echo Html::tag('span', \Yii::t("app", "Order #{id}", ["id" => $model->id]), ['class' => "order-title", "style" => "display: none;"]);
+
 $this->title = \Yii::t('app', 'View Order: {name}', ['name' => "#{$model->id}"]);
 
 $this->params['breadcrumbs'][] = ['label' => \Yii::t('app', 'Orders'), 'url' => ['/order/index']];
@@ -71,6 +73,11 @@ echo DetailView::widget([
             }
         ],
         [
+            'attribute' => 'price',
+            'format' => 'currency',
+            'visible' => $model->mode !== Order::MODE_LONG_DAILY,
+        ],
+        [
             'attribute' => 'status',
             'value' => function (Order $model) {
                 return $model->statusTitle;
@@ -87,6 +94,19 @@ echo DetailView::widget([
                     case Order::MODE_LONG_DAILY:
                         return Yii::t('app', 'mode_long_daily');
                 }
+                return null;
+            }
+        ],
+        [
+            'attribute' => 'is_payed',
+            'visible' => $model->mode !== Order::MODE_LONG_DAILY,
+            'label' => \Yii::t('app', 'Is payed'),
+            'format' => 'raw',
+            'value' => function (Order $model) {
+                $checked = $model->is_payed ? "checked" : "";
+                return "<div class='form-check form-switch mx-3'>
+<input class='form-check-input order-payed-switch' type='checkbox' {$checked} role='switch' data-id='{$model->id}'>
+</div>";
             }
         ],
         'comment',
@@ -125,19 +145,23 @@ echo DetailView::widget([
                 'columns' => [
                     [
                         'attribute' => 'category.title',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
+                        'headerOptions' => ['class' => 'col-md-2 col-2 text-center'],
+                        'contentOptions' => ['class' => 'text-center'],
                     ],
                     [
                         'attribute' => 'count',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
+                        'headerOptions' => ['class' => 'col-md-2 col-2 text-center'],
+                        'contentOptions' => ['class' => 'text-center'],
                     ],
                     [
                         'attribute' => 'property.title',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
+                        'headerOptions' => ['class' => 'col-md-2 col-2 text-center'],
+                        'contentOptions' => ['class' => 'text-center'],
                     ],
                     [
                         'attribute' => 'type',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
+                        'headerOptions' => ['class' => 'col-md-2 col-2 text-center'],
+                        'contentOptions' => ['class' => 'text-center'],
                         'value' => function (\app\models\Requirement $model) {
                             $data = [
                                 'more' => \Yii::t('app', 'More'),
@@ -150,11 +174,13 @@ echo DetailView::widget([
                     ],
                     [
                         'attribute' => 'value',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
+                        'headerOptions' => ['class' => 'col-md-2 col-2 text-center'],
+                        'contentOptions' => ['class' => 'text-center'],
                     ],
                     [
                         'attribute' => 'dimension.title',
-                        'headerOptions' => ['class' => 'col-md-2 col-2'],
+                        'headerOptions' => ['class' => 'col-md-2 col-2 text-center'],
+                        'contentOptions' => ['class' => 'text-center'],
                     ]
                 ],
                 'tableOptions' => [
@@ -166,24 +192,47 @@ echo DetailView::widget([
         <div class="<?= \Yii::$app->request->isAjax ? "col-12" : "col-6" ?>">
             <h4><?= \Yii::t('app', 'Coworkers') ?></h4>
             <?php
-            echo GridView::widget([
-                'dataProvider' => new ArrayDataProvider([
-                    'allModels' => $model->coworkers
+            echo kartik\grid\GridView::widget([
+                'dataProvider' => new \yii\data\ActiveDataProvider([
+                    'query' => $model->getCoworkers()
                 ]),
+                'id' => 'expand-table',
                 'summary' => false,
+                'responsive' => true,
+                'bordered' => false,
+                'striped' => true,
+                'toggleDataContainer' => ['class' => 'btn-group mr-2 me-2'],
                 'columns' => [
+                    [
+                        'class' => '\kartik\grid\ExpandRowColumn',
+                        'detail' => function ($coworker, $key, $index, $column) use ($model) {
+                            return \Yii::$app->controller->renderPartial("_hours", ["coworker_id" => $coworker->id, "order_id" => $model->id]);
+                        },
+                        'expandOneOnly' => true,
+                        'collapseIcon' => kartik\grid\GridView::ICON_COLLAPSE_BS4,
+                        'headerOptions' => ['class' => 'col-1'],
+                        'visible' => $model->mode === Order::MODE_LONG_DAILY,
+                        'value' => function ($model, $key, $index, $column) {
+                            return kartik\grid\GridView::ROW_COLLAPSED;
+                        },
+                        'extraData' => function (\app\models\Coworker $coworker) {
+                            return ['coworker_id' => $coworker->id];
+                        }
+                    ],
                     [
                         'attribute' => 'name',
                         'label' => \Yii::t('app', 'Coworkers'),
                         'headerOptions' => ['class' => 'text-center col-md-3 col-3'],
-                        'contentOptions' => ['class' => 'text-center col-md-3 col-3'],
-                        'value' => function (\app\models\User $model) {
+                        'contentOptions' => ['class' => 'text-center col-md-3 col-3', 'style' => ''],
+                        'value' => function (\app\models\Coworker $model) {
                             return "{$model->profile->family} {$model->profile->name} {$model->profile->surname}";
                         }
                     ], [
                         'headerOptions' => ['class' => 'text-center col-md-3 col-3'],
                         'contentOptions' => ['class' => 'text-center col-md-3 col-3'],
                         'attribute' => 'priority',
+                        'label' => \Yii::t('app', 'Priority'),
+
                     ], [
                         'attribute' => 'referrer_id',
                         'label' => \Yii::t('app', 'Referrer'),
@@ -202,7 +251,7 @@ echo DetailView::widget([
                         'value' => function (app\models\Coworker $model) {
                             $result = "";
                             foreach ($model->userProperties as $userProperty) {
-                                $result .= Html::tag("span", "{$userProperty->property->title} {$userProperty->value} {$userProperty->dimension->title}");
+                                $result .= Html::tag("p", "{$userProperty->property->title} {$userProperty->value} {$userProperty->dimension->title}", ['style' => 'margin: 0; padding: 0']);
                             }
                             return $result;
                         }
@@ -272,21 +321,73 @@ echo DetailView::widget([
     </div>
 <?php
 $this->registerJs(<<<JS
-window.galleries = document.getElementsByClassName('light-gallery')
+(function() {
+    let grid = $("#expand-table");
+    grid.on("kvexprow:beforeLoad", (event, index, key, extra) => {
+        console.log(event, index, key, extra);
+    })
 
-Array.from(galleries).forEach(gallery => {
-    lightGallery(gallery, {
-        plugins: [lgZoom, lgThumbnail],
-        licenseKey: 'your_license_key',
-        speed: 500,
+    window.galleries = document.getElementsByClassName('light-gallery')
+
+    Array.from(galleries).forEach(gallery => {
+        lightGallery(gallery, {
+            plugins: [lgZoom, lgThumbnail],
+            licenseKey: 'your_license_key',
+            speed: 500,
+        });
     });
-})
+})();
 JS
 );
 
 $this->registerCss(<<<CSS
 .image-container {
     margin-right: 10px;
+}
+.kv-expand-header-cell, .kv-expand-icon-cell {
+    font-size: 1em !important;
+}
+.table-info, .table-info>td, .table-info>th {
+background: none !important;
+}
+.image-container {
+    margin-right: 10px;
+}
+.kv-expand-header-cell, .kv-expand-icon-cell {
+    font-size: 1em !important;
+}
+.table-info, .table-info>td, .table-info>th {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: transparent !important;
+}
+.table-striped tbody tr:nth-of-type(even) {
+    background-color: transparent !important;
+}
+.table-striped {
+    background-color: transparent !important;
+}
+.table {
+    background-color: transparent !important;
+}
+.table-info, 
+.table-info>td, 
+.table-info>th,
+.table-striped tbody tr,
+.table-striped,
+.table {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+/* Для таблицы часов в развернутой секции */
+#expand-table + .kv-detail-container .table-striped {
+    background-color: transparent !important;
+}
+
+#expand-table + .kv-detail-container .table-striped tbody tr {
+    background-color: transparent !important;
 }
 CSS
 );

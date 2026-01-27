@@ -126,6 +126,10 @@ $config = [
             'telegram_bot_id' => '8461352654:AAGxgiJVcy2ScgSO6p5akN4gzzSEC25ZlQM',
             'use_database' => true,
         ],
+        'gridview' =>  [
+            'class' => '\kartik\grid\Module',
+            // your other grid module settings
+        ],
     ],
     'params' => $params,
 ];

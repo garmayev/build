@@ -5,7 +5,7 @@ use yii\web\View;
 /**
  * @var $this View
  */
-// Подключаем необходимые библиотеки
+
 $this->registerJsFile('/components/timeline/jquery.timeline.min.js', ['depends' => 'yii\web\JqueryAsset']);
 $this->registerCssFile('/components/timeline/jquery.timeline.min.css');
 $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
@@ -13,72 +13,121 @@ $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
 \app\assets\GalleryAsset::register($this);
 
 $this->title = \Yii::t('app', 'Calendar');
-$firstDayOfMonth = (new DateTime('-2 months'))->format('Y-m-d 00:00:00');
 
+$current = $_GET['date'] ? strtotime($_GET['date']) : time();
+
+$firstDate = date('Y-m-06', $current);
+$lastDate = date('Y-m-05', strtotime('+1 month', $current));
+
+$this->registerJsVar('firstDate', $firstDate);
+$this->registerJsVar('lastDate', $lastDate);
 $this->registerJs(<<<JS
 let timelineContainer;
 let allCoworkersData = []; // Глобальная переменная для хранения данных
-
-const newDateString = () => {
-    const now = new Date();
-    const futureDate = new Date(now.getFullYear(), now.getMonth() + 2, now.getDate());
-    const year = futureDate.getFullYear();
-    const month = String(futureDate.getMonth() + 1).padStart(2, '0');
-    const day = String(futureDate.getDate()).padStart(2, '0');
-    return `\${year}-\${month}-\${day} 23:59`;
-}
+let events = []; // Глобальная переменная для хранения событий
 
 // Функция для открытия модального окна с одним заказом
 const openSingleOrderModal = (order_id) => {
-    $('#event-modal').modal('show').find('#event-modal-content').load(`/order/view?id=\${order_id}`)
+    $('#event-modal').modal('show').find('#event-modal-content').load(`/order/view?id=\${order_id}`, () => {
+        const titleElement = $(this).find('.order-title');
+        let title = 'Просмотр заказа';
+        
+        if (titleElement.length) {
+            title = titleElement.first().text();
+            // Опционально: удалить заголовок из контента, если он там есть
+            titleElement.first().remove();
+        }
+        $('#event-modal .modal-title').text(title);
+    })
+}
+
+const buildEvent = (order, coworker_id, coworkerIndex) => {
+    let finish, content, color, id;
+    if (order.mode !== 2) {
+        if (order.mode === 0) {
+            finish = order.finish_datetime !== null ? DateUtils.formatDate(new Date(order.finish_datetime), 'YYYY-MM-DD 23:59:59') : DateUtils.formatDate(new Date(), 'YYYY-MM-DD 23:59:59');
+        } else {
+            finish = order.finish_datetime !== null ? order.finish_datetime : DateUtils.formatDate(new Date(), 'YYYY-MM-DD 23:59:59');
+        }
+        content = `<div class='event text-center'>
+<span class='title text-white'>\${'Заказ #' + order.id} \${order.title ? `(\${order.title})` : ""}</span>
+<span class='price text-white justify-content-center'>\${formatter.format(order.price)}</span>
+</div>`;
+        id = `order-\${order.id}-\${coworker_id}`;
+        color = order.mode === 1 ? '#28A745' : '#6C757D';
+    } else {
+        finish = order.finish_datetime !== null ? order.finish_datetime : DateUtils.formatDate(new Date(), 'YYYY-MM-DD 23:59:59');
+        content = `<div class='event text-center'>
+<span class='title text-white'>\${'Заказ #' + order.id} \${order.title ? `(\${order.title})` : ""}</span>
+<div class='justify-content-center price'>
+<span class='text-white'>\${formatter.format(order.price[coworker_id].debit)} / \${formatter.format(order.price[coworker_id].credit)} / \${formatter.format(order.price[coworker_id].total)}</span>
+</div></div>`;
+        order.is_payed = order.price[coworker_id].debit === order.price[coworker_id].total ? 1 : 0;
+        id = `order-\${order.id}-\${coworker_id}`
+        color = '#007BFF';
+    }
+    return{
+        id: order.id,
+        eventID: id,
+        start: order.start_datetime,
+        end: finish,
+        row: coworkerIndex + 1,
+        label: content,
+        bgColor: color,
+        callback: (a, b, c) => {
+            console.log("Callback")
+            console.log(a, b, c)
+        },
+        extend: order
+    };
 }
 
 // Функция инициализации плагина
 const initializeTimeline = (coworkers) => {
     allCoworkersData = coworkers; // Сохраняем данные для повторного использования
-    let finalEvents = [];
     let sidebarItems = [];
 
     coworkers.forEach((coworker, coworkerIndex) => {
         const coworkerOrders = coworker.active_orders
-        
         // Все заказы сотрудника на одной строке
-        coworkerOrders.forEach(order => {
-            finalEvents.push({
-                start: order.start_datetime,
-                end: order.finish_datetime,
-                row: coworkerIndex + 1,
-                label: `<div class='event text-center'><span class='title text-white'>\${order.title || 'Заказ #' + order.id}</span><span class='price text-white'>\${formatter.format(order.price)}</span></div>`,
-                bgColor: order.mode === 0 ? '#28A745' : order.mode === 1 ? '#007BFF' : '#6C757D',
-                extend: order
-            });
-        });
+        coworkerOrders.forEach(order => events.push(buildEvent(order, coworker.id, coworkerIndex)));
         
         // Добавляем имя сотрудника в sidebar
         sidebarItems.push(`<span data-key="\${coworker.id}" class="worker-row px-2">\${coworker.name}</span>`);
     });
-            
+
     // Создаем Timeline
     const options = {
         type: "mixed",
         scale: "days",
-        startDatetime: "{$firstDayOfMonth}",
-        endDatetime: newDateString(),
+        startDatetime: new Date( firstDate ),
+        endDatetime: new Date( lastDate ),
         autoScale: true,
         locale: "ru-RU",
         headline: {
             display: false
         },
-        minGridSize: 120,
+        minGridSize: 60,
         sidebar: {
             list: sidebarItems,
             sticky: true,
             position: "left"
         },
-        eventData: finalEvents,
+        eventData: events,
         ruler: {
             top: {
-                lines: ["year", "month", "day", "weekday"],
+                lines: ["day", "weekday"],
+                format: {
+                    timeZone: "Asia/Tokyo",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    weekday: "short"
+                },
+                locale: "ru"
+            },
+            bottom: {
+                lines: ["weekday", "day"],
                 format: {
                     timeZone: "Asia/Tokyo",
                     year: "numeric",
@@ -97,24 +146,28 @@ const initializeTimeline = (coworkers) => {
             weekday: "short"
         },
         eventMeta: {
-            display: false
+            display: true
+        },
+        effects: {
+            sticky: true,
+            hoverEvent: false
         },
         rows: "auto",
         scrollSensitivity: 1
     };
-          
+    console.log( events )
     timelineContainer = $("#timeline")
         .Timeline(options)
         .Timeline('openEvent', (event, timelineEvent) => {
-        let order_id;
-        if (Object.hasOwn(event.extend, 'debit')) {
-            order_id = event.extend.order_id;
-        } else {
-            order_id = event.extend.id;
-        }
-        openSingleOrderModal(order_id);
-    })
-        .Timeline('alignment', 'currently')
+            let order_id;
+            if (Object.hasOwn(event.extend, 'debit')) {
+                order_id = event.extend.order_id;
+            } else {
+                order_id = event.extend.id;
+            }
+            openSingleOrderModal(order_id);
+        })
+        .Timeline('alignment', 'now')
         .Timeline('dateback', {
             scale: "day",
             range: 5,
@@ -141,25 +194,92 @@ $.when(coworkersPromise)
         $("#timeline").html('<div class="alert alert-danger">Ошибка загрузки данных. Пожалуйста, обновите страницу.</div>');
     });
 
-    $('#fin').on('change',function() {
-        if ($(this).is(":checked")) {
-            $('.event .title').hide()
-            $('.event .price').show()
-        } else {
-            $('.event .price').hide()
-            $('.event .title').show()
+// Функция для обновления только данных событий
+const updateTimelineEvents = () => {
+    $.ajax({
+        url: "/coworker/list",
+        method: "GET",
+        headers: {
+            Authorization: `Bearer \${token}`
+        },
+        success: function(coworkers) {
+            // Собираем новые события
+            let updates = [];
+            coworkers.forEach((coworker, coworkerIndex) => {
+                const coworkerOrders = coworker.active_orders
+                coworkerOrders.forEach(order => {
+                    const t = buildEvent(order, coworker.id, coworkerIndex)
+                    events.map(event => {
+                        return event.eventID === t.eventID ? t : event
+                    })
+                    updates.push(t);
+                    
+                });
+            });
+            timelineContainer.Timeline('addEvent', updates)
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('Error updating timeline events:', textStatus, errorThrown);
+        }
+    });
+};
+
+// Используем эту функцию вместо refreshTimelineData
+const REFRESH_INTERVAL = 10000; // 30 секунд
+setInterval(updateTimelineEvents, REFRESH_INTERVAL);
+
+// $('#fin').on('change',function() {
+//     if ($(this).is(":checked")) {
+//         $('.event .title').hide()
+//         $('.event .price').toggleClass(["d-flex", "d-none"])
+//     } else {
+//         $('.event .price').toggleClass(["d-flex", "d-none"])
+//         $('.event .title').show()
+//     }
+// })
+    
+// В calendar.php добавьте этот код в существующий блок JS
+$(document).on('change', '.hour-payed-switch', function() {
+    $.ajax({
+        'url': '/coworker/set-hours',
+        'type': 'POST',
+        'data': {
+            'user_id': $(this).attr('data-user_id'),
+            'order_id': $(this).attr('data-order_id'),
+            'date': $(this).attr('data-date'),
+            'is_payed': $(this).prop('checked') ? 1 : 0
+        },
+        'success': function(data) {
+            console.log(data);
         }
     })
-JS, \yii\web\View::POS_READY);
+});
 
+$(document).on('change', '.order-payed-switch', function() {
+    $.ajax({
+        'url': '/order/set-payed',
+        'type': 'POST',
+        'data': {
+            'id': $(this).attr('data-id'),
+            'is_payed': $(this).prop('checked') ? 1 : 0
+        },
+        'success': function(data) {
+            console.log(data);
+        }
+    })
+});
+
+$(".modal").on("hidden.bs.modal", updateTimelineEvents)
+
+JS, \yii\web\View::POS_READY);
 
 $this->registerCss(<<<CSS
 /* Стили для событий */
 .jqtl-event-node {
     justify-content: center;
-    border-radius: 14px;
+    border-radius: 5px;
     min-height: 40px;
-    margin-top: 5px;
+    transition: all 0.3s ease-in-out;
 }
 .jqtl-event-node[data-is_payed="0"]::before {
     font-family: "Font Awesome 5 Free", serif;
@@ -207,39 +327,105 @@ $this->registerCss(<<<CSS
 .event {
     margin: 0 auto;
     padding: 5px 10px;
-    border-radius: 8px;
+    border-radius: 5px;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
-.event > .price {
-    display: none;
-    font-size: 12px;
-    font-weight: bold;
+.worker-row.px-2 {
+    user-select: none;
 }
-.event > .title {
-    font-size: 12px;
-    font-weight: bold;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: transparent !important;
 }
+.table-striped tbody tr:nth-of-type(even) {
+    background-color: transparent !important;
+}
+.table-striped {
+    background-color: transparent !important;
+}
+.table {
+    background-color: transparent !important;
+}
+.table-info, 
+.table-info>td, 
+.table-info>th {
+    background: none !important;
+    background-color: transparent !important;
+    --bs-table-bg-type: transparent !important;
+    --bs-table-accent-bg: transparent !important;
+    box-shadow: none !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    --bs-table-bg-type: transparent !important;
+    --bs-table-accent-bg: transparent !important;
+    box-shadow: none !important;
+}
+
+.table-striped tbody tr:nth-of-type(even) {
+    --bs-table-bg-type: transparent !important;
+    --bs-table-accent-bg: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Или более простой вариант - для всех строк таблицы */
+.table-striped tbody tr {
+    --bs-table-bg-type: transparent !important;
+    --bs-table-accent-bg: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Также для самой таблицы */
+.table-striped {
+    --bs-table-bg-type: transparent !important;
+    --bs-table-accent-bg: transparent !important;
+}
+
 CSS
 );
 
-\yii\bootstrap5\Modal::begin([
+\yii\bootstrap4\Modal::begin([
     'id' => 'event-modal',
-    'size' => 'modal-xl'
+    'size' => 'modal-xl',
+    'title' => '',
 ]);
 echo \yii\helpers\Html::tag('div', '', ['id' => 'event-modal-content']);
-\yii\bootstrap5\Modal::end();
-
+\yii\bootstrap4\Modal::end();
 ?>
 <div class="row">
-    <div class="form-check form-switch mx-5">
-        <input class="form-check-input" type="checkbox" role="switch" id="fin">
-        <label class="form-check-label" for="fin"><?= \Yii::t('app', 'Finance') ?></label>
+    <div class="row">
+        <div class="col-4">
+            <div class="btn btn-primary h-2 w-100 event text-center">
+                <span class="title text-white"><?= \Yii::t('app', 'mode_long_daily') ?></span>
+                <div class='justify-content-center price'>
+                    <span class='text-white'><?= \Yii::t('app', 'Debit Amount') ?> / <?= \Yii::t('app', 'Credit Amount') ?> / <?= \Yii::t('app', 'Total Amount') ?></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="btn btn-success h-2 w-100 event text-center">
+                <span class="title text-white"><?= \Yii::t('app', 'mode_long_fixed') ?></span>
+                <div class='justify-content-center price'><?= Yii::t('app', 'Price') ?></div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="btn btn-secondary h-2 w-100 event text-center">
+                <span class="title text-white"><?= \Yii::t('app', 'mode_single_fixed') ?></span>
+                <div class='justify-content-center price'><?= Yii::t('app', 'Price') ?></div>
+            </div>
+        </div>
+    </div>
+    <div class="row my-3 px-5">
+        <div class="d-flex justify-content-between">
+            <a href="?date=<?= date('Y-m-06', strtotime('-1 month', strtotime($firstDate))) ?>" class="btn btn-primary align-middle"><?= \Yii::t('app', 'Previous') ?></a>
+            <div class="col-10 d-flex flex-column">
+                <span class="text-center"><?= date('Y', strtotime($firstDate)) ?></span>
+                <span class="text-center text-capitalize"><?= \Yii::$app->formatter->asDate($firstDate, 'LLLL') ?></span>
+            </div>
+            <a href="?date=<?= date('Y-m-06', strtotime('+1 month', strtotime($firstDate))) ?>" class="btn btn-primary col-1"><?= \Yii::t('app', 'Next') ?></a>
+        </div>
     </div>
     <div id="timeline"></div>
 </div>

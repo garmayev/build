@@ -1,6 +1,7 @@
 <?php
 
 use app\models\Order;
+use app\models\search\OrderSearch;
 use yii\data\ActiveDataProvider;
 use yii\helpers\Html;
 use yii\web\View;
@@ -9,12 +10,15 @@ use yii\grid\GridView;
 
 /**
  * @var View $this
+ * @var OrderSearch $searchModel
  * @var ActiveDataProvider $dataProvider
  */
 
 $this->title = \Yii::t('app', 'Orders');
 
 $this->params['breadcrumbs'][] = $this->title;
+
+echo Html::a(\Yii::t('app', 'Reset'), ['index'], ['class' => 'btn btn-primary mb-3']);
 
 echo GridView::widget([
     'dataProvider' => $dataProvider,
@@ -25,6 +29,8 @@ echo GridView::widget([
     'tableOptions' => [
         'class' => 'table table-striped'
     ],
+    'filterModel' => $searchModel,
+    'layout' => '{pager}{items}{pager}',
     'columns' => [
         [
             'attribute' => 'id',
@@ -39,10 +45,15 @@ echo GridView::widget([
             'attribute' => 'title',
             'headerOptions' => ['class' => 'text-center col-md-2 col-4'],
             'contentOptions' => ['class' => 'text-center col-md-2 col-4 align-middle'],
-        ], [
+            'value' => function (Order $model) {
+                return !empty($model->title) ? $model->title : "";
+            }
+        ],
+        [
             'attribute' => 'building_id',
             'label' => \Yii::t('app', 'Building'),
             'headerOptions' => ['class' => 'text-center col-md-1 col-4'],
+            'filter' => \yii\helpers\ArrayHelper::map(\app\models\Building::find()->where(['user_id' => \Yii::$app->user->getId()])->all(), 'id', 'title'),
             'contentOptions' => ['class' => 'text-center col-md-1 col-4 align-middle'],
             'value' => function (Order $model) {
                 return $model->building->title;
@@ -52,6 +63,7 @@ echo GridView::widget([
             'attribute' => 'mode',
             'headerOptions' => ['class' => 'text-center col-md-2 col-4'],
             'contentOptions' => ['class' => 'text-center col-md-2 col-4 align-middle'],
+            'filter' => [Order::MODE_SINGLE_FIXED => \Yii::t('app', 'mode_single_fixed'), Order::MODE_LONG_FIXED => \Yii::t('app', 'mode_long_fixed'), Order::MODE_LONG_DAILY => \Yii::t('app', 'mode_long_daily')],
             'value' => function (Order $model) {
                 return $model->modes[$model->mode];
             }
@@ -74,7 +86,37 @@ echo GridView::widget([
             }
         ],
         [
+            'attribute' => 'price',
+            'format' => 'raw',
+            'label' => \Yii::t('app', 'Date'),
+            'headerOptions' => ['class' => 'text-center col-md-1 hide-on-mobile'],
+            'contentOptions' => ['class' => ' text-right col-md-1 hide-on-mobile align-middle'],
+            'value' => function (Order $model) {
+                if ($model->mode !== Order::MODE_LONG_DAILY) {
+                    return \Yii::$app->formatter->asCurrency($model->price);
+                } else {
+                    $result = 0;
+                    foreach ($model->coworkers as $coworker) {
+                        $hours = \app\models\Hours::find()
+                            ->where(['user_id' => $coworker->id])
+                            ->andWhere(['order_id' => $model->id])
+                            ->all();
+                        foreach ($hours as $hour) {
+                            $startTime = new \DateTime($hour->start_time);
+                            $stopTime = new \DateTime($hour->stop_time);
+                            $i = $startTime->diff($stopTime);
+                            $hourCount = $i->h;
+                            $result += $coworker->price->price * $hourCount;
+                        }
+                    }
+                    return \Yii::$app->formatter->asCurrency($result);
+                }
+            }
+        ],
+
+        [
             'label' => \Yii::t("app", 'Full'),
+            'attribute' => 'is_full',
             'format' => 'raw',
             'headerOptions' => ['class' => 'text-center col-md-1 col-0 hide-on-mobile'],
             'contentOptions' => ['class' => 'text-center col-md-1 col-0 hide-on-mobile align-middle'],
@@ -83,7 +125,8 @@ echo GridView::widget([
                 foreach ( $model->requirements as $requirement) { $totalCount += $requirement->count; }
                 return count($model->coworkers)."/".$totalCount;
             }
-        ], [
+        ],
+        [
             'attribute' => 'owner',
             'label' => \Yii::t("app", 'Owner'),
             'headerOptions' => ['class' => 'text-center col-md-2 col-0 hide-on-mobile'],
@@ -92,7 +135,8 @@ echo GridView::widget([
                 return $model->owner->fullName ?? null;
             },
             'visible' => \Yii::$app->user->can('admin'),
-        ], [
+        ],
+        [
             'class' => \yii\grid\ActionColumn::class,
             'headerOptions' => ['class' => 'text-center col-md-1 col-3'],
             'contentOptions' => ['class' => 'text-center col-md-1 col-3 align-middle'],

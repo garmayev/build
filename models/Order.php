@@ -266,7 +266,22 @@ class Order extends \yii\db\ActiveRecord
                     ->all();
             },
             'mode',
-            'price',
+            'price' => function (Order $model) {
+                if ($model->mode == Order::MODE_LONG_DAILY) {
+                    $result = [];
+                    foreach ($model->coworkers as $coworker) {
+                        $hours = $coworker->getHoursByOrder($model->id);
+                        $debit = $credit = 0;
+                        foreach ($hours as $hour) {
+                            $debit += $hour->debit;
+                            $credit += $hour->credit;
+                        }
+                        $result[$coworker->id] = ['debit' => $debit, 'credit' => $credit, 'total' => $debit + $credit];
+                    }
+                    return $result;
+                }
+                return $model->price;
+            },
             'start_datetime',
             'finish_datetime',
             'is_payed',

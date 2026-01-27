@@ -37,7 +37,8 @@
     "ext-calendar": "*",
     "yiisoft/yii2-jui": "^2.0",
     "npm-asset/chart.js": "^4.5",
-    "garmayev/yii2-max": "@dev"
+    "garmayev/yii2-max": "@dev",
+    "kartik-v/yii2-grid": "dev-master"
   },
   "require-dev": {
     "yiisoft/yii2-debug": "~2.1.0",

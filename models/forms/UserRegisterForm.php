@@ -176,4 +176,19 @@ class UserRegisterForm extends Model
         \Yii::error($this->_profile->getErrors());
         return false;
     }
+
+    public function restore($id)
+    {
+        $this->_user = Coworker::findOne($id);
+        $this->_profile = $this->_user->profile;
+        $this->username = $this->_user->username;
+        $this->email = $this->_user->email;
+        $this->family = $this->_profile->family;
+        $this->name = $this->_profile->name;
+        $this->surname = $this->_profile->surname;
+        $this->phone = $this->_profile->phone;
+        $this->birthday = $this->_profile->birthday;
+        $this->priority = $this->_user->priority_level;
+        $this->properties = $this->_user->userProperties;
+    }
 }

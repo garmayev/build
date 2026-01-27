@@ -2,6 +2,7 @@
 
 namespace app\models\search;
 
+use app\models\Building;
 use app\models\Coworker;
 use app\models\Order;
 use Yii;
@@ -10,6 +11,20 @@ use yii\data\ActiveDataProvider;
 
 class OrderSearch extends Order
 {
+    public $title;
+    public $building_id;
+    public $mode;
+    public $start_datetime;
+
+    public function rules(): array
+    {
+        return [
+            [['title'], 'string'],
+            [['building_id'], 'exist', 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
+            [['mode'], 'in', 'range' => [Order::MODE_SINGLE_FIXED, Order::MODE_LONG_FIXED, Order::MODE_LONG_DAILY]],
+        ];
+    }
+
     public function search($params)
     {
         if (\Yii::$app->user->can('admin')) {
@@ -22,7 +37,7 @@ class OrderSearch extends Order
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
-                'pageSize' => 10,
+                'pageSize' => 20,
             ],
             'sort' => [
                 'defaultOrder' => [
@@ -30,20 +45,21 @@ class OrderSearch extends Order
                 ]
             ]
         ]);
-        $dataFilter = new ActiveDataFilter([
-            'searchModel' => $this,
-        ]);
-        if ($dataFilter->load($params)) {
-            $filter = $dataFilter->build();
-            if ($filter === false) {
-                return $dataFilter;
-            }
+        if (!$this->load($params)) {
+            return $dataProvider;
         }
 
-        if (!empty($filter)) {
-            $query->andFilterWhere($filter);
+        if (!empty($this->title)) {
+            $query->andWhere(['like', 'title', $this->title]);
+        }
+        if (!empty($this->building_id)) {
+            $query->andWhere(['building_id' => $this->building_id]);
+        }
+        if (in_array($this->mode, [0, 1, 2])) {
+            $query->andWhere(['mode' => $this->mode]);
         }
 
+        \Yii::error($query->createCommand()->rawSql);
         return $dataProvider;
     }
 }
