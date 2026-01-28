@@ -272,6 +272,7 @@ class Order extends \yii\db\ActiveRecord
                     foreach ($model->coworkers as $coworker) {
                         $hours = $coworker->getHoursByOrder($model->id);
                         $debit = $credit = 0;
+//                        \Yii::error(count($hours));
                         foreach ($hours as $hour) {
                             $debit += $hour->debit;
                             $credit += $hour->credit;

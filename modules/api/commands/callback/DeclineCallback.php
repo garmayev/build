@@ -40,7 +40,21 @@ class DeclineCallback extends BaseCallback implements CommandInterface
         ]);
 
         if ($message) {
-            $message->remove();
+            $ids = explode(',',$message->joined);
+            if (count($ids)) {
+                foreach ($ids as $id) {
+                    \Yii::error(['chat_id' => $chatId, 'message_id' => $id]);
+                    $telegram->deleteMessage([
+                        'chat_id' => $chatId,
+                        'message_id' => $id,
+                    ]);
+                }
+            }
+            $telegram->deleteMessage([
+                'chat_id' => $chatId,
+                'message_id' => $message->message_id,
+            ]);
+            $message->delete();
         } else {
             $telegram->deleteMessage([
                 'chat_id' => $chatId,

@@ -105,7 +105,7 @@ class Hours extends ActiveRecord
     public function getDebit(): float
     {
         if ($this->is_payed) {
-            return $this->roundedCount * $this->price;
+            return $this->count * $this->price;
         }
         return 0;
     }
@@ -113,7 +113,7 @@ class Hours extends ActiveRecord
     public function getCredit(): float
     {
         if (!$this->is_payed) {
-            return $this->roundedCount * $this->price;
+            return $this->count * $this->price;
         }
         return 0;
     }

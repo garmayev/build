@@ -17,6 +17,7 @@ use yii\helpers\Url;
  * @property integer $order_id
  * @property integer $status
  * @property integer $message_id
+ * @property string $joined
  *
  * @property Coworker $sender
  */
@@ -34,7 +35,7 @@ class TelegramMessage extends ActiveRecord
     public function rules()
     {
         return [
-            [['device_id', 'text', 'reply_markup'], 'string'],
+            [['device_id', 'text', 'reply_markup', 'joined'], 'string'],
             [['created_at', 'updated_at', 'status', 'message_id', 'chat_id'], 'integer'],
             [['order_id'], 'exist', 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']],
             [['status'], 'default', 'value' => self::STATUS_NEW],
@@ -63,7 +64,7 @@ class TelegramMessage extends ActiveRecord
                     "message_id" => $this->message_id,
                 ]);
             } else {
-                \Yii::error($text);
+//                \Yii::error($text);
                 $response = \Yii::$app->telegram->editMessageCaption([
                     "chat_id" => $this->chat_id,
                     "caption" => $text,
@@ -164,10 +165,11 @@ class TelegramMessage extends ActiveRecord
                 $media[] = $item;
             }
 
-            $telegram->sendMediaGroup([
+            $responseMediaGroup = $telegram->sendMediaGroup([
                 'chat_id' => $this->chat_id,
                 'media' => json_encode($media),
             ]);
+//            \Yii::error($responseMediaGroup);
             $response = $telegram->sendMessage([
                 'chat_id' => $this->chat_id,
                 'text' => $this->text,
@@ -177,14 +179,19 @@ class TelegramMessage extends ActiveRecord
 
             // В ответе на медиагруппу приходит массив сообщений; сохраняем первый message_id
             if (isset($response->ok) && $response->ok) {
-                $first = $response->result[0] ?? null;
-                if ($first && isset($first->message_id)) {
-                    $this->id = $first->message_id;
-                    $this->message_id = $first->message_id;
+                $media_ids = [];
+                foreach ($responseMediaGroup['result'] as $item) {
+                    $media_ids[] = $item['message_id'];
+                }
+//                $first = $response->result[0] ?? null;
+//                if ($first && isset($first->message_id)) {
+                    $this->id = $response->result->message_id;
+                    $this->message_id = $response->result->message_id;
+                    $this->joined = implode(',', $media_ids);
                     if (!$this->save()) {
                         \Yii::error($this->errors);
                     }
-                }
+//                }
             }
 
             return $response;
@@ -230,13 +237,13 @@ class TelegramMessage extends ActiveRecord
         $this->save();
     }
 
-    public function remove()
+    public function remove($message_id = null)
     {
         $curl = curl_init();
         $bot_id = \Yii::$app->params['bot_id'];
         $data = [
             "chat_id" => $this->chat_id,
-            "message_id" => $this->id,
+            "message_id" => $message_id ?? $this->id,
         ];
 
         curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/deleteMessage");
@@ -246,7 +253,7 @@ class TelegramMessage extends ActiveRecord
         curl_setopt($curl, CURLOPT_HEADER, false);
 
         if (($result = curl_exec($curl)) === false) {
-            \Yii::error(curl_error($curl));
+//            \Yii::error(curl_error($curl));
             return curl_error($curl);
         } else {
             curl_close($curl);

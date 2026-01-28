@@ -10,7 +10,6 @@ class AcceptCallback extends BaseCallback implements CommandInterface
 
     public function handle($telegram, $args)
     {
-        \Yii::error($args);
         $query = $telegram->input->callback_query;
         parse_str($args[0] ?? '', $data);
         $orderId = $data["order_id"] ?? null;
@@ -28,6 +27,7 @@ class AcceptCallback extends BaseCallback implements CommandInterface
 
             $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $order->id])->all();
 
+            \Yii::error(count($messages));
             if (count($messages)) {
                 if ($order->isFull()) {
                     $order->status = \app\models\Order::STATUS_PROCESS;
@@ -64,6 +64,8 @@ class AcceptCallback extends BaseCallback implements CommandInterface
                 $telegram->editMessageText([
                     'message_id' => $query->message['message_id'],
                     'text' => \app\components\Helper::orderDetails($order),
+                    'chat_id' => $query->from["id"],
+                    'parse_mode' => 'html',
                     'reply_markup' => null,
                 ]);
             }

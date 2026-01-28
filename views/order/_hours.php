@@ -50,7 +50,7 @@ echo GridView::widget([
         [
             'headerOptions' => [ 'class' => 'text-center' ],
             'contentOptions' => [ 'class' => 'text-center' ],
-            'attribute' => 'roundedCount',
+            'attribute' => 'count',
             'label' => \Yii::t('app', 'Count'),
         ],
         [
@@ -67,7 +67,7 @@ echo GridView::widget([
             'format' => 'currency',
             'label' => \Yii::t('app', 'Amount'),
             'value' => function (\app\models\Hours $model) {
-                return $model->price * $model->roundedCount;
+                return $model->price * $model->count;
             }
         ],
         [

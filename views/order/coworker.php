@@ -24,6 +24,7 @@ if (!empty($model->requirements)) {
         $requirementsData[] = [
             'category_id' => $requirement->category_id ?? null,
             'property_id' => $requirement->property_id ?? null,
+            'count' => $requirement->count ?? null,
             'type' => $requirement->type ?? null,
             'value' => $requirement->value ?? null,
             'dimension_id' => $requirement->dimension_id ?? null,
@@ -347,7 +348,7 @@ $(document).ready(function() {
                     </a>
                 </td>`;
                 html += '</tr>';
-                
+                console.log(item.count);
                 // Добавляем скрытые поля для отправки на сервер
                 html += `<input type="hidden" name="Order[requirements][\${index}][category_id]" value="\${item.category_id || ''}">`;
                 html += `<input type="hidden" name="Order[requirements][\${index}][count]" value="\${item.count || ''}">`;
