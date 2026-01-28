@@ -291,6 +291,8 @@ return [
     'command_send_location' => 'Отправить местоположение',
     'empty_list' => 'Ничего не найдено',
     'is_paid' => 'Оплачено',
+    'Previous' => 'Предыдущий',
+    'Next' => 'Следующий',
     'is_paid_hours' => 'Оплачено часов',
     'missing_role {role}' => 'Отсутствует роль {role}',
     'mode_long_daily' => 'Длительный с ежедневной оплатой',
