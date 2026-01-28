@@ -28,12 +28,20 @@ class Calendar {
             allowPastDates: false,
             allowFutureDates: true,
             shortMonthNames: DateUtils.getShortMonthsNames(),
+            mode: 'full', // 'full', 'month-only', 'year-only', 'month-year'
+            showDays: true, // Показывать дни (работает только в режиме 'full')
+            positionSelector: null, // Селектор элемента для позиционирования
             ...options
         };
 
         this.initDates();
         this.init();
         this.render();
+
+        // Флаг для отслеживания кликов
+        this.isClickInProgress = false;
+        // Флаг для отслеживания того, была ли выбрана дата
+        this.dateWasSelected = false;
     }
 
     initDates() {
@@ -61,18 +69,100 @@ class Calendar {
         this.container.innerHTML = '';
         this.calendarRoot = document.createElement('div');
         this.calendarRoot.className = 'calendar-container';
+
+        // Добавляем класс в зависимости от режима
+        if (this.options.mode === 'month-only') {
+            this.calendarRoot.classList.add('calendar-mode-month-only');
+        } else if (this.options.mode === 'year-only') {
+            this.calendarRoot.classList.add('calendar-mode-year-only');
+        } else if (this.options.mode === 'month-year') {
+            this.calendarRoot.classList.add('calendar-mode-month-year');
+        }
+
         this.container.appendChild(this.calendarRoot);
+
+        // Закрытие по клику вне календаря
+        this.outsideClickHandler = (e) => {
+            if (!this.calendarRoot.contains(e.target) &&
+                (!this.positionElement || !this.positionElement.contains(e.target))) {
+                // Если дата была выбрана, скрываем без колбэка, иначе скрываем
+                this.hide();
+            }
+        };
     }
 
     render() {
         this.calendarRoot.innerHTML = '';
 
+        // В зависимости от режима рендерим разные части
+        switch (this.options.mode) {
+            case 'month-only':
+                this.renderMonthOnly();
+                break;
+            case 'year-only':
+                this.renderYearOnly();
+                break;
+            case 'month-year':
+                this.renderMonthYear();
+                break;
+            case 'full':
+            default:
+                this.renderFull();
+                break;
+        }
+    }
+
+    renderFull() {
         if (this.options.showNavigation) {
             this.calendarRoot.appendChild(this.createHeader());
         }
 
-        this.calendarRoot.appendChild(this.createWeekdays());
-        this.calendarRoot.appendChild(this.createDaysGrid());
+        if (this.options.showDays) {
+            this.calendarRoot.appendChild(this.createWeekdays());
+            this.calendarRoot.appendChild(this.createDaysGrid());
+        }
+    }
+
+    renderMonthOnly() {
+        // Рендерим только выбор месяца
+        const monthSelector = this.createMonthSelector();
+        monthSelector.classList.add('calendar-month-only-selector');
+        this.calendarRoot.appendChild(monthSelector);
+
+        // Добавляем обработчики для выбора месяца
+        this.setupMonthOnlySelector(monthSelector);
+    }
+
+    renderYearOnly() {
+        // Рендерим только выбор года
+        const yearSelector = this.createYearSelector();
+        yearSelector.classList.add('calendar-year-only-selector');
+        this.calendarRoot.appendChild(yearSelector);
+
+        // Добавляем обработчики для выбора года
+        this.setupYearOnlySelector(yearSelector);
+    }
+
+    renderMonthYear() {
+        console.log('renderMonthYear called');
+
+        // Рендерим выбор месяца и года вместе
+        const container = document.createElement('div');
+        container.className = 'calendar-month-year-container';
+
+        // Год с навигацией
+        const yearRow = this.createYearRow();
+        container.appendChild(yearRow);
+
+        // Месяцы сеткой
+        const monthGrid = this.createMonthsGrid();
+        monthGrid.classList.add('calendar-month-year-grid');
+        container.appendChild(monthGrid);
+
+        this.calendarRoot.appendChild(container);
+
+        // Добавляем обработчики
+        this.setupMonthYearHandlers();
     }
 
     createHeader() {
@@ -106,7 +196,17 @@ class Calendar {
             prevYearBtn.disabled = true;
             prevYearBtn.classList.add('calendar-nav-btn-disabled');
         } else {
-            prevYearBtn.addEventListener('click', () => this.navigateYear(-1));
+            prevYearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (this.isClickInProgress) return;
+                this.isClickInProgress = true;
+
+                setTimeout(() => {
+                    this.navigateYear(-1);
+                    this.isClickInProgress = false;
+                }, 50);
+            });
         }
 
         yearRow.appendChild(prevYearBtn);
@@ -130,7 +230,11 @@ class Calendar {
             yearSpan.classList.add('calendar-header-year-disabled');
         } else if (this.options.enableYearNavigation) {
             yearSpan.style.cursor = 'pointer';
-            yearSpan.addEventListener('click', () => this.showYearSelector());
+            yearSpan.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                this.showYearSelector();
+            });
         }
 
         yearContainer.appendChild(yearSpan);
@@ -148,7 +252,17 @@ class Calendar {
             nextYearBtn.disabled = true;
             nextYearBtn.classList.add('calendar-nav-btn-disabled');
         } else {
-            nextYearBtn.addEventListener('click', () => this.navigateYear(1));
+            nextYearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (this.isClickInProgress) return;
+                this.isClickInProgress = true;
+
+                setTimeout(() => {
+                    this.navigateYear(1);
+                    this.isClickInProgress = false;
+                }, 50);
+            });
         }
 
         yearRow.appendChild(nextYearBtn);
@@ -172,7 +286,17 @@ class Calendar {
             prevMonthBtn.disabled = true;
             prevMonthBtn.classList.add('calendar-nav-btn-disabled');
         } else {
-            prevMonthBtn.addEventListener('click', () => this.navigateMonth(-1));
+            prevMonthBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (this.isClickInProgress) return;
+                this.isClickInProgress = true;
+
+                setTimeout(() => {
+                    this.navigateMonth(-1);
+                    this.isClickInProgress = false;
+                }, 50);
+            });
         }
 
         monthRow.appendChild(prevMonthBtn);
@@ -190,7 +314,11 @@ class Calendar {
 
         if (this.options.enableMonthNavigation) {
             monthSpan.style.cursor = 'pointer';
-            monthSpan.addEventListener('click', () => this.showMonthSelector());
+            monthSpan.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                this.showMonthSelector();
+            });
         }
 
         monthContainer.appendChild(monthSpan);
@@ -198,7 +326,7 @@ class Calendar {
 
         // Следующий месяц
         const nextMonthIndex = (this.currentMonth + 1) % 12;
-        const nextMonthBtn = document.createElement('button'); // ← Исправлено: было nextYearBtn
+        const nextMonthBtn = document.createElement('button');
         nextMonthBtn.className = 'calendar-nav-btn calendar-nav-btn-next calendar-nav-month-btn';
         nextMonthBtn.textContent = this.SHORT_MONTHS[nextMonthIndex];
         nextMonthBtn.title = `Следующий месяц (${this.MONTHS[nextMonthIndex]})`;
@@ -208,12 +336,296 @@ class Calendar {
             nextMonthBtn.disabled = true;
             nextMonthBtn.classList.add('calendar-nav-btn-disabled');
         } else {
-            nextMonthBtn.addEventListener('click', () => this.navigateMonth(1));
+            nextMonthBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (this.isClickInProgress) return;
+                this.isClickInProgress = true;
+
+                setTimeout(() => {
+                    this.navigateMonth(1);
+                    this.isClickInProgress = false;
+                }, 50);
+            });
         }
 
-        monthRow.appendChild(nextMonthBtn); // ← Исправлено: было nextYearBtn
+        monthRow.appendChild(nextMonthBtn);
 
         return monthRow;
+    }
+
+    setupMonthOnlySelector(container) {
+        // Находим все кнопки месяцев и добавляем обработчики
+        const monthButtons = container.querySelectorAll('.month-selector-month-btn');
+
+        monthButtons.forEach((btn, index) => {
+            if (!btn.disabled) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const monthIndex = index;
+                    const date = new Date(this.currentYear, monthIndex, 1);
+
+                    // Устанавливаем дату
+                    this.setDate(date);
+
+                    // Вызываем колбэк если есть
+                    if (this.options.onDateSelect) {
+                        this.options.onDateSelect(this.currentDate);
+                    }
+
+                    // Помечаем, что дата была выбрана
+                    this.dateWasSelected = true;
+
+                    // Скрываем календарь
+                    setTimeout(() => {
+                        this.hide();
+                        this.dateWasSelected = false;
+                    }, 100);
+                });
+            }
+        });
+
+        // Обработчики для навигации по годам
+        const prevYearBtn = container.querySelector('.month-selector-year-btn-prev');
+        const nextYearBtn = container.querySelector('.month-selector-year-btn-next');
+        const currentYearEl = container.querySelector('.month-selector-current-year');
+
+        if (prevYearBtn && !prevYearBtn.disabled) {
+            prevYearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                this.navigateYearInSelector(-1);
+            });
+        }
+
+        if (nextYearBtn && !nextYearBtn.disabled) {
+            nextYearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                this.navigateYearInSelector(1);
+            });
+        }
+
+        if (currentYearEl) {
+            currentYearEl.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                // Показываем селектор года
+                this.showYearSelector();
+            });
+        }
+    }
+
+    setupYearOnlySelector(container) {
+        // Добавляем обработчики для выбора года
+        const yearButtons = container.querySelectorAll('.year-btn');
+        const decadeButtons = container.querySelectorAll('.year-decade-btn');
+
+        yearButtons.forEach(btn => {
+            if (!btn.disabled) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+
+                    const yearText = btn.textContent;
+                    const year = parseInt(yearText);
+                    const date = new Date(year, this.currentMonth, 1);
+
+                    // Устанавливаем дату
+                    this.setDate(date);
+
+                    // Вызываем колбэк если есть
+                    if (this.options.onDateSelect) {
+                        this.options.onDateSelect(this.currentDate);
+                    }
+
+                    // Помечаем, что дата была выбрана
+                    this.dateWasSelected = true;
+
+                    // Скрываем календарь
+                    setTimeout(() => {
+                        this.hide();
+                        this.dateWasSelected = false;
+                    }, 100);
+                });
+            }
+        });
+
+        // Обработчики для декад
+        decadeButtons.forEach(btn => {
+            if (!btn.disabled) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    // Декады обрабатываются в showYearsInDecade
+                });
+            }
+        });
+    }
+
+    // Добавьте этот метод в класс Calendar
+    setupMonthYearHandlers() {
+        console.log('setupMonthYearHandlers called');
+
+        const container = this.calendarRoot.querySelector('.calendar-month-year-container');
+        if (!container) {
+            console.log('No month-year container found');
+            return;
+        }
+
+        // Обработчики для навигации по годам
+        const yearButtons = container.querySelectorAll('.calendar-nav-year-btn');
+        const monthButtons = container.querySelectorAll('.month-selector-month-btn');
+
+        console.log('Found month buttons:', monthButtons.length);
+        console.log('Found year buttons:', yearButtons.length);
+
+        yearButtons.forEach(btn => {
+            if (!btn.disabled) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    console.log('Year nav button clicked');
+                    const isPrev = btn.classList.contains('calendar-nav-btn-prev');
+                    this.navigateYear(isPrev ? -1 : 1);
+                    this.updateMonthYearView();
+                    // После обновления нужно заново добавить обработчики
+                    this.setupMonthYearHandlers();
+                });
+            }
+        });
+
+        // Обработчики для выбора месяца
+        monthButtons.forEach((btn, index) => {
+            if (!btn.disabled) {
+                // Удаляем старые обработчики, если есть
+                btn.replaceWith(btn.cloneNode(true));
+                const newBtn = container.querySelectorAll('.month-selector-month-btn')[index];
+
+                newBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    console.log('Month button clicked:', index);
+                    const monthIndex = index;
+                    const date = new Date(this.currentYear, monthIndex, 1);
+
+                    console.log('Setting date to:', date);
+                    // Устанавливаем дату
+                    this.setDate(date);
+
+                    // Вызываем колбэк если есть
+                    console.log('Checking for onDateSelect callback');
+                    if (this.options.onDateSelect) {
+                        console.log('Calling onDateSelect with:', this.currentDate);
+                        this.options.onDateSelect(this.currentDate);
+                    } else {
+                        console.log('No onDateSelect callback defined');
+                    }
+
+                    // Помечаем, что дата была выбрана
+                    this.dateWasSelected = true;
+
+                    // Скрываем календарь
+                    setTimeout(() => {
+                        console.log('Hiding calendar after selection');
+                        this.hide();
+                        this.dateWasSelected = false;
+                    }, 100);
+                });
+            }
+        });
+
+        // Обработчик для клика на текущий год
+        const yearSpan = container.querySelector('.calendar-header-year');
+        if (yearSpan && this.options.enableYearNavigation) {
+            yearSpan.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                this.showYearSelector();
+            });
+        }
+    }
+
+    // В методе setupMonthYearSelector() исправьте обработчик клика на кнопки месяцев:
+    setupMonthYearSelector(container) {
+        // Обработчики для навигации по годам
+        const yearButtons = container.querySelectorAll('.calendar-nav-year-btn');
+        const monthButtons = container.querySelectorAll('.month-selector-month-btn');
+
+        yearButtons.forEach(btn => {
+            if (!btn.disabled) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const isPrev = btn.classList.contains('calendar-nav-btn-prev');
+                    this.navigateYear(isPrev ? -1 : 1);
+                    this.updateMonthYearView();
+                });
+            }
+        });
+
+        // Обработчики для выбора месяца - ДОБАВЬТЕ ВЫЗОВ КОЛБЭКА
+        monthButtons.forEach((btn, index) => {
+            if (!btn.disabled) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const monthIndex = index;
+                    const date = new Date(this.currentYear, monthIndex, 1);
+
+                    // Устанавливаем дату
+                    this.setDate(date);
+
+                    // ВЫЗЫВАЕМ КОЛБЭК ЕСЛИ ЕСТЬ - ДОБАВЬТЕ ЭТО
+                    if (this.options.onDateSelect) {
+                        this.options.onDateSelect(this.currentDate);
+                    }
+
+                    // Помечаем, что дата была выбрана
+                    this.dateWasSelected = true;
+
+                    // Скрываем календарь
+                    setTimeout(() => {
+                        this.hide();
+                        this.dateWasSelected = false;
+                    }, 100);
+                });
+            }
+        });
+
+        // Обработчик для клика на текущий год
+        const yearSpan = container.querySelector('.calendar-header-year');
+        if (yearSpan && this.options.enableYearNavigation) {
+            yearSpan.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                this.showYearSelector();
+            });
+        }
+    }
+
+    updateMonthOnlyView() {
+        // Обновляем только вид выбора месяца
+        const container = this.calendarRoot.querySelector('.calendar-month-only-selector');
+        if (container) {
+            container.remove();
+            this.renderMonthOnly();
+        }
+    }
+
+    updateMonthYearView() {
+        console.log('updateMonthYearView called');
+
+        // Обновляем вид выбора месяца и года
+        const container = this.calendarRoot.querySelector('.calendar-month-year-container');
+        if (container) {
+            console.log('Removing old container');
+            container.remove();
+        }
+
+        console.log('Rendering new month-year view');
+        this.renderMonthYear();
     }
 
     isPrevYearDisabled() {
@@ -257,20 +669,69 @@ class Calendar {
     }
 
     navigateYear(direction) {
-        this.currentYear += direction;
+        const oldYear = this.currentYear;
+        const newYear = this.currentYear + direction;
 
         // Проверяем ограничения
-        if (this.minDate && this.currentYear < this.minDate.getFullYear()) {
+        if (this.minDate && newYear < this.minDate.getFullYear()) {
             this.currentYear = this.minDate.getFullYear();
+        } else if (this.maxDate && newYear > this.maxDate.getFullYear()) {
+            this.currentYear = this.maxDate.getFullYear();
+        } else {
+            this.currentYear = newYear;
         }
 
-        if (this.maxDate && this.currentYear > this.maxDate.getFullYear()) {
-            this.currentYear = this.maxDate.getFullYear();
+        // Если год не изменился из-за ограничений
+        if (oldYear === this.currentYear) {
+            return;
         }
 
         // Если месяц стал невалидным, корректируем
         this.adjustMonthForYear();
-        this.render();
+
+        // В зависимости от режима рендерим по-разному
+        switch (this.options.mode) {
+            case 'month-only':
+                this.updateMonthOnlyView();
+                break;
+            case 'year-only':
+                this.render();
+                break;
+            case 'month-year':
+                this.updateMonthYearView();
+                // После обновления нужно заново добавить обработчики
+                this.setupMonthYearHandlers();
+                break;
+            case 'full':
+            default:
+                this.render();
+                break;
+        }
+    }
+
+    navigateYearInSelector(direction) {
+        const oldYear = this.currentYear;
+        const newYear = this.currentYear + direction;
+
+        // Проверяем ограничения
+        if (this.minDate && newYear < this.minDate.getFullYear()) {
+            this.currentYear = this.minDate.getFullYear();
+        } else if (this.maxDate && newYear > this.maxDate.getFullYear()) {
+            this.currentYear = this.maxDate.getFullYear();
+        } else {
+            this.currentYear = newYear;
+        }
+
+        // Если год не изменился из-за ограничений
+        if (oldYear === this.currentYear) {
+            return;
+        }
+
+        // Если месяц стал невалидным, корректируем
+        this.adjustMonthForYear();
+
+        // Обновляем только вид выбора месяца
+        this.updateMonthOnlyView();
     }
 
     adjustMonthForYear() {
@@ -431,7 +892,10 @@ class Calendar {
         if (cellDate) {
             if (this.isDateSelectable(cellDate)) {
                 inner.style.cursor = 'pointer';
-                inner.addEventListener('click', () => this.selectDate(cellDate));
+                inner.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.selectDate(cellDate);
+                });
 
                 if (DateUtils.isSameDay(cellDate, this.currentDate)) {
                     dayEl.classList.add('calendar-day-selected');
@@ -483,7 +947,18 @@ class Calendar {
             this.options.onDateSelect(this.currentDate);
         }
 
+        // Помечаем, что дата была выбрана
+        this.dateWasSelected = true;
+
         this.render();
+
+        // Скрываем календарь после выбора даты (если это режим month/year)
+        if (this.options.mode !== 'full') {
+            setTimeout(() => {
+                this.hide();
+                this.dateWasSelected = false;
+            }, 100);
+        }
     }
 
     showMonthSelector() {
@@ -519,7 +994,8 @@ class Calendar {
         closeBtn.innerHTML = '×';
         closeBtn.type = 'button';
         closeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+            e.preventDefault();
+            e.stopImmediatePropagation();
             this.hideMonthSelector();
         });
 
@@ -542,7 +1018,9 @@ class Calendar {
         todayBtn.className = 'month-selector-btn';
         todayBtn.textContent = 'Сегодня';
         todayBtn.type = 'button';
-        todayBtn.addEventListener('click', () => {
+        todayBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
             this.selectToday();
             this.hideMonthSelector();
         });
@@ -551,7 +1029,11 @@ class Calendar {
         confirmBtn.className = 'month-selector-btn primary';
         confirmBtn.textContent = 'Готово';
         confirmBtn.type = 'button';
-        confirmBtn.addEventListener('click', () => this.hideMonthSelector());
+        confirmBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            this.hideMonthSelector();
+        });
 
         footer.append(todayBtn, confirmBtn);
         container.appendChild(footer);
@@ -572,7 +1054,11 @@ class Calendar {
         if (this.isPrevYearDisabled()) {
             prevYearBtn.disabled = true;
         } else {
-            prevYearBtn.addEventListener('click', () => this.navigateYearInSelector(-1));
+            prevYearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                this.navigateYearInSelector(-1);
+            });
         }
 
         yearNav.appendChild(prevYearBtn);
@@ -581,7 +1067,11 @@ class Calendar {
         const currentYear = document.createElement('div');
         currentYear.className = 'month-selector-current-year';
         currentYear.textContent = this.currentYear.toString();
-        currentYear.addEventListener('click', () => this.showYearSelectorFromMonth());
+        currentYear.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            this.showYearSelectorFromMonth();
+        });
         yearNav.appendChild(currentYear);
 
         // Следующий год
@@ -593,39 +1083,16 @@ class Calendar {
         if (this.isNextYearDisabled()) {
             nextYearBtn.disabled = true;
         } else {
-            nextYearBtn.addEventListener('click', () => this.navigateYearInSelector(1));
+            nextYearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                this.navigateYearInSelector(1);
+            });
         }
 
         yearNav.appendChild(nextYearBtn);
 
         return yearNav;
-    }
-
-    navigateYearInSelector(direction) {
-        this.currentYear += direction;
-
-        // Обновляем только год в селекторе месяцев
-        const yearNav = this.monthSelector.querySelector('.month-selector-year-nav');
-        if (yearNav) {
-            const prevYearBtn = yearNav.querySelector('.month-selector-year-btn-prev');
-            const currentYear = yearNav.querySelector('.month-selector-current-year');
-            const nextYearBtn = yearNav.querySelector('.month-selector-year-btn-next');
-
-            prevYearBtn.textContent = (this.currentYear - 1).toString();
-            currentYear.textContent = this.currentYear.toString();
-            nextYearBtn.textContent = (this.currentYear + 1).toString();
-
-            // Обновляем доступность кнопок
-            prevYearBtn.disabled = this.isPrevYearDisabled();
-            nextYearBtn.disabled = this.isNextYearDisabled();
-
-            // Обновляем сетку месяцев
-            const monthsGrid = this.monthSelector.querySelector('.month-selector-months-grid');
-            if (monthsGrid) {
-                monthsGrid.innerHTML = '';
-                this.populateMonthsGrid(monthsGrid);
-            }
-        }
     }
 
     showYearSelectorFromMonth() {
@@ -634,9 +1101,30 @@ class Calendar {
     }
 
     createMonthsGrid() {
+        console.log('createMonthsGrid called, currentYear:', this.currentYear, 'currentMonth:', this.currentMonth);
+
         const grid = document.createElement('div');
         grid.className = 'month-selector-months-grid';
-        this.populateMonthsGrid(grid);
+
+        this.MONTHS.forEach((monthName, index) => {
+            const monthBtn = document.createElement('button');
+            monthBtn.className = 'month-selector-month-btn';
+            monthBtn.textContent = monthName;
+            monthBtn.type = 'button';
+            monthBtn.dataset.monthIndex = index;
+
+            // Проверяем, доступен ли месяц
+            if (!this.isMonthAvailable(this.currentYear, index)) {
+                monthBtn.classList.add('month-selector-month-btn-disabled');
+                monthBtn.disabled = true;
+            } else if (index === this.currentMonth) {
+                monthBtn.classList.add('month-selector-month-btn-current');
+            }
+
+            grid.appendChild(monthBtn);
+        });
+
+        console.log('Created', this.MONTHS.length, 'month buttons');
         return grid;
     }
 
@@ -655,7 +1143,9 @@ class Calendar {
                 monthBtn.classList.add('month-selector-month-btn-current');
             }
 
-            monthBtn.addEventListener('click', () => {
+            monthBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
                 this.selectMonth(index);
                 this.hideMonthSelector();
             });
@@ -723,7 +1213,8 @@ class Calendar {
         closeBtn.innerHTML = '×';
         closeBtn.type = 'button';
         closeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+            e.preventDefault();
+            e.stopImmediatePropagation();
             this.hideYearSelector();
         });
 
@@ -755,7 +1246,9 @@ class Calendar {
                 btn.classList.add('active');
             }
 
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
                 // Переходим ко второму этапу - выбору года в декаде
                 this.showYearsInDecade(decade);
             });
@@ -858,8 +1351,9 @@ class Calendar {
         backBtn.className = 'year-back-btn';
         backBtn.innerHTML = '← Назад к десятилетиям';
         backBtn.type = 'button';
-
-        backBtn.addEventListener('click', () => {
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
             // Возвращаемся к первому этапу
             this.showDecadesAgain();
         });
@@ -911,7 +1405,9 @@ class Calendar {
                 btn.classList.add('year-disabled');
                 btn.disabled = true;
             } else {
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
                     this.selectYear(year);
                 });
             }
@@ -965,7 +1461,9 @@ class Calendar {
                 btn.classList.add('active');
             }
 
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
                 // Переходим ко второму этапу - выбору года в декаде
                 this.showYearsInDecade(decade);
             });
@@ -985,8 +1483,35 @@ class Calendar {
     }
 
     selectYear(year) {
+        console.log('selectYear called for:', year);
         this.currentYear = year;
-        this.render();
+
+        // В зависимости от режима рендерим по-разному
+        switch (this.options.mode) {
+            case 'month-only':
+                this.updateMonthOnlyView();
+                break;
+            case 'year-only':
+                this.render();
+                break;
+            case 'month-year':
+                this.updateMonthYearView();
+                // После обновления нужно заново добавить обработчики
+                this.setupMonthYearHandlers();
+                break;
+            case 'full':
+            default:
+                this.render();
+                break;
+        }
+
+        // Вызываем колбэк если есть
+        if (this.options.onDateSelect) {
+            console.log('Calling onDateSelect from selectYear');
+            const date = new Date(this.currentYear, this.currentMonth, 1);
+            this.options.onDateSelect(date);
+        }
+
         this.hideYearSelector();
     }
 
@@ -998,13 +1523,21 @@ class Calendar {
         todayBtn.className = 'year-selector-btn';
         todayBtn.textContent = 'Сегодня';
         todayBtn.type = 'button';
-        todayBtn.addEventListener('click', () => this.selectToday());
+        todayBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            this.selectToday();
+        });
 
         const confirmBtn = document.createElement('button');
         confirmBtn.className = 'year-selector-btn primary';
         confirmBtn.textContent = 'Готово';
         confirmBtn.type = 'button';
-        confirmBtn.addEventListener('click', () => this.hideYearSelector());
+        confirmBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            this.hideYearSelector();
+        });
 
         footer.append(todayBtn, confirmBtn);
         return footer;
@@ -1033,14 +1566,36 @@ class Calendar {
         this.hideYearSelector();
     }
 
-    // Public API
+// Public API
     setDate(date) {
         const newDate = DateUtils.cloneDate(date);
         if (this.isDateSelectable(newDate)) {
             this.currentDate = newDate;
             this.currentYear = this.currentDate.getFullYear();
             this.currentMonth = this.currentDate.getMonth();
-            this.render();
+
+            // В зависимости от режима рендерим по-разному
+            switch (this.options.mode) {
+                case 'month-only':
+                    this.updateMonthOnlyView();
+                    break;
+                case 'year-only':
+                    this.render();
+                    break;
+                case 'month-year':
+                    this.updateMonthYearView();
+                    break;
+                case 'full':
+                default:
+                    this.render();
+                    break;
+            }
+
+            // ВЫЗЫВАЕМ КОЛБЭК ЕСЛИ ЕСТЬ - УБЕДИТЕСЬ, ЧТО ЭТО ЕСТЬ
+            if (this.options.onDateSelect) {
+                this.options.onDateSelect(this.currentDate);
+            }
+
             return true;
         }
         return false;
@@ -1061,7 +1616,13 @@ class Calendar {
     }
 
     updateOptions(newOptions) {
+        const oldMode = this.options.mode;
         this.options = { ...this.options, ...newOptions };
+
+        if (newOptions.mode && newOptions.mode !== oldMode) {
+            // Если изменился режим, полностью переинициализируем
+            this.init();
+        }
 
         if (newOptions.initialDate !== undefined) this.setDate(newOptions.initialDate);
         if (newOptions.minDate !== undefined) this.setMinDate(newOptions.minDate);
@@ -1069,16 +1630,33 @@ class Calendar {
         if (newOptions.monthsNames !== undefined) this.MONTHS = newOptions.monthsNames;
         if (newOptions.weekdaysNames !== undefined) this.WEEKDAYS = newOptions.weekdaysNames;
         if (newOptions.shortMonthNames !== undefined) this.SHORT_MONTHS = newOptions.shortMonthNames;
+        if (newOptions.showDays !== undefined) this.options.showDays = newOptions.showDays;
 
         this.render();
     }
 
     show() {
+        // Позиционируем календарь
+        if (this.options.positionSelector) {
+            this.positionElement = document.querySelector(this.options.positionSelector);
+            if (this.positionElement) {
+                this.positionCalendar();
+            }
+        }
+
         this.calendarRoot.style.display = 'block';
+        this.calendarRoot.style.visibility = 'visible';
+
+        // Добавляем обработчик клика вне календаря
+        setTimeout(() => {
+            document.addEventListener('click', this.outsideClickHandler);
+        }, 10);
     }
 
     hide() {
         this.calendarRoot.style.display = 'none';
+        // Удаляем обработчик клика вне календаря
+        document.removeEventListener('click', this.outsideClickHandler);
     }
 
     toggle() {
@@ -1089,8 +1667,58 @@ class Calendar {
         }
     }
 
+    positionCalendar() {
+        if (!this.positionElement) return;
+
+        const elementRect = this.positionElement.getBoundingClientRect();
+        const calendarRect = this.calendarRoot.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const windowWidth = window.innerWidth;
+
+        // Сбрасываем стили позиционирования
+        this.calendarRoot.style.position = 'fixed';
+        this.calendarRoot.style.left = '';
+        this.calendarRoot.style.right = '';
+        this.calendarRoot.style.top = '';
+        this.calendarRoot.style.bottom = '';
+        this.calendarRoot.style.transform = '';
+
+        // Рассчитываем доступное пространство сверху и снизу
+        const spaceAbove = elementRect.top;
+        const spaceBelow = windowHeight - elementRect.bottom;
+        const calendarHeight = calendarRect.height || 300; // Примерная высота
+
+        // Определяем, куда лучше поместить календарь
+        if (spaceBelow >= calendarHeight || spaceBelow >= spaceAbove) {
+            // Помещаем под элементом
+            this.calendarRoot.style.top = (elementRect.bottom + window.scrollY) + 'px';
+        } else {
+            // Помещаем над элементом
+            this.calendarRoot.style.bottom = (windowHeight - elementRect.top + window.scrollY) + 'px';
+        }
+
+        // Горизонтальное позиционирование
+        const spaceLeft = elementRect.left;
+        const spaceRight = windowWidth - elementRect.right;
+        const calendarWidth = calendarRect.width || 300; // Примерная ширина
+
+        if (spaceRight >= calendarWidth || spaceRight >= spaceLeft) {
+            // Выравниваем по левому краю элемента
+            this.calendarRoot.style.left = (elementRect.left + window.scrollX) + 'px';
+        } else {
+            // Выравниваем по правому краю элемента
+            this.calendarRoot.style.right = (windowWidth - elementRect.right + window.scrollX) + 'px';
+        }
+
+        // Добавляем небольшой отступ
+        this.calendarRoot.style.margin = '5px 0';
+        this.calendarRoot.style.zIndex = '10000';
+    }
+
     destroy() {
+        this.hide();
         this.container.innerHTML = '';
+        this.outsideClickHandler = null;
     }
 
     isYearNavigationDisabled() {

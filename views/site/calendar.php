@@ -271,9 +271,51 @@ $(document).on('change', '.order-payed-switch', function() {
 
 $(".modal").on("hidden.bs.modal", updateTimelineEvents)
 
+// В calendar.php убедитесь, что onDateSelect правильно обрабатывается
+const monthYearPicker = new Calendar('#month-year-selector', {
+    mode: 'month-year',
+    initialDate: new Date(firstDate),
+    allowPastDates: true,
+    positionSelector: '#date-container',
+    onDateSelect: (date) => {
+        console.log('onDateSelect triggered:', date);
+        if (DateUtils.getMonthsNames()[date.getMonth()] !== DateUtils.getMonthsNames()[(new Date(firstDate)).getMonth()]) {
+            window.location.href = '/site/calendar?date=' + DateUtils.formatDate(date, 'YYYY-MM-DD');
+        }
+    }
+});
+
+$("#date-container").on("click", () => {
+    console.log('Date container clicked, showing picker');
+    monthYearPicker.toggle(); // Используем toggle вместо show
+});
+
 JS, \yii\web\View::POS_READY);
 
 $this->registerCss(<<<CSS
+#month-year-selector {
+z-index: 99999;
+}
+.calendar-container {
+    position: fixed;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 10000;
+}
+
+.calendar-month-year-container {
+    padding: 10px;
+    min-width: 200px;
+}
+
+.calendar-month-year-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    margin-top: 10px;
+}
 /* Стили для событий */
 .jqtl-event-node {
     justify-content: center;
@@ -382,7 +424,12 @@ $this->registerCss(<<<CSS
     --bs-table-bg-type: transparent !important;
     --bs-table-accent-bg: transparent !important;
 }
-
+.calendar-container {
+display: none;
+}
+#date-container {
+cursor: pointer;
+}
 CSS
 );
 
@@ -420,9 +467,10 @@ echo \yii\helpers\Html::tag('div', '', ['id' => 'event-modal-content']);
     <div class="row my-3 px-5">
         <div class="d-flex justify-content-between">
             <a href="?date=<?= date('Y-m-06', strtotime('-1 month', strtotime($firstDate))) ?>" class="btn btn-primary align-middle"><?= \Yii::t('app', 'Previous') ?></a>
-            <div class="col-10 d-flex flex-column">
-                <span class="text-center"><?= date('Y', strtotime($firstDate)) ?></span>
-                <span class="text-center text-capitalize"><?= \Yii::$app->formatter->asDate($firstDate, 'LLLL') ?></span>
+            <div class="col-10 d-flex flex-column position-relative" id="date-container">
+                <div id="month-year-selector" class="justify-content-between position-absolute top-0 start-middle"></div>
+                <span id="year" class="text-center"><?= \Yii::$app->formatter->asDate($firstDate, 'php:Y') ?></span>
+                <span id="month" class="text-center text-capitalize"><?= \Yii::$app->formatter->asDate($firstDate, 'LLLL') ?></span>
             </div>
             <a href="?date=<?= date('Y-m-06', strtotime('+1 month', strtotime($firstDate))) ?>" class="btn btn-primary col-1"><?= \Yii::t('app', 'Next') ?></a>
         </div>
