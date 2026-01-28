@@ -15,7 +15,7 @@ class ScheduleAsset extends AssetBundle
     ];
     public $css = [
         '/components/schedule/schedule.css',
-        '/components/calendar/calendar.css',
+        '/components/calendar/calendar_v2.css',
         '/components/dateSelector/dateSelector.css',
         '/components/timeline/jquery.timeline.min.css',
     ];

@@ -272,7 +272,7 @@ $(document).on('change', '.order-payed-switch', function() {
 $(".modal").on("hidden.bs.modal", updateTimelineEvents)
 
 // В calendar.php убедитесь, что onDateSelect правильно обрабатывается
-const monthYearPicker = new Calendar('#month-year-selector', {
+const monthYearPicker = new CalendarV2('#month-year-selector', {
     mode: 'month-year',
     initialDate: new Date(firstDate),
     allowPastDates: true,

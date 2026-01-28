@@ -406,7 +406,7 @@ class DateSelector {
         if (!calendarContainer) return;
 
         // Устанавливаем размеры календаря перед расчетом
-        calendarContainer.style.width = '280px';
+        calendarContainer.style.width = '220px';
         calendarContainer.style.height = 'auto';
 
         const calendarRect = calendarContainer.getBoundingClientRect();

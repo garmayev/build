@@ -9,7 +9,7 @@ markdown
 
 ```html
 <!-- Подключение стилей -->
-<link rel="stylesheet" href="calendar.css">
+<link rel="stylesheet" href="calendar_v2.css">
 
 <!-- Подключение скриптов -->
 <script src="date-utils.js"></script> <!-- Предполагаемый файл с DateUtils -->

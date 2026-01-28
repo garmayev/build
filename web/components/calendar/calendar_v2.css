@@ -28,6 +28,10 @@
 .calendar-header {
   margin-bottom: 12px;
   user-select: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
 .calendar-header-row {
   display: flex;
@@ -1298,4 +1302,4 @@ button.year-back-btn:focus-visible {
   justify-content: center;
   min-width: 0;
 }
-/*# sourceMappingURL=calendar.css.map */
+/*# sourceMappingURL=calendar_v2.css.map */

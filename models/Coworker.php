@@ -265,7 +265,7 @@ class Coworker extends User
         $startDate = date("Y-m-01", strtotime("$year-$month-01"));
         $endDate = date("Y-m-t", strtotime("$year-$month-01"));
         $startTimestamp = strtotime($startDate);
-        $endTimestamp = strtotime($endDate);
+        $endTimestamp = strtotime($endDate . ' 23:59:59');
 
         $query = $this->hasMany(Order::class, ['id' => 'order_id'])
             ->viaTable('order_user', ['user_id' => 'id'])
@@ -282,14 +282,56 @@ class Coworker extends User
                         ->andWhere(['<=', 'h.date', $endDate])
                     ]
                 ],
-                // 2. Заказы НЕ mode_long_daily, чья дата попадает в указанный месяц
+                // 2. Заказы с mode_long_daily, которые пересекаются с указанным месяцем
+                ['and',
+                    ['order.mode' => Order::MODE_LONG_DAILY],
+                    ['or',
+                        // Начало в месяце
+                        ['and',
+                            ['>=', 'order.date', $startTimestamp],
+                            ['<=', 'order.date', $endTimestamp]
+                        ],
+                        // Окончание в месяце
+                        ['and',
+                            ['<=', "FROM_UNIXTIME(order.date, '%Y-%m-%d')", $endDate],
+                            ['>=', "order.finish_datetime", $startDate]
+                        ],
+                        // Начинается до и заканчивается после месяца (охватывает весь месяц)
+                        ['and',
+                            ['<=', 'order.date', $startTimestamp],
+                            ['>=', "order.finish_datetime", $endDate]
+                        ]
+                    ]
+                ],
+                // 3. Заказы НЕ mode_long_daily, которые пересекаются с указанным месяцем
                 ['and',
                     ['or',
                         ['<>', 'order.mode', Order::MODE_LONG_DAILY],
                         ['order.mode' => null]
                     ],
-                    ['>=', 'order.date', $startTimestamp],
-                    ['<=', 'order.date', $endTimestamp]
+                    ['or',
+                        // Начало в месяце
+                        ['and',
+                            ['>=', 'order.date', $startTimestamp],
+                            ['<=', 'order.date', $endTimestamp]
+                        ],
+                        // Если есть finish_datetime, проверяем пересечение
+                        ['and',
+                            ['is not', 'order.finish_datetime', null],
+                            ['or',
+                                // Окончание в месяце
+                                ['and',
+                                    ['<=', "FROM_UNIXTIME(order.date, '%Y-%m-%d')", $endDate],
+                                    ['>=', "order.finish_datetime", $startDate]
+                                ],
+                                // Начинается до и заканчивается после месяца
+                                ['and',
+                                    ['<=', 'order.date', $startTimestamp],
+                                    ['>=', "order.finish_datetime", $endDate]
+                                ]
+                            ]
+                        ]
+                    ]
                 ]
             ]);
 
