@@ -135,17 +135,20 @@ window.categoryIdField.on('select2:select', function() {
     }
 })
 window.propertyIdField.on('depdrop:afterChange', function(event) {
-    $(event.target).val(presetData.property_id ?? null)
+    $(event.target).val(presetData.property_id ?? null).trigger('change').trigger({type: "change", value: presetData.property_id ?? null})
+}).on('change', function(event) {
     const isDisabled = $(event.currentTarget).val() === '';
     window.typeField.attr('disabled', isDisabled);
     window.dimensionIdField.attr('disabled', isDisabled);
     window.valueField.attr('disabled', isDisabled);
     window.dimensionIdField
         .trigger('change')
-        .trigger({type: 'change', value: presetData.dimension_id})
+        .trigger({type: 'change', value: presetData.dimension_id ?? null})
         .trigger('depdrop:change')
-        .trigger({type: 'depdrop:change', value: presetData.dimension_id});
+        .trigger({type: 'depdrop:change', value: presetData.dimension_id ?? null});
+
 })
+
 window.dimensionIdField.on('depdrop:afterChange', function(event) {
     window.dimensionIdField.val(presetData.dimension_id ?? null)
 })
