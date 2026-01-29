@@ -14,7 +14,7 @@ $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
 
 $this->title = \Yii::t('app', 'Calendar');
 
-$current = isset($_GET['date']) ? strtotime($_GET['date']) : time();
+$current = isset($_GET['date']) ? strtotime($_GET['date']) : strtotime('first day of this month');
 
 $firstDate = date('Y-m-06', $current);
 $lastDate = date('Y-m-05', strtotime('+1 month', $current));
@@ -155,7 +155,7 @@ const initializeTimeline = (coworkers) => {
         rows: "auto",
         scrollSensitivity: 1
     };
-    console.log( events )
+
     timelineContainer = $("#timeline")
         .Timeline(options)
         .Timeline('openEvent', (event, timelineEvent) => {
