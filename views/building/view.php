@@ -36,7 +36,14 @@ $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
             'options' => ['class' => 'table table-striped detail-view'],
             'attributes' => [
                 'title',
-                'location.address',
+                [
+                    'attribute' => 'location.address',
+                    'label' => \Yii::t('app', 'Location'),
+                    'value' => function (Building $model) {
+                        return $model->location->address;
+                    },
+                    'format' => 'raw'
+                ],
                 [
                     'attribute' => 'location',
                     'label' => \Yii::t('app', 'Map'),
@@ -57,6 +64,45 @@ $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
                 ],
                 'radius'
             ],
+        ]) ?>
+
+        <?= \yii\grid\GridView::widget([
+            'dataProvider' => new \yii\data\ActiveDataProvider([
+                'query' => $model->getOrders(),
+                'pagination' => false
+            ]),
+            'summary' => false,
+            'tableOptions' => ['class' => 'table table-striped'],
+            'columns' => [
+                'id',
+                'title',
+                'start_datetime:date',
+                'finish_datetime:date',
+                [
+                    'attribute' => 'requirements',
+                    'value' => function (\app\models\Order $model) {
+                        $result = "";
+                        foreach ($model->requirements as $requirement) {
+                            $result .= $requirement->toString();
+                        }
+                        return $result ?? null;
+                    },
+                    'format' => 'html'
+                ],
+                [
+                    'attribute' => 'isPayed',
+                    'value' => function (\app\models\Order $model) {
+                        return $model->isPayed ? \Yii::t('app', 'Is payed') : \Yii::t('app', 'not_paid');
+                    },
+                    'format' => 'html'
+                ],
+                [
+                    'class' => \yii\grid\ActionColumn::class,
+                    'controller' => 'order',
+                    'template' => '{view} {delete}'
+                ]
+            ],
+            'layout' => '{items}'
         ]) ?>
     </div>
 <?php

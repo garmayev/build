@@ -50,6 +50,8 @@ use yii\helpers\ArrayHelper;
  * @property int $issetCoworkers
  * @property User[] $suitableCoworkers
  * @property Report[] $reports
+ * @property Hours[] $hours
+ * @property bool $isPayed
  */
 class Order extends \yii\db\ActiveRecord
 {
@@ -169,7 +171,14 @@ class Order extends \yii\db\ActiveRecord
      */
     public function beforeValidate(): bool
     {
-        $this->date = $this->date ?? Yii::$app->formatter->asTimestamp($this->datetime);
+        // Проверяем, не является ли это AJAX валидацией
+        if (Yii::$app->request->isAjax && Yii::$app->request->getIsPost()) {
+            // Пропускаем определенную логику для AJAX валидации
+            $this->date = $this->date ?? time(); // Простое присвоение без форматирования
+        } else {
+            $this->date = $this->date ?? Yii::$app->formatter->asTimestamp($this->datetime);
+        }
+
         return parent::beforeValidate();
     }
 
@@ -194,6 +203,23 @@ class Order extends \yii\db\ActiveRecord
     {
         return [
             [['building_id', 'mode'], 'required'],
+
+            // Правила валидации дат с правильной обработкой
+            [['start_datetime', 'finish_datetime'], 'required', 'when' => function ($model) {
+                return $model->mode == self::MODE_LONG_FIXED || $model->mode == self::MODE_LONG_DAILY;
+            }, 'whenClient' => 'function (attribute, value) {return $("#order-mode").val() === 1 || $("#order-mode").val() === 2}', 'message' => 'Выберите дату начала и окончания'],
+
+            [['start_datetime'], 'required', 'when' => function ($model) {
+                return $model->mode == self::MODE_SINGLE_FIXED;
+            }, 'message' => 'Выберите дату начала'],
+
+            // Убираем старое правило date и добавляем кастомные валидаторы
+            [['start_datetime'], 'validateStartDate'],
+            [['finish_datetime'], 'validateFinishDate'],
+            [['start_datetime', 'finish_datetime'], 'validateDateRange'], // НОВЫЙ ВАЛИДАТОР
+
+            [['start_datetime', 'finish_datetime'], 'date', 'format' => 'php:Y-m-d H:i:s'],
+
             [['status', 'building_id', 'date', 'type', 'created_by', 'created_at', 'priority_level', 'mode', 'is_payed'], 'integer'],
             [['building_id'], 'exist', 'skipOnError' => true, 'targetClass' => Building::class, 'targetAttribute' => ['building_id' => 'id']],
             [['priority_level'], 'default', 'value' => Coworker::PRIORITY_HIGH],
@@ -204,12 +230,72 @@ class Order extends \yii\db\ActiveRecord
             [['summary'], 'string', 'max' => 11],
             [['summary'], 'default', 'value' => ''],
             [['title'], 'string', 'max' => 255],
-            [['datetime', 'attachments', 'requirements'], 'safe'],
+
+            // Правила валидации для requirements
+            [['requirements'], 'required', 'message' => Yii::t('app', 'You must specify at least one requirement'), 'whenClient' => 'function (attribute, value) {
+                // Проверяем, есть ли хотя бы один заполненный элемент requirements
+                var hasRequirements = false;
+                
+                // Если это обычная форма с полями
+                if ($("[name*=\'requirements\']").length > 0) {
+                    // Проверяем все поля requirements
+                    $("[name*=\'requirements\']").each(function() {
+                        var fieldName = $(this).attr("name");
+                        if (fieldName.includes("[property_id]") || fieldName.includes("[category_id]")) {
+                            if ($(this).val() && $(this).val().trim() !== "") {
+                                hasRequirements = true;
+                                return false; // break loop
+                            }
+                        }
+                    });
+                }
+                
+                // Если requirements передаются как JSON или массив
+                if (!hasRequirements && value && value.trim() !== "") {
+                    try {
+                        var reqData = JSON.parse(value);
+                        if (Array.isArray(reqData) && reqData.length > 0) {
+                            // Проверяем, что есть хотя бы одно заполненное требование
+                            for (var i = 0; i < reqData.length; i++) {
+                                var req = reqData[i];
+                                if (req && req.property_id && req.category_id && req.value) {
+                                    hasRequirements = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } catch(e) {
+                        // Если не JSON, проверяем как массив
+                        if (Array.isArray(value) && value.length > 0) {
+                            hasRequirements = true;
+                        }
+                    }
+                }
+                
+                return !hasRequirements;
+            }'
+            ],
+            [['requirements'], 'validateRequirements'],
+            // Отключаем требование requirements для AJAX валидации
+            [['requirements'], 'required',
+                'when' => function ($model) {
+                    // Только для реального сохранения, не для AJAX валидации
+                    return !Yii::$app->request->isAjax;
+                },
+                'message' => Yii::t('app', 'You must specify at least one requirement')
+            ],
+
+            [['datetime', 'attachments'], 'safe'],
             [['created_at'], 'default', 'value' => time()],
-            [['price', 'requirements'], 'safe'],
-            [['price'], 'default', 'value' => 0],
+
+            [['price'], 'required', 'when' => function($model) {
+                return $model->mode !== self::MODE_LONG_DAILY;
+            }, 'whenClient' => 'function (attribute, value, model) {
+                return $("#order-mode").val() !== "'.self::MODE_LONG_DAILY.'";
+            }', 'message' => Yii::t('app', 'Price field is required')],
+            [['mode', 'price'], 'validatePrice'],
+
             [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg', 'jpeg', 'png', 'svg', 'bmp'], 'maxFiles' => 10],
-            [['start_datetime', 'finish_datetime'], 'date', 'format' => 'php:Y-m-d H:i:s']
         ];
     }
 
@@ -235,6 +321,8 @@ class Order extends \yii\db\ActiveRecord
             'priority_level' => Yii::t('app', 'Priority'),
             'start_datetime' => Yii::t('app', 'Start Date'),
             'finish_datetime' => Yii::t('app', 'End Date'),
+            'isPayed' => Yii::t('app', 'Is payed'),
+            'requirements' => \Yii::t('app', 'Requirements')
         ];
     }
 
@@ -298,6 +386,128 @@ class Order extends \yii\db\ActiveRecord
     }
 
     /**
+     * Валидация цены в зависимости от режима заказа
+     */
+    public function validatePrice($attribute, $params)
+    {
+        // Если режим MODE_LONG_DAILY - цена может быть 0, валидация не требуется
+        if (intval($this->mode) === intval(self::MODE_LONG_DAILY)) {
+            $this->clearErrors('price');
+            return;
+        }
+
+        // Для других режимов цена обязательна и должна быть > 0
+        if (empty($this->price) || $this->price == 0 || $this->price === '') {
+            $this->addError('price', Yii::t('app', 'You must specify a price greater than 0'));
+            return;
+        }
+
+        // Проверяем, что цена - положительное число
+        $price = (float) $this->price;
+        if ($price <= 0) {
+            $this->addError('price', Yii::t('app', 'The price must be a positive number'));
+        }
+    }
+
+    /**
+     * Валидация взаимосвязи дат начала и окончания
+     */
+    public function validateDateRange($attribute, $params)
+    {
+        // Проверяем оба поля одновременно
+        $startDate = $this->start_datetime;
+        $finishDate = $this->finish_datetime;
+
+        // Проверяем только если оба поля заполнены
+        if (empty($startDate) || empty($finishDate)) {
+            return;
+        }
+
+        $startTimestamp = strtotime($startDate);
+        $finishTimestamp = strtotime($finishDate);
+        $today = strtotime(date('Y-m-d 00:00:00'));
+
+        $errors = [];
+
+        // Проверяем дату начала относительно сегодня
+        if ($startTimestamp < $today) {
+            $errors['start'] = Yii::t('app', 'The start date cannot be earlier than today');
+        }
+
+        // Проверяем дату окончания относительно сегодня
+        if ($finishTimestamp < $today) {
+            $errors['finish'] = Yii::t('app', 'The end date cannot be earlier than the start date');
+        }
+
+        // Проверяем, что дата окончания не раньше даты начала
+        if ($finishTimestamp < $startTimestamp) {
+            $errors['finish'] = Yii::t('app', 'The end date cannot be earlier than today');
+        }
+
+        // Добавляем ошибки на соответствующие поля
+        foreach ($errors as $field => $error) {
+            if ($field === 'start') {
+                $this->addError('start_datetime', $error);
+            } elseif ($field === 'finish') {
+                $this->addError('finish_datetime', $error);
+            }
+        }
+    }
+
+    /**
+     * Валидация даты начала
+     */
+    public function validateStartDate($attribute, $params)
+    {
+        // Проверяем только базовую валидацию, основную логику перенесли в validateDateRange
+        if (!$this->hasErrors() && $this->$attribute) {
+            $startDate = strtotime($this->$attribute);
+            // Базовые проверки, если нужно
+        }
+    }
+
+    /**
+     * Валидация даты окончания
+     */
+    public function validateFinishDate($attribute, $params)
+    {
+        // Проверяем только базовую валидацию, основную логику перенесли в validateDateRange
+        if (!$this->hasErrors() && $this->{$attribute}) {
+            // Базовые проверки, если нужно
+        }
+    }
+
+    /**
+     * Валидация массива requirements
+     */
+    public function validateRequirements($attribute, $params)
+    {
+        if (!is_array($this->$attribute) || empty($this->$attribute)) {
+            $this->addError($attribute, Yii::t('app', 'The requirements must be specified as an array'));
+            return;
+        }
+
+        if (count($this->{$attribute}) === 0) {
+            $this->addError($attribute, Yii::t('app', 'You must specify at least one valid requirement'));
+        }
+    }
+
+    public function getIsPayed()
+    {
+        if ($this->mode !== Order::MODE_LONG_DAILY) {
+            return $this->is_payed === 1;
+        }
+        $result = true;
+        foreach ($this->hours as $hour) {
+            if ($hour->is_payed === 0) {
+                $result = false;
+                break;
+            }
+        }
+        return $result;
+    }
+
+    /**
      * Получение объекта заказа
      *
      * @return ActiveQuery Query for the related Building
@@ -348,7 +558,6 @@ class Order extends \yii\db\ActiveRecord
                 \Yii::error("process Uploaded Files");
                 $attachments = $this->processUploadedFiles();
             }
-            \Yii::error($attachments);
             // Обработка URL вложений
             if (!empty($attachments)) {
                 \Yii::error("process Url Attachments");
@@ -570,9 +779,12 @@ class Order extends \yii\db\ActiveRecord
      */
     public function setRequirements($data)
     {
+        if (\Yii::$app->request->isAjax) {
+            return;
+        }
         $transaction = Yii::$app->db->beginTransaction();
-        $this->save(false);
         try {
+            $this->save(false);
             foreach ($this->requirements as $requirement) {
                 $this->unlink('requirements', $requirement, true);
             }

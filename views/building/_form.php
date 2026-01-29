@@ -22,7 +22,7 @@ $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
         <?php $form = ActiveForm::begin(); ?>
 
         <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
-<!---->
+
 <!--        <div class="form-group show">-->
 <!--            <label for="building-location_id">--><?php //= \Yii::t('app', 'Location') ?><!--</label>-->
 <!--            <div class="input-group">-->
@@ -41,6 +41,8 @@ $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
              data-lang="ru"
              data-api-key="0bb42c7c-0a9c-4df9-956a-20d4e56e2b6b"
              data-suggest-key="22140ff8-3ef0-4c5d-a828-8f6472b72e28"></div>
+
+
 
         <div class="form-group">
             <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>

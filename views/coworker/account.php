@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 use yii\helpers\Url;
 
 /** @var yii\web\View $this */
@@ -52,6 +52,7 @@ $this->registerJsVar('translations', $jsTranslations ?? []);
 
 $form = ActiveForm::begin([
     'id' => 'coworker-form',
+    'enableClientValidation' => true,
     'options' => [
         'enctype' => 'multipart/form-data',
     ]
@@ -134,7 +135,8 @@ echo '<div class="modal fade" id="propertyModal" tabindex="-1" aria-labelledby="
 $js = <<<JS
 $(document).ready(function() {
     const t = translations;
-    
+    const form = $('#coworker-form');
+    form.submit();
     // Для новых пользователей не показываем календарь и свойства
     const propertyModal = $('#propertyModal');
         

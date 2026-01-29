@@ -88,9 +88,9 @@ echo GridView::widget([
         [
             'attribute' => 'price',
             'format' => 'raw',
-            'label' => \Yii::t('app', 'Date'),
-            'headerOptions' => ['class' => 'text-center col-md-1 hide-on-mobile'],
-            'contentOptions' => ['class' => ' text-right col-md-1 hide-on-mobile align-middle'],
+            'label' => \Yii::t('app', 'Price'),
+            'headerOptions' => ['class' => 'text-right col-md-1 hide-on-mobile'],
+            'contentOptions' => ['class' => 'text-right col-md-1 hide-on-mobile align-middle'],
             'value' => function (Order $model) {
                 if ($model->mode !== Order::MODE_LONG_DAILY) {
                     return \Yii::$app->formatter->asCurrency($model->price);

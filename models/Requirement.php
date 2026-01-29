@@ -153,4 +153,10 @@ class Requirement extends \yii\db\ActiveRecord
     {
         return self::getTypes()[$this->type];
     }
+
+    public function toString()
+    {
+        $type = \Yii::t('app', ucfirst($this->type));
+        return "{$this->category->title} {$this->property->title} {$type} {$this->value} {$this->dimension->title}";
+    }
 }

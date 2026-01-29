@@ -169,7 +169,10 @@ echo DetailView::widget([
                                 'equal' => \Yii::t('app', 'Equal'),
                                 'not-equal' => \Yii::t('app', 'Not Equal'),
                             ];
-                            return $data[$model->type];
+                            if ($model->type) {
+                                return $data[$model->type];
+                            }
+                            return null;
                         }
                     ],
                     [

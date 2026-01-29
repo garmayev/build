@@ -56,7 +56,7 @@ $form = \yii\bootstrap5\ActiveForm::begin();
                 'options' => ['id' => 'property_id', 'class' => 'form-control'],
                 'name' => 'order[requirement]property_id',
                 'pluginOptions' => [
-                    'depends' => ['category_id', 'count'],
+                    'depends' => ['category_id'],
                     'placeholder' => \Yii::t('app', 'Select property'),
                     'url' => Url::to(['/property/by-category']),
                 ],
@@ -115,42 +115,49 @@ $form = \yii\bootstrap5\ActiveForm::begin();
 
 // Упрощенный JavaScript для инициализации
 $this->registerJs(<<<JS
-var timer;
-$('#category_id').on('change', function() {
-    $('#count').attr('disabled', false);
-    // $('#property_id').attr('disabled', true);
+window.categoryIdField = $('#category_id');
+window.propertyIdField = $('#property_id');
+window.countField = $('#count');
+window.typeField = $('#type');
+window.dimensionIdField = $('#dimension_id');
+window.valueField = $('#value');
+
+window.categoryIdField.on('select2:select', function() {
+    window.countField.attr('disabled', false);
+    window.propertyIdField.attr('disabled', false);
+    if (presetData.count && presetData.property_id) {
+        window.countField.val(presetData.count);
+        window.propertyIdField.val(presetData.property_id)
+            .trigger('change')
+            .trigger({type: 'change', value: presetData.property_id})
+            .trigger('depdrop:change')
+            .trigger({type: 'depdrop:change', value: presetData.property_id});
+    }
 })
-$('#count').on('input', function() {
-    var self = $(this);
-    clearTimeout(timer);
-    timer = setTimeout(function() {
-        self.trigger('change'); // Запускает механизм DepDrop
-        $('#property_id').attr('disabled', false);
-    }, 1); // Задержка 500мс
-});
-$('#property_id').on('change', function(event) {
+window.propertyIdField.on('depdrop:afterChange', function(event) {
+    $(event.target).val(presetData.property_id ?? null)
     const isDisabled = $(event.currentTarget).val() === '';
-//    console.log(isDisabled);
-    $('#type').attr('disabled', isDisabled);
-    $('#dimension_id').attr('disabled', isDisabled);
-    $('#value').attr('disabled', isDisabled);
+    window.typeField.attr('disabled', isDisabled);
+    window.dimensionIdField.attr('disabled', isDisabled);
+    window.valueField.attr('disabled', isDisabled);
+    window.dimensionIdField
+        .trigger('change')
+        .trigger({type: 'change', value: presetData.dimension_id})
+        .trigger('depdrop:change')
+        .trigger({type: 'depdrop:change', value: presetData.dimension_id});
 })
+window.dimensionIdField.on('depdrop:afterChange', function(event) {
+    window.dimensionIdField.val(presetData.dimension_id ?? null)
+})
+
 if (Object.keys(presetData).length) {
-    $('#category_id').val(presetData.category_id).trigger('change').trigger({type: 'change', value: presetData.category_id});
-    $('#count').val(presetData.count).trigger('change').trigger({type: 'change', value: presetData.count});
-    $('#property_id').on('depdrop:afterChange', function () {
-        $(this).val(presetData.property_id).trigger('change').trigger({type: 'change', value: presetData.property_id});
-        $('#type').attr('disabled', false);
-        $('#dimension_id').attr('disabled', false).trigger('change').on('depdrop:ready', function (args) {
-            console.log($(this))
-            console.log(args)
-        }).on('depdrop:afterChange ', function () {
-            console.log($('#property_id').val());
-            $(this).val(presetData.dimension_id).trigger('change').trigger({type: 'change', value: presetData.dimension_id});
-        });
-        $('#value').attr('disabled', false);
+    window.categoryIdField.val(presetData.category_id).trigger('change').trigger({type: 'change', value: presetData.category_id}).trigger({type: 'select2:select', value: presetData.category_id});
+    window.countField.val(presetData.count).trigger('change');
+    window.propertyIdField.val(presetData.property_id).on('depdrop:ready', function(e) {
+        console.log(e)  
     }).trigger('change').trigger({type: 'change', value: presetData.property_id});
-    $('#type').val(presetData.type);
-    $('#value').val(presetData.value);
+    window.typeField.val(presetData.type);
+    window.valueField.val(presetData.value);
+    window.dimensionIdField.val(presetData.dimension_id).trigger('change').trigger({type: 'change', value: presetData.dimension_id});
 }
 JS);

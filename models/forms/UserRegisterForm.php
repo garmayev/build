@@ -180,7 +180,13 @@ class UserRegisterForm extends Model
     public function restore($id)
     {
         $this->_user = Coworker::findOne($id);
-        $this->_profile = $this->_user->profile;
+        if (!$this->_user) {
+            $this->_profile = new Profile();
+            $this->properties = [];
+            return;
+        } else {
+            $this->_profile = $this->_user->profile;
+        }
         $this->username = $this->_user->username;
         $this->email = $this->_user->email;
         $this->family = $this->_profile->family;

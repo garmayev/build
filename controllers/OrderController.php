@@ -10,6 +10,7 @@ use app\models\Report;
 use app\models\Requirement;
 use app\models\User;
 use Yii;
+use yii\bootstrap5\ActiveForm;
 use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -116,6 +117,21 @@ class OrderController extends BaseController
         return $this->render('coworker', [
             'model' => $model
         ]);
+    }
+
+    /**
+     * Действие для AJAX валидации формы заказа
+     */
+    public function actionValidate()
+    {
+        $model = new Order();
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
+        return $this->redirect(['index']);
     }
 
     public function actionMaterial()

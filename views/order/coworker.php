@@ -58,6 +58,10 @@ $this->registerJsVar('translations', $jsTranslations);
 $this->registerJsVar('types', \app\models\Requirement::getTypes());
 
 $form = ActiveForm::begin([
+    'id' => 'order-form',
+    'enableClientValidation' => true,
+    'enableAjaxValidation' => true,
+    'validationUrl' => ['order/validate'],
     'options' => [
         'enctype' => 'multipart/form-data',
     ]
@@ -76,7 +80,7 @@ $this->registerJsVar('token', \Yii::$app->user->identity->access_token);
 
 $this->params['breadcrumbs'][] = $this->title;
 
-echo $form->field($model, 'status')->dropDownList($model->statusList);
+echo $form->field($model, 'status')->hiddenInput(['value' => Order::STATUS_NEW])->label(false);
 
 echo $form->field($model, 'type', ['options' => ['class' => 'mx-0 my-0']])->hiddenInput(['value' => Order::TYPE_COWORKER])->label(false);
 
@@ -142,21 +146,16 @@ echo $form->field($model, 'price', [
         ],
     ])
     ->label(\Yii::t('app', 'Price'));
-?>
-    <div class="row dates mb-3">
-        <div class="col-6">
-            <p class="mb-2"><strong><?= \Yii::t('app', 'Start Date') ?></strong></p>
-            <div id="start-date"></div>
-        </div>
-        <div class="col-6">
-            <p class="mb-2"><strong><?= \Yii::t('app', 'End Date') ?></strong></p>
-            <div id="finish-date"></div>
-        </div>
-    </div>
-<?php
-echo $form->field($model, 'start_datetime', ['options' => ['class' => 'mx-0 my-0']])->hiddenInput()->label(false);
 
-echo $form->field($model, 'finish_datetime', ['options' => ['class' => 'mx-0 my-0']])->hiddenInput()->label(false);
+echo $form->field($model, 'start_datetime', [
+    'inputTemplate' => "{input}\n<div id='start-date' class='form-control'></div>",
+    'template' => "{label}\n{input}\n{error}"
+])->textInput(['style' => 'display: none;', 'value' => date('Y-m-d 00:00:00')]);
+
+echo $form->field($model, 'finish_datetime', [
+    'inputTemplate' => "{input}\n<div id='finish-date' class='form-control'></div>",
+    'template' => "{label}\n{input}\n{error}"
+])->textInput(['style' => 'display: none;']);
 
 echo $form->field($model, 'files[]')->fileInput([
     'multiple' => true,
@@ -185,8 +184,8 @@ echo '<div class="modal fade" id="requirement" tabindex="-1" aria-labelledby="re
                 <div id="modal-content"></div>
             </div>
             <div class="modal-footer d-flex justify-content-between">
-                <button type="button" class="btn btn-success save-modal" data-bs-dismiss="modal">'.\Yii::t('app', 'Save').'</button>
-                <button type="button" class="btn btn-secondary close-modal" data-bs-dismiss="modal">'.\Yii::t('app', 'Close').'</button>
+                <button type="button" class="btn btn-success save-modal" data-bs-dismiss="modal">' . \Yii::t('app', 'Save') . '</button>
+                <button type="button" class="btn btn-secondary close-modal" data-bs-dismiss="modal">' . \Yii::t('app', 'Close') . '</button>
             </div>
         </div>
     </div>
@@ -198,35 +197,115 @@ $this->registerJs(<<<JS
 $(document).ready(function() {
     // Используем переводы из PHP
     const t = translations;
-
+    // Получаем форму
+    const form = $('#order-form');
+    let startDate, endDate;
+    const startDateContainer = $('#order-start_datetime');
+    const finishDateContainer = $('#order-finish_datetime');
+    form.on('submit', function(e) {
+        if ($(e.target).hasClass('save-modal') || $(e.target).hasClass('close-modal') || $(e.target).hasClass('btn-close')) {
+            e.preventDefault();
+            return false;
+        }
+    });
     // Инициализация DateSelector
-    const endDate = new DateSelector('#finish-date', {
+    endDate = new DateSelector('#finish-date', {
         initialDate: finish_date_value ? new Date(finish_date_value) : new Date(),
         startDate: new Date(),
+        showValidationErrors: false,
+        errorMessage: finishDateContainer.closest('.form-group').hasClass('has-error') ? 
+                     finishDateContainer.closest('.form-group').find('.help-block').text() : null,
         useLeftRightButtons: true,
         calendarOptions: {
             allowPastDates: true
         },
         onChange: (date) => {
-            $('#order-finish_datetime').val(DateUtils.formatDate(date, "YYYY-MM-DD") + " 23:59:59")
+            finishDateContainer.val(DateUtils.formatDate(date, "YYYY-MM-DD") + " 23:59:59")
+            form.yiiActiveForm('validateAttribute', 'order-finish_datetime');
         }
     })
         
-    const startDate = new DateSelector('#start-date', {
+    // Инициализация DateSelector с поддержкой ошибок
+    startDate = new DateSelector('#start-date', {
         initialDate: start_date_value ? new Date(start_date_value) : new Date(),
-        startDate: new Date(),
         useLeftRightButtons: true,
+        showValidationErrors: false,
         calendarOptions: {
             allowPastDates: true
         },
+        // Получаем ошибку из Yii2 валидации
+        errorMessage: startDateContainer.closest('.form-group').hasClass('has-error') ? 
+                     startDateContainer.closest('.form-group').find('.help-block').text() : null,
         onChange: (date) => {
-            $('#order-start_datetime').val(DateUtils.formatDate(date, "YYYY-MM-DD") + " 00:00:00")
-            if (date > endDate.getDate()) {
+            const dateStr = DateUtils.formatDate(date, "YYYY-MM-DD") + " 00:00:00";
+            startDateContainer.val(dateStr);
+            
+            // Очищаем ошибку при изменении
+            if (endDate && date > endDate.getDate()) {
                 endDate.setDate(new Date(date));
+            }
+            
+            // Триггерим валидацию Yii2
+            form.yiiActiveForm('validateAttribute', 'order-start_datetime');
+        }
+    });
+    
+    // Отслеживаем ошибки валидации Yii2
+    form.on('afterValidateAttribute', function(event, attribute, messages) {
+        // Обработка ошибок для start_datetime
+        if (attribute.id === 'order-start_datetime') {
+            if (messages.length > 0) {
+                startDate.setError(messages[0]);
+                $("#start-date").addClass("is-invalid").removeClass('is-valid');
+            } else {
+                startDate.clearError();
+                $("#start-date").removeClass("is-invalid").addClass('is-valid');
+            }
+        }
+        
+        // Обработка ошибок для finish_datetime
+        if (attribute.id === 'order-finish_datetime') {
+            if (messages.length > 0) {
+                endDate.setError(messages[0]);
+                $("#finish-date").addClass("is-invalid").removeClass('is-valid');
+            } else {
+                endDate.clearError();
+                $("#finish-date").removeClass("is-invalid").addClass('is-valid');
+            }
+        }
+        
+        if (attribute.id === 'order-price') {
+            if (messages.length > 0) {
+                $(attribute.input).addClass("is-invalid").removeClass('is-valid');
+            } else {
+                $(attribute.input).removeClass("is-invalid").addClass('is-valid');
             }
         }
     });
     
+    // Добавьте обработчик для валидации всей формы, чтобы обновить оба поля:
+    form.on('afterValidate', function(event, messages, errorAttributes) {
+        // Проверяем, есть ли ошибки в связанных полях
+        const hasStartError = errorAttributes.some(attr => attr.name === 'start_datetime');
+        const hasFinishError = errorAttributes.some(attr => attr.name === 'finish_datetime');
+        
+        // Если есть ошибка в одном из полей дат, можем добавить дополнительную логику
+        if (hasStartError || hasFinishError) {
+            // Например, можно подсветить оба поля, если ошибка связана с их взаимосвязью
+            const startMessages = messages['order-start_datetime'] || [];
+            const finishMessages = messages['order-finish_datetime'] || [];
+            
+            // Проверяем, связаны ли ошибки с датами
+            const dateErrors = startMessages.concat(finishMessages).filter(msg => 
+                msg.includes('дата') || msg.includes('Дата') || msg.includes('date') || msg.includes('Date')
+            );
+            
+            if (dateErrors.length > 0) {
+                // Можно добавить дополнительную подсветку или логику
+            }
+        }
+    });
+
     const modalWindow = $('#requirement');
     
     // Инициализация Table с данными из модели (если есть)
@@ -276,7 +355,7 @@ $(document).ready(function() {
                 if (item.dimension_id) params.append('dimension_id', item.dimension_id);
                 
                 const url = baseUrl + (params.toString() ? '?' + params.toString() : '');
-                
+                console.log(url)
                 modalContent.load(url, function(response, status, xhr) {
                     if (status === "error") {
                         modalContent.html('<div class="alert alert-danger">Ошибка загрузки формы</div>');
@@ -394,30 +473,37 @@ $(document).ready(function() {
         Table.render();
     }
 
+    // В обработчике change для select режима добавьте валидацию цены:
     $('#order-mode').on('change', function() {
-        const datesContainer = $('.dates');
+        const startContainer = $(".field-order-start_datetime");
+        const finishContainer = $(".field-order-finish_datetime");
         const priceContainer = $('.field-order-price');
-        console.log($(this).val())
+        const priceInput = $('#order-price');
+        
         switch ($(this).val()) {
-            case '0':
-                datesContainer.show();
-                datesContainer.children('div:first-child').removeClass('col-6').addClass('col-12');
-                datesContainer.children('div:last-child').removeClass('col-6').addClass('d-none');
+            case '0': // MODE_SINGLE_FIXED
+                startContainer.removeClass('col-6').addClass('col-12');
+                finishContainer.addClass('d-none');
                 priceContainer.show();
+                // Включаем валидацию цены
+                priceInput.removeAttr('disabled');
                 break;
-            case '1':
-                datesContainer.show();
-                datesContainer.children('div:first-child').addClass('col-6').removeClass('col-12');
-                datesContainer.children('div:last-child').addClass('col-6').removeClass('d-none');
+                
+            case '1': // MODE_LONG_FIXED
+                startContainer.addClass('col-6').removeClass('col-12');
+                finishContainer.removeClass('d-none').addClass('col-6');
                 priceContainer.show();
+                priceInput.removeAttr('disabled');
                 break;
-            case '2':
-                datesContainer.show();
-                datesContainer.children('div:first-child').addClass('col-6').removeClass('col-12');
-                datesContainer.children('div:last-child').addClass('col-6').removeClass('d-none');
-                priceContainer.hide()
+                
+            case '2': // MODE_LONG_DAILY
+                startContainer.addClass('col-6').removeClass('col-12');
+                finishContainer.removeClass('d-none').addClass('col-6');
+                priceContainer.hide();
                 break;
         }
+        
+        form.yiiActiveForm('validate');
     }).trigger('change');
     
     $('#order-price').on('blur', function() {
@@ -443,9 +529,11 @@ $(document).ready(function() {
     });
     
     modalWindow.find('.btn-close').click(function(e) {
+        e.preventDefault();
         modalWindow.modal('hide');
     });
     modalWindow.find('.close-modal').click(function(e) {
+        e.preventDefault();
         modalWindow.modal('hide');
     });
     modalWindow.find('.save-modal').click(function(e) {
@@ -483,3 +571,11 @@ $(document).ready(function() {
 });
 JS
 );
+$this->registerCss(<<<CSS
+#start-date {
+    padding: 0;
+}
+#finish-date {
+    padding: 0;
+}
+CSS);

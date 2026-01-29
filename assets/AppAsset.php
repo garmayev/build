@@ -26,7 +26,7 @@ class AppAsset extends AssetBundle
         '/css/site.css',
         '/components/dateSelector/dateSelector.css',
         '/components/calendar/calendar_v2.css',
-        '/components/dhtmlx.gantt/dhtmlxgantt.css'
+        '/components/dhtmlx.gantt/dhtmlxgantt.css',
 //        '/react/css/main.3113935e.css',
     ];
     public $js = [
@@ -34,7 +34,7 @@ class AppAsset extends AssetBundle
         '/components/dateSelector/dateSelector.js',
         '/components/calendar/calendar.js',
         '/components/calendar/calendar_v2.js',
-        '/components/dhtmlx.gantt/dhtmlxgantt.js'
+        '/components/dhtmlx.gantt/dhtmlxgantt.js',
 //        '/react/js/453.abd1f321.chunk.js',
 //        '/react/js/main.ff9963a6.js',
     ];
