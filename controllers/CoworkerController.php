@@ -103,6 +103,8 @@ class CoworkerController extends Controller
         }
         if (Yii::$app->request->get('value')) {
             $model->value = Yii::$app->request->get('value');
+        } else {
+            $model->value = 0;
         }
 
         return $this->renderAjax('_add_property', [

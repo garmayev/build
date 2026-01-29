@@ -182,7 +182,7 @@ $(document).ready(function() {
                 if (property.property_id) params.append('category_id', property.category_id);
                 if (property.property_id) params.append('property_id', property.property_id);
                 if (property.dimension_id) params.append('dimension_id', property.dimension_id);
-                if (property.value) params.append('value', property.value);
+                params.append('value', property.value.toString());
                     
                 const url = baseUrl + (params.toString() ? '?' + params.toString() : '');
                     
@@ -237,7 +237,7 @@ $(document).ready(function() {
                     html += '<input type="hidden" name="UserRegisterForm[properties][' + index + '][category_id]" value="' + (property.category_id || '') + '">';
                     html += '<input type="hidden" name="UserRegisterForm[properties][' + index + '][property_id]" value="' + (property.property_id || '') + '">';
                     html += '<input type="hidden" name="UserRegisterForm[properties][' + index + '][dimension_id]" value="' + (property.dimension_id || '') + '">';
-                    html += '<input type="hidden" name="UserRegisterForm[properties][' + index + '][value]" value="' + (property.value || '') + '">';
+                    html += '<input type="hidden" name="UserRegisterForm[properties][' + index + '][value]" value="' + (property.value) + '">';
             });
                 
             html += '</tbody></table>';
