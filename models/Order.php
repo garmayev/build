@@ -894,7 +894,82 @@ class Order extends \yii\db\ActiveRecord
 
     public function canAssignCoworker(User $coworker): bool
     {
-        $this->start_datetime;
+        // Если сотрудник уже назначен на этот заказ
+        $coworkersIds = ArrayHelper::getColumn($this->coworkers, 'id');
+        if (in_array($coworker->id, $coworkersIds)) {
+            return false;
+        }
+
+        // Получаем даты текущего заказа
+        $startDate = $this->start_datetime ? strtotime($this->start_datetime) : null;
+        $finishDate = $this->finish_datetime ? strtotime($this->finish_datetime) : null;
+
+        // Если у текущего заказа нет дат начала/окончания - всегда можно назначить
+        if (!$startDate && !$finishDate) {
+            return true;
+        }
+
+        // Для заказов без даты окончания используем дату начала как окончание
+        if (!$finishDate) {
+            $finishDate = $startDate;
+        }
+
+        // Получаем все заказы сотрудника (кроме текущего)
+        $existingOrders = Order::find()
+            ->alias('o')
+            ->innerJoin('order_user ou', 'ou.order_id = o.id')
+            ->where(['ou.user_id' => $coworker->id])
+            ->andWhere(['<>', 'o.id', $this->id])
+            ->andWhere(['<>', 'o.status', Order::STATUS_COMPLETE]) // Исключаем завершенные заказы
+            ->all();
+
+        foreach ($existingOrders as $existingOrder) {
+            // Получаем даты существующего заказа
+            $existingStart = $existingOrder->start_datetime ? strtotime($existingOrder->start_datetime) : null;
+            $existingFinish = $existingOrder->finish_datetime ? strtotime($existingOrder->finish_datetime) : null;
+
+            // Если у существующего заказа нет дат - пропускаем
+            if (!$existingStart && !$existingFinish) {
+                continue;
+            }
+
+            // Для заказов без даты окончания используем дату начала как окончание
+            if (!$existingFinish) {
+                $existingFinish = $existingStart;
+            }
+
+            // Проверяем пересечение временных интервалов
+            $intersects = $this->dateRangesIntersect(
+                $startDate, $finishDate,
+                $existingStart, $existingFinish
+            );
+
+            if ($intersects) {
+                return false; // Найдено пересечение - нельзя назначить
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Проверяет пересечение двух временных интервалов
+     *
+     * @param int|null $start1 Начало первого интервала (timestamp)
+     * @param int|null $end1 Окончание первого интервала (timestamp)
+     * @param int|null $start2 Начало второго интервала (timestamp)
+     * @param int|null $end2 Окончание второго интервала (timestamp)
+     * @return bool true если интервалы пересекаются
+     */
+    private function dateRangesIntersect(?int $start1, ?int $end1, ?int $start2, ?int $end2): bool
+    {
+        // Если какой-то из интервалов неопределен - считаем что пересечения нет
+        if (!$start1 || !$end1 || !$start2 || !$end2) {
+            return false;
+        }
+
+        // Проверяем пересечение интервалов (включая граничные случаи)
+        return ($start1 <= $end2 && $end1 >= $start2);
     }
 
     /**
@@ -905,7 +980,12 @@ class Order extends \yii\db\ActiveRecord
      */
     public function assignCoworker(User $coworker): bool
     {
-        $coworkersIds = \yii\helpers\ArrayHelper::getColumn($this->coworkers, 'id');
+        if (!$this->canAssignCoworker($coworker)) {
+            // Yii::error("Cannot assign coworker {$coworker->id} to order {$this->id} - date conflict or already assigned");
+            return false;
+        }
+
+        $coworkersIds = ArrayHelper::getColumn($this->coworkers, 'id');
         if (!in_array($coworker->id, $coworkersIds)) {
             $this->link('coworkers', $coworker);
             return $this->save();
@@ -1073,6 +1153,10 @@ class Order extends \yii\db\ActiveRecord
             foreach ($this->suitableCoworkers as $coworker) {
                 if ($coworker->status !== User::STATUS_ACTIVE ||
                     in_array($coworker->id, $assignedCoworkerIds)) {
+                    continue;
+                }
+
+                if (!$this->canAssignCoworker($coworker)) {
                     continue;
                 }
 

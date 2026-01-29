@@ -21,9 +21,6 @@ class AcceptCallback extends BaseCallback implements CommandInterface
             ->one();
 
         if (!$order->isFull()) {
-            if ($order->canAssignCoworker($coworker)) {
-
-            }
             if (!$order->assignCoworker($coworker)) {
                 return null;
             }

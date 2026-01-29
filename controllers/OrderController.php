@@ -85,6 +85,9 @@ class OrderController extends BaseController
     {
         $model = Order::findOne($id);
         $model->unlinkAll('attachments', true);
+        foreach ($model->telegramMessages as $message) {
+            \Yii::$app->telegram->deleteMessage($message->chat_id, $message->message_id);
+        }
         $model->delete();
         return $this->redirect(['/order/index']);
     }
