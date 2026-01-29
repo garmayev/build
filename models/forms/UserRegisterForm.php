@@ -25,6 +25,7 @@ class UserRegisterForm extends Model
 
     private $_user;
     private $_profile;
+    public $_is_update = false;
     public $is_mail = false;
     public $referrer;
 
@@ -34,9 +35,38 @@ class UserRegisterForm extends Model
             [['username', 'email', 'family', 'name', 'surname'], 'string'],
             [['username', 'email', 'family', 'phone'], 'required'],
             [['username', 'email', 'family', 'name', 'surname'], 'trim'],
-            [['username'], 'unique', 'targetClass' => User::className(), 'targetAttribute' => ['username']],
+
+            // Правило уникальности для username с исключением текущего пользователя
+            [
+                ['username'],
+                'unique',
+                'targetClass' => User::class,
+                'targetAttribute' => ['username'],
+                'filter' => function($query) {
+                    if ($this->_is_update && $this->_user) {
+                        // Исключаем текущего пользователя из проверки
+                        $query->andWhere(['not', ['id' => $this->_user->id]]);
+                    }
+                },
+                'message' => \Yii::t('app', 'This username has already been taken.')
+            ],
+
+            // Правило уникальности для email с исключением текущего пользователя
+            [
+                ['email'],
+                'unique',
+                'targetClass' => User::class,
+                'targetAttribute' => ['email'],
+                'filter' => function($query) {
+                    if ($this->_is_update && $this->_user) {
+                        // Исключаем текущего пользователя из проверки
+                        $query->andWhere(['not', ['id' => $this->_user->id]]);
+                    }
+                },
+                'message' => \Yii::t('app', 'This email address has already been taken.')
+            ],
+
             [['email'], 'email'],
-            [['email'], 'unique', 'targetClass' => User::className(), 'targetAttribute' => ['email']],
             [['priority'], 'in', 'range' => [Coworker::PRIORITY_LOW, Coworker::PRIORITY_NORMAL, Coworker::PRIORITY_HIGH]],
             [['phone'], PhoneValidator::class],
             [['birthday'], 'date', 'format' => 'php:Y-m-d'],
@@ -44,33 +74,61 @@ class UserRegisterForm extends Model
         ];
     }
 
+    // UserRegisterForm.php
     public function update()
     {
-        $this->_user = User::findOne(['email' => $this->email]);
-        if ($this->_user && $this->current_password && $this->_user->validatePassword($this->current_password)) {
+        // Если у нас уже есть _user (при восстановлении данных), используем его
+        if (!$this->_user) {
+            \Yii::error('User not found for update');
+            return false;
+        }
+
+        $transaction = \Yii::$app->db->beginTransaction();
+        try {
+            // Обновляем основные данные пользователя
             $this->_user->username = $this->username;
             $this->_user->email = $this->email;
-            if ($this->new_password) {
-                $this->_user->password_hash = \Yii::$app->security->generatePasswordHash($this->new_password);
+            $this->_user->priority_level = $this->priority;
+
+            // Обновляем свойства пользователя, если они есть
+            if ($this->properties !== null) {
+                $this->_user->setUserProperties($this->properties);
             }
-            return $this->_user->save();
-        } else {
-            $this->_user = new User();
-            $data = explode('@', $this->email);
-            $this->_user->username = $data[0];
-            $this->_user->email = $this->email;
-            $this->_user->access_token = \Yii::$app->security->generateRandomString();
-            $this->_user->auth_key = \Yii::$app->security->generateRandomString();
-            $this->new_password = \Yii::$app->security->generateRandomString(6);
-            $this->_user->password_hash = \Yii::$app->security->generatePasswordHash($this->new_password);
-            if ($this->_user->save()) {
-                $this->sendMail();
-                return true;
-            } else {
-                \Yii::error($this->_user->getErrors());
+
+            // Сохраняем пользователя
+            if (!$this->_user->save()) {
+                $transaction->rollBack();
+                \Yii::error('Failed to save user: ' . json_encode($this->_user->getErrors()));
+                return false;
             }
+
+            // Обновляем профиль
+            $profile = $this->_user->profile;
+            if (!$profile) {
+                $profile = new Profile();
+                $profile->user_id = $this->_user->id;
+            }
+
+            $profile->family = $this->family;
+            $profile->name = $this->name;
+            $profile->surname = $this->surname;
+            $profile->phone = $this->phone;
+            $profile->birthday = $this->birthday;
+
+            if (!$profile->save()) {
+                $transaction->rollBack();
+                \Yii::error('Failed to save profile: ' . json_encode($profile->getErrors()));
+                return false;
+            }
+
+            $transaction->commit();
+            return true;
+
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            \Yii::error('Exception in UserRegisterForm::update(): ' . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
     private function sendMail()
@@ -130,17 +188,19 @@ class UserRegisterForm extends Model
             $this->_user = new Coworker();
         }
 
-        $this->_user->load([
-            "username" => $this->username,
-            "email" => $this->email,
-            "password_hash" => \Yii::$app->security->generatePasswordHash($this->email),
-            "auth_key" => \Yii::$app->security->generateRandomString(),
-            "access_token" => \Yii::$app->security->generateRandomString(),
-            "status" => User::STATUS_ACTIVE,
-            "referrer_id" => \Yii::$app->user->id,
-            "priority_level" => $this->priority,
-            "userProperties" => $this->properties,
-        ], '');
+        if (!$this->_is_update) {
+            $this->_user->load([
+                "username" => $this->username,
+                "email" => $this->email,
+                "password_hash" => \Yii::$app->security->generatePasswordHash($this->email),
+                "auth_key" => \Yii::$app->security->generateRandomString(),
+                "access_token" => \Yii::$app->security->generateRandomString(),
+                "status" => User::STATUS_ACTIVE,
+                "referrer_id" => \Yii::$app->user->id,
+                "priority_level" => $this->priority,
+                "userProperties" => $this->properties,
+            ], '');
+        }
 
         if ($this->_user->save()) {
             return true;
@@ -179,14 +239,26 @@ class UserRegisterForm extends Model
 
     public function restore($id)
     {
+        $this->_is_update = true;
+
+        // Находим пользователя
         $this->_user = Coworker::findOne($id);
+
         if (!$this->_user) {
+            \Yii::error("Coworker with id {$id} not found");
             $this->_profile = new Profile();
             $this->properties = [];
             return;
-        } else {
-            $this->_profile = $this->_user->profile;
         }
+
+        // Получаем профиль (если нет - создаем новый)
+        $this->_profile = $this->_user->profile;
+        if (!$this->_profile) {
+            $this->_profile = new Profile();
+            $this->_profile->user_id = $this->_user->id;
+        }
+
+        // Заполняем данные формы
         $this->username = $this->_user->username;
         $this->email = $this->_user->email;
         $this->family = $this->_profile->family;
@@ -195,6 +267,14 @@ class UserRegisterForm extends Model
         $this->phone = $this->_profile->phone;
         $this->birthday = $this->_profile->birthday;
         $this->priority = $this->_user->priority_level;
-        $this->properties = $this->_user->userProperties;
+
+        // Получаем свойства пользователя
+        $this->properties = [];
+        $userProperties = $this->_user->userProperties;
+        if ($userProperties) {
+            foreach ($userProperties as $userProperty) {
+                $this->properties[] = $userProperty;
+            }
+        }
     }
 }

@@ -245,13 +245,21 @@ class CoworkerController extends Controller
     public function actionAccount($id = null)
     {
         $registerForm = new \app\models\forms\UserRegisterForm();
+        if ($id) {
+            $registerForm->restore($id);
+        }
 
         if (Yii::$app->request->isPost) {
             $postData = Yii::$app->request->post();
 
             // Загрузка данных формы
             if ($registerForm->load($postData) && $registerForm->validate()) {
-                $registerForm->register($id);
+                if (!$registerForm->_is_update) {
+                    $registerForm->register($id);
+                } else {
+                    $registerForm->update();
+                }
+                \Yii::error($registerForm->getErrors());
                 $this->redirect(['index']);
             } else {
                 \Yii::error($registerForm->getErrors());

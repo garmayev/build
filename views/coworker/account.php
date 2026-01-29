@@ -17,12 +17,12 @@ $propertiesData = [];
 foreach ($registerForm->properties as $property) {
     $propertiesData[] = [
         'category_id' => $property->category_id ?? null,
-        'category_name' => $property->category ? $property->category->title : null,
+        'category_name' => isset($property->category) ? $property->category->title : null,
         'property_id' => $property->property_id ?? null,
         'dimension_id' => $property->dimension_id ?? null,
         'value' => $property->value ?? null,
         'property_name' => $property->property->title ?? null,
-        'dimension_name' => $property->dimension ? $property->dimension->title : null,
+        'dimension_name' => isset($property->dimension) ? $property->dimension->title : null,
     ];
 }
 
@@ -136,7 +136,7 @@ $js = <<<JS
 $(document).ready(function() {
     const t = translations;
     const form = $('#coworker-form');
-    form.submit();
+
     // Для новых пользователей не показываем календарь и свойства
     const propertyModal = $('#propertyModal');
         
