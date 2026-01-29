@@ -19,7 +19,7 @@ class PhotoHandler extends BaseCommand implements CommandInterface
         if (empty($report)) { return ; }
 
         $file_url[] = $this->downloadFile($message->photo[count($message->photo) - 1], $telegram);
-//        \Yii::error($file_url);
+        \Yii::error($file_url);
         $user = \app\models\User::findByChatId($message->from->id);
         if ($report && $report->load(['Report' => ['comment' => \Yii::$app->formatter->asDate(time()), 'created_at' => $message->date]]) && $report->save()) {
 //            \Yii::error('report saved');

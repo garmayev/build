@@ -384,6 +384,9 @@ background: none !important;
     background: transparent !important;
     background-color: transparent !important;
 }
+.lg-backdrop.in {
+    z-index: 1000;
+}
 /* Для таблицы часов в развернутой секции */
 #expand-table + .kv-detail-container .table-striped {
     background-color: transparent !important;

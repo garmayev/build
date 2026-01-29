@@ -12,7 +12,7 @@ class StopReportCommand extends Command implements CommandInterface
     {
         $message = $telegram->input->message;
 
-        $user = \app\models\User::findByChatId($message->from->id);
+        $user = \app\models\Coworker::findByChatId($message->from->id);
         $report_id = \Yii::$app->session->get('report_id');
         $keyboard = [];
         \Yii::error($report_id);

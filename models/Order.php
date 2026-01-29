@@ -892,6 +892,11 @@ class Order extends \yii\db\ActiveRecord
         return $this->hasOne(User::class, ['id' => 'created_by']);
     }
 
+    public function canAssignCoworker(User $coworker): bool
+    {
+        $this->start_datetime;
+    }
+
     /**
      * Assigns a coworker to the order
      *

@@ -326,7 +326,7 @@ class CoworkerController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = User::findOne(['id' => $id])) !== null) {
+        if (($model = Coworker::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
