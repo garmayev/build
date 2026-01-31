@@ -1,0 +1,32 @@
+<?php
+
+namespace app\modules\api\commands\telegram\command;
+
+use app\modules\api\commands\telegram\Command;
+use app\modules\api\commands\telegram\CommandInterface;
+
+class StopReportCommand extends Command implements CommandInterface
+{
+
+    public function handle($telegram, $args)
+    {
+        $message = $telegram->input->message;
+
+        $user = \app\models\Coworker::findByChatId($message->from->id);
+        $report_id = \Yii::$app->session->get('report_id');
+        $keyboard = [];
+        \Yii::error($report_id);
+        foreach ($user->orders as $order) {
+                $keyboard[] = [['text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/attach_report_to_order order_id=' . $order->id . '&report_id=' . $report_id]];
+        }
+        \Yii::$app->session->remove('report_id');
+        $keyboard[] = [['text' => \Yii::t('telegram', 'button_menu'), 'callback_data' => '/menu']];
+        $telegram->sendMessage([
+            'chat_id' => $message->chat->id,
+            'text' => \Yii::t('telegram', 'message_report_{id}_saved', ['id' => $report_id]),
+            'reply_markup' => json_encode([
+                'inline_keyboard' => $keyboard
+            ])
+        ]);
+    }
+}
