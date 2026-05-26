@@ -7,6 +7,7 @@ use app\models\Order;
 use app\models\Profile;
 use app\models\User;
 use floor12\phone\PhoneValidator;
+use yii\base\Exception;
 use yii\base\Model;
 
 class UserRegisterForm extends Model
@@ -175,12 +176,16 @@ class UserRegisterForm extends Model
         return $this->_user->id;
     }
 
-    public function register($user_id)
+    public function register($user_id = null)
     {
-        return $this->createProfile($user_id);
+        return $this->createUser($user_id) && $this->createProfile($user_id);
     }
 
-    private function createUser($user_id = null)
+    /**
+     * @throws Exception
+     * @throws \yii\db\Exception
+     */
+    private function createUser($user_id = null): bool
     {
         if (isset($user_id)) {
             $this->_user = Coworker::findOne($user_id);
@@ -196,7 +201,7 @@ class UserRegisterForm extends Model
                 "auth_key" => \Yii::$app->security->generateRandomString(),
                 "access_token" => \Yii::$app->security->generateRandomString(),
                 "status" => User::STATUS_ACTIVE,
-                "referrer_id" => \Yii::$app->user->id,
+                "referrer_id" => \Yii::$app->user->id ?? null,
                 "priority_level" => $this->priority,
                 "userProperties" => $this->properties,
             ], '');
@@ -210,18 +215,20 @@ class UserRegisterForm extends Model
         }
     }
 
-    private function createProfile($user_id)
+    private function createProfile($user_id): bool
     {
         if (!isset($this->_user)) {
             $this->createUser($user_id);
         } else {
             $this->_user = User::findOne($user_id);
         }
+
         if ($this->_user->profile) {
             $this->_profile = $this->_user->profile;
         } else {
             $this->_profile = new Profile();
         }
+
         $this->_profile->load([
             'family' => $this->family,
             'name' => $this->name,
@@ -233,7 +240,7 @@ class UserRegisterForm extends Model
         if ($this->_profile->save()) {
             return $this->_user->link('profile', $this->_profile);
         }
-        \Yii::error($this->_profile->getErrors());
+
         return false;
     }
 

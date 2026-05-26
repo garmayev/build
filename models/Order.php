@@ -1090,6 +1090,18 @@ class Order extends \yii\db\ActiveRecord
         return $workingDays;
     }
 
+    public function getAttachImages()
+    {
+        $attachments = $this->getAttachments()->all();
+        $images = [];
+        foreach ($attachments as $attachment) {
+            if ($attachment->isImage()) {
+                $images[] = $attachment;
+            }
+        }
+        return $images;
+    }
+
     public function isOwnerNotified()
     {
         $profile = $this->owner->profile;

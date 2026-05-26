@@ -7,7 +7,6 @@ use garmayev\max\EventHandler;
 
 class StartBotHandler implements BotHandler
 {
-
     public function register(EventHandler $handler): void
     {
         $max = \Yii::$app->max;

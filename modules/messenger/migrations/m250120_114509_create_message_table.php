@@ -14,7 +14,6 @@ class m250120_114509_create_message_table extends Migration
     {
         $this->createTable('{{%message}}', [
             'id' => $this->primaryKey(),
-            
         ]);
     }
 

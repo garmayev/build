@@ -113,7 +113,7 @@ class TelegramMessage extends ActiveRecord
         $response = null;
 
         try {
-            $attachments = $order ? $order->attachments : [];
+            $attachments = $order ? $order->getAttachImages() : [];
             $attachmentsCount = is_array($attachments) ? count($attachments) : 0;
 
             if ($attachmentsCount === 0) {

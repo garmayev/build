@@ -84,17 +84,21 @@ class DataController extends Controller
                 $build = new Building();
                 $build->load(["Building" => $item]);
                 $build->save();
+                echo \Yii::t("app", "Building was {title} created", ['title' => $build->title]) . "\n";
             }
             foreach ($this->dimension as $item) {
                 $dimension = new Dimension($item);
                 $dimension->save();
+                echo \Yii::t("app", "Dimension was {title} created", ['title' => $dimension->title]) . "\n";
             }
             foreach ($this->properties as $item) {
                 $property = new Property($item);
+                echo \Yii::t("app", "Property was {title} created", ['title' => $property->title]) . "\n";
                 $property->save();
             }
             foreach ($this->categories as $item) {
                 $category = new Category($item);
+                echo \Yii::t("app", "Category was {title} created", ['title' => $category->title]) . "\n";
                 $category->save();
             }
         }

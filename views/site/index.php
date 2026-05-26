@@ -2,6 +2,8 @@
 
 /** @var yii\web\View $this */
 
+use app\components\VCardParser;
+
 $this->title = \Yii::$app->name;
 $this->registerJsFile("https://api-maps.yandex.ru/2.1/?apikey=0bb42c7c-0a9c-4df9-956a-20d4e56e2b6b&lang=ru_RU");
 $this->registerJsVar('orders', \app\models\Order::find()->where(['created_by' => \Yii::$app->user->getId()])->all(), \yii\web\View::POS_HEAD );
