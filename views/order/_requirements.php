@@ -142,6 +142,7 @@ window.propertyIdField.on('depdrop:afterChange', function(event) {
     window.dimensionIdField.attr('disabled', isDisabled);
     window.valueField.attr('disabled', isDisabled);
     window.dimensionIdField
+//        .val(window.dimensionIdField.find('option:first').val())
         .trigger('change')
         .trigger({type: 'change', value: presetData.dimension_id ?? null})
         .trigger('depdrop:change')
@@ -150,14 +151,15 @@ window.propertyIdField.on('depdrop:afterChange', function(event) {
 })
 
 window.dimensionIdField.on('depdrop:afterChange', function(event) {
-    window.dimensionIdField.val(presetData.dimension_id ?? null)
+//    console.log($(event.delegateTarget).find('option:nth-child(2)').val());
+    window.dimensionIdField.val(presetData.dimension_id ?? $(event.delegateTarget).find('option:nth-child(2)').val())
 })
 
 if (Object.keys(presetData).length) {
     window.categoryIdField.val(presetData.category_id).trigger('change').trigger({type: 'change', value: presetData.category_id}).trigger({type: 'select2:select', value: presetData.category_id});
     window.countField.val(presetData.count).trigger('change');
     window.propertyIdField.val(presetData.property_id).on('depdrop:ready', function(e) {
-        console.log(e)  
+//        console.log(e)  
     }).trigger('change').trigger({type: 'change', value: presetData.property_id});
     window.typeField.val(presetData.type);
     window.valueField.val(presetData.value);

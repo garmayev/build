@@ -295,7 +295,7 @@ class Order extends \yii\db\ActiveRecord
             }', 'message' => Yii::t('app', 'Price field is required')],
             [['mode', 'price'], 'validatePrice'],
 
-            [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg', 'jpeg', 'png', 'svg', 'bmp'], 'maxFiles' => 10],
+            [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg', 'jpeg', 'png', 'svg', 'bmp', 'doc', 'docx', 'pdf', 'xls', 'xlsx'], 'maxFiles' => 10],
         ];
     }
 
@@ -560,7 +560,7 @@ class Order extends \yii\db\ActiveRecord
             }
             // Обработка URL вложений
             if (!empty($attachments)) {
-                \Yii::error("process Url Attachments");
+//                \Yii::error("process Url Attachments");
                 $this->processUrlAttachments($attachments);
             }
 
@@ -598,7 +598,7 @@ class Order extends \yii\db\ActiveRecord
             ]);
 
             if ($attachment->upload() && $attachment->save()) {
-                Yii::error('Attachment saved');
+//                Yii::error('Attachment saved');
                 $attachments[] = $attachment;
             } else {
                 Yii::error('Failed to upload file: ' . $file->name);
@@ -1090,6 +1090,18 @@ class Order extends \yii\db\ActiveRecord
         return $workingDays;
     }
 
+    public function getAttachImages()
+    {
+        $attachments = $this->getAttachments()->all();
+        $images = [];
+        foreach ($attachments as $attachment) {
+            if ($attachment->isImage()) {
+                $images[] = $attachment;
+            }
+        }
+        return $images;
+    }
+
     public function isOwnerNotified()
     {
         $profile = $this->owner->profile;
@@ -1151,11 +1163,11 @@ class Order extends \yii\db\ActiveRecord
 
             // 3. Отправка уведомлений подходящим сотрудникам
             foreach ($this->suitableCoworkers as $coworker) {
-                if ($coworker->status !== User::STATUS_ACTIVE ||
+/*                if ($coworker->status !== User::STATUS_ACTIVE ||
                     in_array($coworker->id, $assignedCoworkerIds)) {
                     continue;
-                }
-
+                } */
+//                \Yii::error($coworker->id);
                 if (!$this->canAssignCoworker($coworker)) {
                     continue;
                 }
@@ -1164,8 +1176,10 @@ class Order extends \yii\db\ActiveRecord
                 if (!$profile) continue;
                 // Telegram сообщения
                 if ($profile->chat_id) {
+//                    \Yii::error($profile->chat_id);
                     $message = TelegramMessage::find()->where(['chat_id' => $profile->chat_id])->andWhere(['order_id' => $this->id])->one();
                     if (!in_array($profile->chat_id, $existingChatIds) && empty($message)) {
+//                        \Yii::error($profile->chat_id);
                         $telegramMsg = new TelegramMessage([
                             'chat_id' => $profile->chat_id,
                             'order_id' => $this->id,

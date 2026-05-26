@@ -20,20 +20,28 @@ class AcceptCallback extends BaseCallback implements CommandInterface
             ->one();
 
         if (!$order->isFull()) {
+            if (!$order->canAssignCoworker($coworker)) {
+//                $message = \app\models\telegram\TelegramMessage::findOne(['message_id' => $query->id]);
+                $telegram->sendMessage([
+                    'chat_id' => $coworker->profile->chat_id,
+                    'text' => \Yii::t('app', 'Sorry, you can`t assign to order'),
+                ]);
+                return null;
+            }
             if (!$order->assignCoworker($coworker)) {
                 return null;
             }
 
             $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $order->id])->all();
 
-            \Yii::error(count($messages));
+//            \Yii::error(count($messages));
             if (count($messages)) {
                 if ($order->isFull()) {
                     $order->status = \app\models\Order::STATUS_PROCESS;
                     $order->save();
                     foreach ($messages as $message) {
                         if (in_array($message->chat_id, array_merge(\yii\helpers\ArrayHelper::map($order->coworkers, 'profile.chat_id', 'profile.chat_id'), [$order->owner->profile->chat_id => $order->owner->profile->chat_id]))) {
-                            $message->editMessageText(\app\components\Helper::generateTelegramHiddenMessage($order->id), null);
+                            $message->editMessage(\app\components\Helper::generateTelegramHiddenMessage($order->id));
                         } else {
                             $message->remove();
                         }
@@ -52,7 +60,7 @@ class AcceptCallback extends BaseCallback implements CommandInterface
                             $replyMarkup = $message->reply_markup;
                         }
                         $text = "";
-                        \Yii::error($header);
+//                        \Yii::error($header);
                         $message->editMessageText(
                             $header . \app\components\Helper::generateTelegramMessage($order->id),
                             $replyMarkup

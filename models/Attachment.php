@@ -51,4 +51,10 @@ class Attachment extends ActiveRecord
     {
         return $baseUrl ? Html::a(Html::img($this->url, ['class' => 'glide__slide']), Url::to([$this->url], true), ['data-lg-size' => '1600-2400']) : Html::a(Html::img($this->url, ['class' => 'glide__slide']), [$this->url], ['data-lg-size' => '1600-2400', 'class' => 'image-container']);
     }
+
+    public function isImage()
+    {
+        preg_match('/\.(jpg|jpeg|png|gif|webp|svg)$/', $this->url, $matches);
+        return !empty($matches);
+    }
 }

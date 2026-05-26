@@ -27,4 +27,16 @@ class MaxController extends Controller
     {
         \Yii::$app->max->setWebhook($url, ["message_created", "bot_started", "message_callback"]);
     }
+
+    public function actionGetWebhook()
+    {
+        return $this->render('get-webhook');
+    }
+
+    public function actionAddWebhook() {
+        if ($this->request->isPost) {
+            \Yii::$app->max->
+        }
+        return $this->render('add-webhook');
+    }
 }

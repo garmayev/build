@@ -150,7 +150,7 @@ class DimensionController extends BaseController
                 foreach ($property->dimensions as $dimension) {
                     $out[] = ['id' => $dimension->id, 'name' => $dimension->title];
                 }
-                return ['output' => $out, 'selected' => ''];
+                return ['output' => $out, 'selected' => $property->dimensions[0]->id];
             }
         }
 

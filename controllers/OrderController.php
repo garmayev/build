@@ -86,7 +86,9 @@ class OrderController extends BaseController
         $model = Order::findOne($id);
         $model->unlinkAll('attachments', true);
         foreach ($model->telegramMessages as $message) {
-            \Yii::$app->telegram->deleteMessage($message->chat_id, $message->message_id);
+            try {
+                \Yii::$app->telegram->deleteMessage(['chat_id' => $message->chat_id, 'message_id' => $message->message_id]);
+            } catch (\Exception $e) {}
         }
         $model->delete();
         return $this->redirect(['/order/index']);
@@ -108,6 +110,7 @@ class OrderController extends BaseController
                 $model->files = $uploadedFiles;
                 $model->setAttachments($uploadedFiles);
                 $result = $model->sendAndUpdateTelegramNotifications();
+//                \Yii::error($result);
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Order is successfully saved'));
                 return $this->redirect('index');
             } else {

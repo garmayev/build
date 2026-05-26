@@ -38,7 +38,7 @@ class DeclineCallback extends BaseCallback implements CommandInterface
             'order_id' => $order->id
         ]);
 
-        if ($message) {
+        if (!empty($message->joined)) {
             $ids = explode(',',$message->joined);
             if (count($ids)) {
                 foreach ($ids as $id) {
