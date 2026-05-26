@@ -4811,12 +4811,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
+<<<<<<< HEAD
                 "reference": "b1d11b5c042238a074d7c58e5b5ac87dae887c63"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/b1d11b5c042238a074d7c58e5b5ac87dae887c63",
                 "reference": "b1d11b5c042238a074d7c58e5b5ac87dae887c63",
+=======
+                "reference": "3880813d6f1381804397be9ba75d81d6ac337baf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/3880813d6f1381804397be9ba75d81d6ac337baf",
+                "reference": "3880813d6f1381804397be9ba75d81d6ac337baf",
+>>>>>>> 871e886255be3f96d05f77d138a059afcfa26297
                 "shasum": ""
             },
             "require": {
@@ -4833,7 +4842,11 @@
                 "theseer/tokenizer": "^2.0.1"
             },
             "require-dev": {
+<<<<<<< HEAD
                 "phpunit/phpunit": "^12.5.26"
+=======
+                "phpunit/phpunit": "^12.5.27"
+>>>>>>> 871e886255be3f96d05f77d138a059afcfa26297
             },
             "suggest": {
                 "ext-pcov": "PHP extension that provides line coverage",
@@ -4891,7 +4904,11 @@
                     "type": "tidelift"
                 }
             ],
+<<<<<<< HEAD
             "time": "2026-05-21T17:09:51+00:00"
+=======
+            "time": "2026-05-26T05:55:53+00:00"
+>>>>>>> 871e886255be3f96d05f77d138a059afcfa26297
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -6846,12 +6863,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-grapheme.git",
+<<<<<<< HEAD
                 "reference": "9c862df890f7c833b1101ac5578ec4dcf199efb5"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/polyfill-intl-grapheme/zipball/9c862df890f7c833b1101ac5578ec4dcf199efb5",
                 "reference": "9c862df890f7c833b1101ac5578ec4dcf199efb5",
+=======
+                "reference": "e9247d281d694a5120554d9afaf54e070e88a603"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-intl-grapheme/zipball/e9247d281d694a5120554d9afaf54e070e88a603",
+                "reference": "e9247d281d694a5120554d9afaf54e070e88a603",
+>>>>>>> 871e886255be3f96d05f77d138a059afcfa26297
                 "shasum": ""
             },
             "require": {
@@ -6921,7 +6947,11 @@
                     "type": "tidelift"
                 }
             ],
+<<<<<<< HEAD
             "time": "2026-05-25T12:39:52+00:00"
+=======
+            "time": "2026-05-26T05:58:03+00:00"
+>>>>>>> 871e886255be3f96d05f77d138a059afcfa26297
         },
         {
             "name": "symfony/string",

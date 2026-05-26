@@ -55,11 +55,14 @@ class TelegramMessage extends ActiveRecord
     public function editMessageText($text, $keyboard = "")
     {
         if ($text !== $this->text) {
-            if (count($this->order->attachments) !== 1) {
+            $order = Order::findOne($this->order_id);
+            $attachments = $order ? $order->getAttachImages() : [];
+            $attachmentsCount = is_array($attachments) ? count($attachments) : 0;
+            if ($attachmentsCount !== 1) {
                 $response = \Yii::$app->telegram->editMessageText([
                     "chat_id" => $this->chat_id,
                     "text" => $text,
-                    "reply_markup" => !empty($keyboard) ? $keyboard : null,
+                    "reply_markup" => !empty($keyboard) ? $keyboard : "{\"inline_keyboard\":[]}",
                     "parse_mode" => "html",
                     "message_id" => $this->message_id,
                 ]);
@@ -68,7 +71,7 @@ class TelegramMessage extends ActiveRecord
                 $response = \Yii::$app->telegram->editMessageCaption([
                     "chat_id" => $this->chat_id,
                     "caption" => $text,
-                    "reply_markup" => !empty($keyboard) ? $keyboard : null,
+                    "reply_markup" => !empty($keyboard) ? $keyboard : "{\"inline_keyboard\":[]}",
                     "message_id" => $this->message_id,
                     "parse_mode" => "html",
                 ]);
@@ -115,7 +118,7 @@ class TelegramMessage extends ActiveRecord
         try {
             $attachments = $order ? $order->getAttachImages() : [];
             $attachmentsCount = is_array($attachments) ? count($attachments) : 0;
-
+//            \Yii::error($attachmentsCount);
             if ($attachmentsCount === 0) {
                 $response = $telegram->sendMessage([
                     'chat_id' => $this->chat_id,
@@ -136,6 +139,9 @@ class TelegramMessage extends ActiveRecord
 
             if ($attachmentsCount === 1) {
                 $photoUrl = Url::to($attachments[0]->url, true);
+//                \Yii::error($attachments);
+//                \Yii::error($photoUrl);
+//                \Yii::error($this->attributes);
                 $response = $telegram->sendPhoto([
                     'chat_id' => $this->chat_id,
                     'photo' => $photoUrl,
@@ -151,7 +157,7 @@ class TelegramMessage extends ActiveRecord
                         \Yii::error($this->errors);
                     }
                 }
-//                \Yii::error($response);
+                \Yii::error($response);
                 return $response;
             }
 
@@ -164,7 +170,7 @@ class TelegramMessage extends ActiveRecord
                 ];
                 $media[] = $item;
             }
-
+            \Yii::error($media);
             $responseMediaGroup = $telegram->sendMediaGroup([
                 'chat_id' => $this->chat_id,
                 'media' => json_encode($media),
@@ -196,7 +202,7 @@ class TelegramMessage extends ActiveRecord
 
             return $response;
         } catch (\Throwable $e) {
-            \Yii::error($e->getMessage());
+            \Yii::error($e);
             return null;
         }
     }
@@ -259,6 +265,40 @@ class TelegramMessage extends ActiveRecord
             curl_close($curl);
             $this->delete();
             return $result;
+        }
+    }
+
+    public function editMessage($text)
+    {
+        $order = $this->order_id ? Order::findOne($this->order_id) : null;
+        $telegram = \Yii::$app->telegram;
+        $response = null;
+        $this->text = $text;
+        try {
+            $attachments = $order ? $order->getAttachImages() : [];
+            $attachmentsCount = is_array($attachments) ? count($attachments) : 0;
+            switch ($attachmentsCount) {
+                case 1:
+                    $telegram->editMessageCaption([
+                        'chat_id' => $this->chat_id,
+                        'message_id' => $this->message_id,
+                        'caption' => $attachments[0],
+                        'parse_mode' => 'html',
+                        'text' => $this->text,
+                    ]);
+                    break;
+                default:
+                    $telegram->editMessageText([
+                        'chat_id' => $this->chat_id,
+                        'message_id' => $this->message_id,
+                        'parse_mode' => 'html',
+                        'text' => $this->text,
+                    ]);
+                    break;
+            }
+            $this->save();
+        } catch (\Exception $e) {
+            \Yii::error($e);
         }
     }
 

@@ -51,6 +51,7 @@ $this->registerJsVar('orders', \app\models\Order::find()->where(['created_by' =>
 </div>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        console.log(orders);
         ymaps.ready(function(){
             // Указывается идентификатор HTML-элемента.
             var map = new ymaps.Map("map", {
@@ -76,11 +77,11 @@ $this->registerJsVar('orders', \app\models\Order::find()->where(['created_by' =>
             const getContentBody = (order) => {
                 const orderDate = new Date(order.date);
                 let result = `<div><b>Дата</b>: <i>${orderDate.toLocaleDateString()}</i></div>
-<div><b>Статус</b>: <i>${order.status}</i></div>
+<div><b>Статус</b>: <i>${order.statusName}</i></div>
 <div><b>Объект</b>: <i>${order.building.title}</i></div>`;
                 let requiredCoworkers = order.requirements.reduce((sum, req) => sum + req.count, 0);
                 console.log(requiredCoworkers);
-                result += `<div><b>Сотрудники</b>: <i>${order.coworkers.length}/${requiredCoworkers}</i></div><div><b>Комментарий</b>: <i>${order.comment}</i></div>`
+                result += `<div><b>Комментарий</b>: <i>${order.comment}</i></div>`
                 return result;
             }
 

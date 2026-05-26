@@ -104,7 +104,7 @@ class OrderController extends Controller
          * @var $coworker Coworker
          */
         foreach ($coworkers as $coworker) {
-            echo $coworker->id . ":\n";
+            echo $coworker->id . " " . $coworker->name .":\n";
             foreach ($coworker->userProperties as $property) {
                 echo "\t{$property->property->title}: {$property->value}\n";
             }

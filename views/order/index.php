@@ -68,6 +68,12 @@ echo GridView::widget([
                 return $model->modes[$model->mode];
             }
         ],
+        [
+            'attribute' => 'statusTitle',
+            'label' => \Yii::t('app', 'Status'),
+            'headerOptions' => ['class' => 'text-center col-md-1 col-4'],
+            'contentOptions' => ['class' => 'text-center col-md-1 col-4 align-middle'],
+        ],
         [ 
             'attribute' => 'start_datetime',
             'format' => 'raw',

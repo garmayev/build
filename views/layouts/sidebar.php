@@ -21,7 +21,7 @@
             <div class="info">
                 <a href="#" class="d-block">
                     <?php
-                    echo \Yii::$app->user->identity->fullName;
+                    // echo \Yii::$app->user->identity->fullName;
                     ?>
                 </a>
             </div>

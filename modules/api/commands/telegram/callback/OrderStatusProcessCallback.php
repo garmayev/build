@@ -18,7 +18,11 @@ class OrderStatusProcessCallback extends BaseCallback implements CommandInterfac
         $order = \app\models\Order::findOne($id);
         $order->status = \app\models\Order::STATUS_PROCESS;
         if ($order->save()) {
-            $order
+            $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $order->id])->all();
+            foreach ($messages as $message) {
+                $message->editMessageText(\app\components\Helper::generateTelegramHiddenMessage($order->id), null);
+            }
+//            $order->
         }
     }
 }
