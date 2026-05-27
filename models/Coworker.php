@@ -150,6 +150,7 @@ class Coworker extends User
     {
         return $this->getPrices()->orderBy(['date' => SORT_DESC])->one();
     }
+
     public function setPrice($value)
     {
         $transaction = \Yii::$app->db->beginTransaction();
@@ -388,12 +389,12 @@ class Coworker extends User
         return $this->profile->fullName !== "" ? $this->profile->fullName : $this->username;
     }
 
-    public function getReferrer()
+    public function getReferrer(): \yii\db\ActiveQuery
     {
         return $this->hasOne(User::className(), ['id' => 'referrer_id']);
     }
 
-    public function getReferrals()
+    public function getReferrals(): array
     {
         return User::find()
             ->where(['referrer_id' => $this->id])
@@ -406,12 +407,12 @@ class Coworker extends User
         return \Yii::$app->authManager->getRolesByUser($this->id);
     }
 
-    public function getHours()
+    public function getHours(): \yii\db\ActiveQuery
     {
         return $this->hasMany(Hours::class, ['user_id' => 'id']);
     }
 
-    public function getHoursByMonth($startDate, $finishDate)
+    public function getHoursByMonth($startDate, $finishDate): array
     {
         $query = $this->hasMany(Hours::class, ['user_id' => 'id']);
         if (!empty($startDate)) {
@@ -433,7 +434,6 @@ class Coworker extends User
             $this->password_hash = \Yii::$app->security->generatePasswordHash($data['password']);
             $this->auth_key = \Yii::$app->security->generateRandomString();
             $this->access_token = \Yii::$app->security->generateRandomString();
-//            \Yii::error(\Yii::$app->user->isGuest);
             if (!\Yii::$app->user->isGuest) {
                 $this->referrer_id = \Yii::$app->user->getId();
             } else {
@@ -685,7 +685,7 @@ class Coworker extends User
         return $priorityList[$this->priority_level];
     }
 
-    public static function getPriorityList()
+    public static function getPriorityList(): array
     {
         return [
             self::PRIORITY_LOW => \Yii::t('app', 'Priority low'),

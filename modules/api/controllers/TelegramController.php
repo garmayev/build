@@ -2,7 +2,6 @@
 
 namespace app\modules\api\controllers;
 
-<<<<<<< HEAD
 use app\modules\api\commands\telegram\callback\OrderStatusProcessCallback;
 use app\modules\api\commands\telegram\callback\AcceptCallback;
 use app\modules\api\commands\telegram\callback\AttachReportCallback;
@@ -38,44 +37,6 @@ use app\modules\api\commands\telegram\command\StopReportCommand;
 use app\modules\api\commands\telegram\ContactHandler;
 use app\modules\api\commands\telegram\LocationHandler;
 use app\modules\api\commands\telegram\PhotoHandler;
-=======
-use app\modules\api\commands\callback\AcceptCallback;
-use app\modules\api\commands\callback\AttachReportCallback;
-use app\modules\api\commands\callback\DayListCallback;
-use app\modules\api\commands\callback\DayViewCallback;
-use app\modules\api\commands\callback\DayDetailCallback;
-use app\modules\api\commands\callback\DeclineCallback;
-use app\modules\api\commands\callback\OrderAcceptCallback;
-use app\modules\api\commands\callback\OrderDetailCallback;
-use app\modules\api\commands\callback\OrderViewCallback;
-use app\modules\api\commands\callback\OrderListCallback;
-use app\modules\api\commands\callback\OrderStatusProcessCallback;
-use app\modules\api\commands\callback\OrderRejectCallback;
-use app\modules\api\commands\callback\ReportStartCallback;
-use app\modules\api\commands\callback\ReportStopCallback;
-use app\modules\api\commands\callback\StartDayCallback;
-use app\modules\api\commands\callback\StopDayCallback;
-use app\modules\api\commands\Command;
-use app\modules\api\commands\command\MyCommand;
-use app\modules\api\commands\command\OrderListCommand;
-use app\modules\api\commands\command\StopReportCommand;
-use app\modules\api\commands\command\StartReportCommand;
-use app\modules\api\commands\command\StartDayCommand;
-use app\modules\api\commands\command\DayListCommand;
-use app\modules\api\commands\command\HelloCommand;
-use app\modules\api\commands\command\ClearCommand;
-use app\modules\api\commands\command\ShowDataCommand;
-use app\modules\api\commands\handler\NameHandler;
-use app\modules\api\commands\ContactHandler;
-use app\modules\api\commands\LocationHandler;
-use app\modules\api\commands\command\MenuCommand;
-use app\modules\api\commands\command\StartCommand;
-use app\modules\api\commands\callback\OrderCallback;
-use app\modules\api\commands\callback\MyCallback;
-use app\modules\api\commands\callback\MyCoworkersCallback;
-use app\modules\api\commands\callback\MenuCallback;
-use app\modules\api\commands\PhotoHandler;
->>>>>>> e5fe673 (Fix)
 use yii\base\InvalidConfigException;
 
 class TelegramController extends \yii\web\Controller

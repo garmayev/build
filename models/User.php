@@ -100,6 +100,11 @@ class User extends ActiveRecord implements IdentityInterface
         return self::find()->joinWith('profile')->where(['profile.phone' => $phone])->one();
     }
 
+    public static function findByMaxId($user_id)
+    {
+        return self::find()->joinWith(['profile'])->andWhere(['profile.max_id' => $user_id])->one();
+    }
+
     /**
      * {@inheritdoc}
      */

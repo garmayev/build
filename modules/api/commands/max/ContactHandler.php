@@ -13,7 +13,6 @@ class ContactHandler implements BotHandler
         $max = \Yii::$app->max;
         $handler->onMessage(function ($request) use ($max) {
             foreach ($request->getMessage()->body->attachments ?? [] as $attachment) {
-                \Yii::error($attachment);
                 if ($attachment->type === 'contact') {
                     try {
                         $info = $attachment->payload->getVcf_info();
@@ -23,11 +22,11 @@ class ContactHandler implements BotHandler
                             $user->profile->max_id = "{$request->message->sender->user_id}";
                             if ($user->profile->save()) {
                                 $max->sendMessage(
-                                    MessageBuilder::create(\Yii::t("app", "Registration successfully!") . "\n" . \Yii::t("app", "Thank you!"))
+                                    MessageBuilder::create(\Yii::t("telegram", "command_contact_complete!") . "\n\n" . \Yii::t('telegram', 'message_menu'),)
                                         ->inlineKeyboard([
-                                            MessageBuilder::row([
-                                                MessageBuilder::callbackButton(\Yii::t("telegram", "command_day_list"), "command_day_list")
-                                            ])
+                                            MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t("telegram", "command_orders_my"), "command_orders_my")]),
+                                            MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t("telegram", "command_orders_list"), "command_orders_list")]),
+                                            MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t("telegram", "command_day_list"), "command_day_list")]),
                                         ])
                                         ->format("html")
                                         ->build(),
@@ -38,7 +37,10 @@ class ContactHandler implements BotHandler
                             }
                             return true;
                         } else {
-                            
+                            $max->sendMessage(
+                                MessageBuilder::create(\Yii::t("app", "command_contact_not_found!"))->build(),
+                                ["user_id" => $request->message->sender->user_id]
+                            );
                         }
                     } catch(\Exception $e) {
                         \Yii::error($e);

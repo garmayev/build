@@ -24,24 +24,6 @@ class MaxController extends Controller
             new \app\modules\api\commands\max\StartBotHandler(),
             new \app\modules\api\commands\max\ContactHandler(),
         ];
-/*        $handler->onMessage(function ($request) use ($max) {
-            $message = MessageBuilder::create(\Yii::t('app', 'Welcome to our bot'))
-                ->inlineKeyboard([
-                    MessageBuilder::row([
-                        MessageBuilder::callbackButton('Ваши заказы', 'action_orders')
-                    ])
-                ])
-                ->build();
-            $max->sendMessage($message, ['user_id' => $request->message->sender->user_id]);
-            \Yii::error($message->attributes);
-        });
-        $handler->callback('action_orders', function($callback) use ($max) {
-            \Yii::error($callback);
-            $max->sendAnswer([
-                'text' => 'Вы подтвердили действие!',
-            ], ['callback_id' => $callback->callback_id]);
-        });
-        */
         foreach ($callbacks as $callback) {
             $callback->register($handler);
         }
