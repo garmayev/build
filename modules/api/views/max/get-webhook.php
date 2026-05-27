@@ -24,8 +24,21 @@ echo GridView::widget([
         'url',
         'time:datetime',
         [
+            'attribute' => 'update_types',
+            'value' => function ($model) {
+                return implode(', ', $model['update_types']);
+            }
+        ],
+        [
             'class' => \yii\grid\ActionColumn::class,
             'template' => '{delete}',
+            'urlCreator' => function ($action, $model, $key, $index) {
+//                \Yii::error($model);
+                if ($action === 'delete') {
+                    return \yii\helpers\Url::to(['delete', 'url' => $model['url']]);
+                }
+                return $action;
+            },
             'headerOptions' => [
                 'class' => 'col-1'
             ]

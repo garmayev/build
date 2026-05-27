@@ -4,6 +4,7 @@ namespace app\modules\api\controllers;
 
 use app\models\SubscriptionForm;
 use yii\web\Controller;
+use garmayev\max\MessageBuilder;
 
 class MaxController extends Controller
 {
@@ -18,9 +19,32 @@ class MaxController extends Controller
         /** @var garmayev\max\Max $max */
         $max = \Yii::$app->max;
         $handler = $max->handler();
-        $callbacks = [
 
+        $callbacks = [
+            new \app\modules\api\commands\max\StartBotHandler(),
+            new \app\modules\api\commands\max\ContactHandler(),
         ];
+/*        $handler->onMessage(function ($request) use ($max) {
+            $message = MessageBuilder::create(\Yii::t('app', 'Welcome to our bot'))
+                ->inlineKeyboard([
+                    MessageBuilder::row([
+                        MessageBuilder::callbackButton('Ваши заказы', 'action_orders')
+                    ])
+                ])
+                ->build();
+            $max->sendMessage($message, ['user_id' => $request->message->sender->user_id]);
+            \Yii::error($message->attributes);
+        });
+        $handler->callback('action_orders', function($callback) use ($max) {
+            \Yii::error($callback);
+            $max->sendAnswer([
+                'text' => 'Вы подтвердили действие!',
+            ], ['callback_id' => $callback->callback_id]);
+        });
+        */
+        foreach ($callbacks as $callback) {
+            $callback->register($handler);
+        }
         $handler->handle();
     }
 
@@ -35,11 +59,12 @@ class MaxController extends Controller
     }
 
     public function actionAddWebhook() {
-        $model = new SubscriptionForm();
+        $model = new \app\models\forms\SubscriptionForm();
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Webhook {url} added.', ['url' => $model->url]));
+                return $this->redirect(['get-webhook']);
             } else {
                 \Yii::$app->session->setFlash('error', \Yii::t('app', 'Unable to add webhook.'));
                 \Yii::error($model->errors);
@@ -52,7 +77,7 @@ class MaxController extends Controller
 
     public function actionDelete($url)
     {
-        $model = new SubscriptionForm($url);
+        $model = new \app\models\forms\SubscriptionForm(['url' => $url]);
         if ($this->request->isPost) {
             if ($model->delete()) {
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Webhook {url} deleted.', ['url' => $url]));
