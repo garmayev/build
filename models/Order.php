@@ -913,7 +913,6 @@ class Order extends \yii\db\ActiveRecord
 
         // Для заказов без даты окончания используем дату начала как окончание
         if (!$finishDate) {
-            
             $finishDate = $startDate;
         }
 
@@ -983,7 +982,6 @@ class Order extends \yii\db\ActiveRecord
     public function assignCoworker(User $coworker): bool
     {
         if (!$this->canAssignCoworker($coworker)) {
-            // Yii::error("Cannot assign coworker {$coworker->id} to order {$this->id} - date conflict or already assigned");
             return false;
         }
 
@@ -1144,70 +1142,30 @@ class Order extends \yii\db\ActiveRecord
             $messageText = Helper::generateTelegramMessage($this->id);
             $title = !empty($this->title) ? "({$this->title})" : "";
             $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $this->id]) . " {$title}</b>\n" . $messageText;
-//            \Yii::error($formattedMessage);
-            $coworkerKeyboard = json_encode([
-                'inline_keyboard' => [
-                    [
-                        ['text' => Yii::t('app', 'Accept'), 'callback_data' => "/accept order_id={$this->id}"],
-                        ['text' => Yii::t('app', 'Decline'), 'callback_data' => "/decline order_id={$this->id}"]
-                    ]
-                ]
-            ]);
 
-            // 1. Обновление существующих сообщений
-            foreach ($this->telegramMessages as $message) {
-                $message->editText($formattedMessage, $coworkerKeyboard);
-            }
-
-            // 2. Подготовка данных для массовой проверки
-            $assignedCoworkerIds = ArrayHelper::getColumn($this->coworkers, 'id');
-            $existingChatIds = ArrayHelper::getColumn($this->telegramMessages, 'chat_id');
-//            \Yii::error(count($this->suitableCoworkers));
             // 3. Отправка уведомлений подходящим сотрудникам
             foreach ($this->suitableCoworkers as $coworker) {
-/*                if ($coworker->status !== User::STATUS_ACTIVE ||
-                    in_array($coworker->id, $assignedCoworkerIds)) {
-                    continue;
-                } */
-//                \Yii::error($coworker->attributes);
-//                \Yii::error($this->canAssignCoworker($coworker));
                 if (!$this->canAssignCoworker($coworker)) {
                     continue;
                 }
 
                 $profile = $coworker->profile;
                 if (!$profile) continue;
-                    $coworkerKeyboard = [MessageBuilder::row([MessageBuilder::callbackButton("Принять заказ", "command_accept id={$this->id}")]), MessageBuilder::row([MessageBuilder::callbackButton("Отказаться", "command_reject id={$this->id}")])];
-                // Telegram сообщения
-//                if ($profile->chat_id || $profile->max_id) {
-//                    \Yii::error($profile->chat_id ?? $profile->max_id);
-                    $message = TelegramMessage::find()->where(['chat_id' => $profile->chat_id ?? $profile->max_id])->andWhere(['order_id' => $this->id])->one();
-//                    if ((!in_array($profile->chat_id, $existingChatIds) || !in_array($profile->max_id, $existingChatIds)) && empty($message)) {
-//                        \Yii::error($profile->chat_id ?? $profile->max_id);
 
-                        $telegramMsg = new TelegramMessage([
-                            'chat_id' => $profile->chat_id ?? $profile->max_id,
-                            'order_id' => $this->id,
-                            'text' => $formattedMessage,
-                            'reply_markup' => $coworkerKeyboard,
-                            'created_at' => time(),
-                            'updated_at' => time(),
-                        ]);
-                        $telegramMsg->send();
-//                    }
-//                }
-                // Push-уведомления
-                /*                elseif ($profile->device_id) {
-                                    $expoMessage = (new ExpoMessage())
-                                        ->setTitle(\Yii::t('app', 'New Order') . ' #' . $this->id)
-                                        ->setBody(Helper::orderDetailsPlain($this))
-                                        ->setTo($profile->device_id)
-                                        ->setData(['url' => 'build://amgcompany.ru/--/order/' . $this->id, 'id' => $this->id])
-                                        ->setChannelId('new-order')
-                                        ->setCategoryId('new-order')
-                                        ->playSound();
-                                    (new Expo())->send($expoMessage)->push();
-                                } */
+                $coworkerKeyboard = [
+                    MessageBuilder::row([MessageBuilder::callbackButton("Принять заказ", "command_accept id={$this->id}")]),
+                    MessageBuilder::row([MessageBuilder::callbackButton("Отказаться", "command_reject id={$this->id}")])
+                ];
+
+                $telegramMsg = new TelegramMessage([
+                    'chat_id' => $profile->chat_id ?? $profile->max_id,
+                    'order_id' => $this->id,
+                    'text' => $formattedMessage,
+                    'reply_markup' => $coworkerKeyboard,
+                    'created_at' => time(),
+                    'updated_at' => time(),
+                ]);
+                $telegramMsg->send();
             }
 
             // 4. Уведомление владельца

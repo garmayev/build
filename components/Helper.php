@@ -53,10 +53,6 @@ class Helper extends Component
             $name = \Yii::t("app", "Coworkers");
         }
         $message .= "\n" . \Yii::t("app", "<b>{name}</b>: <i>{current}/{total}</i>", ["name" => $name, "current" => $currentCount, "total" => $totalRequired]) . "\n";
-/*        foreach ($order->requirements as $requirement) {
-            $eq = Helper::equals[$requirement->type];
-            $message .= "--- {$requirement->property->title} {$eq} {$requirement->value} {$requirement->dimension->title}\n";
-        } */
         return $message;
     }
 
@@ -90,7 +86,7 @@ class Helper extends Component
         $currentCount = $order->issetCoworkers;
         $totalRequired = $order->requiredCoworkers;
         $message .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
-        $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href=\"tel:+{$order->owner->profile->phone}\">+{$order->owner->profile->phone}</a>)\n";
+        $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
         return $message;
     }
 
@@ -119,7 +115,7 @@ class Helper extends Component
         if ($order->comment) {
             $text .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
         }
-        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href=\"tel:+{$order->owner->profile->phone}\">+{$order->owner->profile->phone}</a>)\n";
+        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
 
         if ($order->attachments) {
             $text .= \Yii::t("app", "<b>Attachments</b>")."\n";
@@ -209,7 +205,8 @@ class Helper extends Component
         return $distance <= $radiusKm;
     }
 
-    public static function timeToSeconds($timeString) {
+    public static function timeToSeconds($timeString)
+    {
         $parts = explode(':', $timeString);
         $seconds = 0;
 

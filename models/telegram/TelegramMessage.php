@@ -36,10 +36,11 @@ class TelegramMessage extends ActiveRecord
     public function rules()
     {
         return [
-            [['device_id', 'text', 'reply_markup', 'joined', 'message_id'], 'string'],
+            [['device_id', 'text', 'joined', 'message_id'], 'string'],
             [['created_at', 'updated_at', 'status', 'chat_id'], 'integer'],
             [['order_id'], 'exist', 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']],
             [['status'], 'default', 'value' => self::STATUS_NEW],
+            [['reply_markup'], 'safe']
         ];
     }
 
@@ -48,294 +49,33 @@ class TelegramMessage extends ActiveRecord
         return $this->hasOne(Order::class, ['id' => 'order_id']);
     }
 
-    public function getSender()
-    {
-        return $this->hasOne(Coworker::class , ['chat_id' => 'chat_id']);
-    }
-
-    public function editMessageText($text, $keyboard = "")
-    {
-        if ($text !== $this->text) {
-            $order = Order::findOne($this->order_id);
-            $attachments = $order ? $order->getAttachImages() : [];
-            $attachmentsCount = is_array($attachments) ? count($attachments) : 0;
-            if ($attachmentsCount !== 1) {
-                $response = \Yii::$app->telegram->editMessageText([
-                    "chat_id" => $this->chat_id,
-                    "text" => $text,
-                    "reply_markup" => !empty($keyboard) ? $keyboard : "{\"inline_keyboard\":[]}",
-                    "parse_mode" => "html",
-                    "message_id" => $this->message_id,
-                ]);
-            } else {
-//                \Yii::error($text);
-                $response = \Yii::$app->telegram->editMessageCaption([
-                    "chat_id" => $this->chat_id,
-                    "caption" => $text,
-                    "reply_markup" => !empty($keyboard) ? $keyboard : "{\"inline_keyboard\":[]}",
-                    "message_id" => $this->message_id,
-                    "parse_mode" => "html",
-                ]);
-            }
-            if ($response->ok) {
-                $this->text = $text;
-                $this->reply_markup = json_encode($keyboard);
-                $this->save();
-            }
-        }
-    }
-
-    public function deleteMessage()
-    {
-        \Yii::$app->telegram->deleteMessage(["message_id" => $this->id, "chat_id" => $this->chat_id]);
-        $this->delete();
-    }
-
-    public static function sendMessage($params)
-    {
-        $response = \Yii::$app->telegram->sendMessage($params);
-        if ($response->ok) {
-            $message = new TelegramMessage();
-//            \Yii::error($response);
-            $message->id = $response->result->message_id;
-            $message->message_id = $response->result->message_id;
-            $message->chat_id = $params->result->from->id;
-            $message->save();
-        }
-    }
-
     public function send()
     {
-        if (YII_DEBUG) {
-//            return null;
-        }
-
         if (empty($this->chat_id)) return;
 
-        $order = $this->order_id ? Order::findOne($this->order_id) : null;
-        $telegram = \Yii::$app->telegram;
-        $response = null;
         $max = \Yii::$app->max;
 
         $order = \app\models\Order::findOne($this->order_id);
         $text = \app\components\Helper::orderDetails($order, 'max');
-//        $keyboard = [];
 
-//        $keyboard[] = [MessageBuilder::callbackButton(\Yii::t('telegram', 'button_reject'), "command_reject id={$order->id}")];
-//        $keyboard[] = [MessageBuilder::callbackButton(\Yii::t('telegram', 'command_back'), 'command_orders_my')];
         $message = MessageBuilder::create($text)
-            ->inlineKeyboard($this->reply_markup)
+            ->inlineKeyboard((array)$this->reply_markup)
             ->format('html');
+
         foreach ($order->attachments as $attachment) {
             if ($attachment->isImage()) {
                 $message->image(\yii\helpers\Url::to($attachment->url, true));
-//                        } else {
-//                            $message->file(\yii\helpers\Url::to($order->attachments[0]->url, true));
             }
         }
 
         $response = $max->sendMessage($message->build(), ['user_id' => $this->chat_id]);
-//        \Yii::error($this->attributes);
+
         $this->message_id = $response->message['body']['mid'];
-        $this->reply_markup = json_encode($this->reply_markup);
+        if (is_array($this->reply_markup)) {
+            $this->reply_markup = json_encode($this->reply_markup);
+        }
         if (!$this->save()) {
             \Yii::error($this->errors);
         }
-
-/*        try {
-            $attachments = $order ? $order->getAttachImages() : [];
-            $attachmentsCount = is_array($attachments) ? count($attachments) : 0;
-//            \Yii::error($attachmentsCount);
-            if ($attachmentsCount === 0) {
-                $response = $telegram->sendMessage([
-                    'chat_id' => $this->chat_id,
-                    'text' => $this->text,
-                    'parse_mode' => 'html',
-                    'reply_markup' => !empty($this->reply_markup) ? $this->reply_markup : null,
-                ]);
-
-                if (isset($response->ok) && $response->ok) {
-                    $this->id = $response->result->message_id;
-                    $this->message_id = $response->result->message_id;
-                    if (!$this->save()) {
-                        \Yii::error($this->errors);
-                    }
-                }
-                return $response;
-            }
-
-            if ($attachmentsCount === 1) {
-                $photoUrl = Url::to($attachments[0]->url, true);
-//                \Yii::error($attachments);
-//                \Yii::error($photoUrl);
-//                \Yii::error($this->attributes);
-                $response = $telegram->sendPhoto([
-                    'chat_id' => $this->chat_id,
-                    'photo' => $photoUrl,
-                    'caption' => $this->text,
-                    'parse_mode' => 'html',
-                    'reply_markup' => !empty($this->reply_markup) ? $this->reply_markup : null,
-                ]);
-
-                if (isset($response->ok) && $response->ok) {
-                    $this->id = $response->result->message_id;
-                    $this->message_id = $response->result->message_id;
-                    if (!$this->save()) {
-                        \Yii::error($this->errors);
-                    }
-                }
-                \Yii::error($response);
-                return $response;
-            }
-
-            // 2+ вложений — отправляем медиагруппу
-            $media = [];
-            foreach ($attachments as $index => $attachment) {
-                $item = [
-                    'type' => 'photo',
-                    'media' => Url::to($attachment->url, true),
-                ];
-                $media[] = $item;
-            }
-            \Yii::error($media);
-            $responseMediaGroup = $telegram->sendMediaGroup([
-                'chat_id' => $this->chat_id,
-                'media' => json_encode($media),
-            ]);
-//            \Yii::error($responseMediaGroup);
-            $response = $telegram->sendMessage([
-                'chat_id' => $this->chat_id,
-                'text' => $this->text,
-                'parse_mode' => 'html',
-                'reply_markup' => $this->reply_markup ?? null,
-            ]);
-
-            // В ответе на медиагруппу приходит массив сообщений; сохраняем первый message_id
-            if (isset($response->ok) && $response->ok) {
-                $media_ids = [];
-                foreach ($responseMediaGroup['result'] as $item) {
-                    $media_ids[] = $item['message_id'];
-                }
-//                $first = $response->result[0] ?? null;
-//                if ($first && isset($first->message_id)) {
-                    $this->id = $response->result->message_id;
-                    $this->message_id = $response->result->message_id;
-                    $this->joined = implode(',', $media_ids);
-                    if (!$this->save()) {
-                        \Yii::error($this->errors);
-                    }
-//                }
-            }
-
-            return $response;
-        } catch (\Throwable $e) {
-            \Yii::error($e);
-            return null;
-        } */
-    }
-
-    public function editText($chat_id = null, $text = null, $reply_markup = null, $message_id = null)
-    {
-        $this->chat_id = $chat_id ?? $this->chat_id;
-        $this->text = $text ?? $this->text;
-        $this->reply_markup = $reply_markup ?? $this->reply_markup;
-        $this->message_id = $message_id ?? $this->message_id;
-
-        $curl = curl_init();
-        $bot_id = \Yii::$app->params['bot_id'];
-        $data = [
-            "chat_id" => $this->chat_id,
-            "text" => $this->text,
-            "parse_mode" => "html",
-            "reply_markup" => $this->reply_markup,
-            "message_id" => $this->message_id,
-        ];
-
-        curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/editMessageText");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_HEADER, false);
-
-        if (($result = curl_exec($curl)) === false) {
-            \Yii::error(curl_error($curl));
-        }
-
-        curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/editMessageReplyMarkup");
-
-        if ($result = curl_exec($curl) === false) {
-            \Yii::error(curl_error($curl));
-        }
-
-        $this->save();
-    }
-
-    public function remove($message_id = null)
-    {
-        $curl = curl_init();
-        $bot_id = \Yii::$app->params['bot_id'];
-        $data = [
-            "chat_id" => $this->chat_id,
-            "message_id" => $message_id ?? $this->id,
-        ];
-
-        curl_setopt($curl, CURLOPT_URL, "https://api.telegram.org/bot{$bot_id}/deleteMessage");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_HEADER, false);
-
-        if (($result = curl_exec($curl)) === false) {
-//            \Yii::error(curl_error($curl));
-            return curl_error($curl);
-        } else {
-            curl_close($curl);
-            $this->delete();
-            return $result;
-        }
-    }
-
-    public function editMessage($text)
-    {
-        $order = $this->order_id ? Order::findOne($this->order_id) : null;
-        $telegram = \Yii::$app->telegram;
-        $response = null;
-        $this->text = $text;
-        try {
-            $attachments = $order ? $order->getAttachImages() : [];
-            $attachmentsCount = is_array($attachments) ? count($attachments) : 0;
-            switch ($attachmentsCount) {
-                case 1:
-                    $telegram->editMessageCaption([
-                        'chat_id' => $this->chat_id,
-                        'message_id' => $this->message_id,
-                        'caption' => $attachments[0],
-                        'parse_mode' => 'html',
-                        'text' => $this->text,
-                    ]);
-                    break;
-                default:
-                    $telegram->editMessageText([
-                        'chat_id' => $this->chat_id,
-                        'message_id' => $this->message_id,
-                        'parse_mode' => 'html',
-                        'text' => $this->text,
-                    ]);
-                    break;
-            }
-            $this->save();
-        } catch (\Exception $e) {
-            \Yii::error($e);
-        }
-    }
-
-    public function sendPhoto()
-    {
-        \Yii::error("Photo");
-    }
-
-    public function sendMediaGroup()
-    {
-        \Yii::error("Media group");
     }
 }
