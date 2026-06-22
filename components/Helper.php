@@ -90,11 +90,11 @@ class Helper extends Component
         $currentCount = $order->issetCoworkers;
         $totalRequired = $order->requiredCoworkers;
         $message .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";
-        $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
+        $message .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href=\"tel:+{$order->owner->profile->phone}\">+{$order->owner->profile->phone}</a>)\n";
         return $message;
     }
 
-    public static function orderDetails(Order $order)
+    public static function orderDetails(Order $order, string $source = 'telegram')
     {
         $building = $order->building;
         $text = "<b>" . \Yii::t('app', 'Order #{id}', ['id' => $order->id]) . "</b>";
@@ -119,13 +119,15 @@ class Helper extends Component
         if ($order->comment) {
             $text .= \Yii::t("app", "<b>Comment</b>: {comment}", ['comment' => $order->comment]) . "\n";
         }
-        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href='tel:+{$order->owner->profile->phone}'>+{$order->owner->profile->phone}</a>)\n";
+        $text .= "<b>".\Yii::t("app", "Owner")."</b>: {$order->owner->profile->name} (<a href=\"tel:+{$order->owner->profile->phone}\">+{$order->owner->profile->phone}</a>)\n";
+
         if ($order->attachments) {
             $text .= \Yii::t("app", "<b>Attachments</b>")."\n";
             foreach ($order->attachments as $attachment) {
-                $text .= \Yii::t("app", "--- {<a href='https://build.amgcompany.ru{$attachment->url}'>$attachment->url</a>}") . "\n";
+                $text .= \Yii::t("app", "--- <a href=\"https://build.amgcompany.ru{$attachment->url}\">$attachment->url</a>") . "\n";
             }
         }
+
         $currentCount = $order->issetCoworkers;
         $totalRequired = $order->requiredCoworkers;
         $text .= "\n" . \Yii::t("app", "<b>Coworkers</b>: <i>{current}/{total}</i>", ["current" => $currentCount, "total" => $totalRequired]) . "\n";

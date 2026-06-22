@@ -96,25 +96,8 @@ echo $form->field($model, 'title')->textInput();
 
 echo $form->field($model, 'date', ['options' => ['class' => 'mx-0 my-0']])->hiddenInput(['value' => time()])->label(false);
 
-if (count($model->attachments)) {
-    echo \yii\grid\GridView::widget([
-        'dataProvider' => new \yii\data\ArrayDataProvider([
-            'allModels' => $model->attachments,
-        ]),
-        'summary' => false,
-        'tableOptions' => [
-            'class' => 'table table-striped',
-        ],
-        'columns' => [
-            [
-                'attribute' => 'url',
-                'format' => 'raw',
-                'value' => function ($model) {
-                    return Html::a($model->url, $model->url);
-                }
-            ]
-        ]
-    ]);
+if (!$model->isNewRecord) {
+    echo $form->field($model, 'status')->dropDownList($model->getStatusList());
 }
 
 echo $form->field($model, 'mode')->dropDownList($model->modes)->label(\Yii::t('app', 'Mode'));
@@ -160,6 +143,27 @@ echo $form->field($model, 'finish_datetime', [
 echo $form->field($model, 'files[]')->fileInput([
     'multiple' => true,
 ])->label(\Yii::t('app', 'Attachments'));
+
+if (count($model->attachments)) {
+    echo \yii\grid\GridView::widget([
+        'dataProvider' => new \yii\data\ArrayDataProvider([
+            'allModels' => $model->attachments,
+        ]),
+        'summary' => false,
+        'tableOptions' => [
+            'class' => 'table table-striped',
+        ],
+        'columns' => [
+            [
+                'attribute' => 'url',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    return Html::a($model->url, $model->url);
+                }
+            ]
+        ]
+    ]);
+}
 
 echo $form->field($model, 'comment')->textarea(['rows' => 6]);
 
@@ -505,7 +509,9 @@ $(document).ready(function() {
         
         form.yiiActiveForm('validate');
     }).trigger('change');
-    
+    $('.order-payed-switch').on('change', () => {
+        console.log('set status');
+    })
     $('#order-price').on('blur', function() {
         $(this).addClass('is-valid')
     })

@@ -6,6 +6,7 @@ use app\models\Coworker;
 use app\models\Order;
 use yii\db\ActiveRecord;
 use yii\helpers\Url;
+use garmayev\max\MessageBuilder;
 
 /**
  * @property string|null $chat_id
@@ -35,8 +36,8 @@ class TelegramMessage extends ActiveRecord
     public function rules()
     {
         return [
-            [['device_id', 'text', 'reply_markup', 'joined'], 'string'],
-            [['created_at', 'updated_at', 'status', 'message_id', 'chat_id'], 'integer'],
+            [['device_id', 'text', 'reply_markup', 'joined', 'message_id'], 'string'],
+            [['created_at', 'updated_at', 'status', 'chat_id'], 'integer'],
             [['order_id'], 'exist', 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']],
             [['status'], 'default', 'value' => self::STATUS_NEW],
         ];
@@ -114,8 +115,34 @@ class TelegramMessage extends ActiveRecord
         $order = $this->order_id ? Order::findOne($this->order_id) : null;
         $telegram = \Yii::$app->telegram;
         $response = null;
+        $max = \Yii::$app->max;
 
-        try {
+        $order = \app\models\Order::findOne($this->order_id);
+        $text = \app\components\Helper::orderDetails($order, 'max');
+//        $keyboard = [];
+
+//        $keyboard[] = [MessageBuilder::callbackButton(\Yii::t('telegram', 'button_reject'), "command_reject id={$order->id}")];
+//        $keyboard[] = [MessageBuilder::callbackButton(\Yii::t('telegram', 'command_back'), 'command_orders_my')];
+        $message = MessageBuilder::create($text)
+            ->inlineKeyboard($this->reply_markup)
+            ->format('html');
+        foreach ($order->attachments as $attachment) {
+            if ($attachment->isImage()) {
+                $message->image(\yii\helpers\Url::to($attachment->url, true));
+//                        } else {
+//                            $message->file(\yii\helpers\Url::to($order->attachments[0]->url, true));
+            }
+        }
+
+        $response = $max->sendMessage($message->build(), ['user_id' => $this->chat_id]);
+//        \Yii::error($this->attributes);
+        $this->message_id = $response->message['body']['mid'];
+        $this->reply_markup = json_encode($this->reply_markup);
+        if (!$this->save()) {
+            \Yii::error($this->errors);
+        }
+
+/*        try {
             $attachments = $order ? $order->getAttachImages() : [];
             $attachmentsCount = is_array($attachments) ? count($attachments) : 0;
 //            \Yii::error($attachmentsCount);
@@ -204,7 +231,7 @@ class TelegramMessage extends ActiveRecord
         } catch (\Throwable $e) {
             \Yii::error($e);
             return null;
-        }
+        } */
     }
 
     public function editText($chat_id = null, $text = null, $reply_markup = null, $message_id = null)

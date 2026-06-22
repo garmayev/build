@@ -84,6 +84,6 @@ class Location extends \yii\db\ActiveRecord
 
     public function getLink()
     {
-        return "<a href='https://2gis.ru/geo/{$this->longitude}%2C{$this->latitude}?m={$this->longitude}%2C{$this->latitude}%2F14'>{$this->address}</a>";
+        return "<a href=\"https://2gis.ru/geo/{$this->longitude}%2C{$this->latitude}?m={$this->longitude}%2C{$this->latitude}%2F14\">{$this->address}</a>";
     }
 }
