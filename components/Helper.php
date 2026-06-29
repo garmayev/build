@@ -53,6 +53,7 @@ class Helper extends Component
             $name = \Yii::t("app", "Coworkers");
         }
         $message .= "\n" . \Yii::t("app", "<b>{name}</b>: <i>{current}/{total}</i>", ["name" => $name, "current" => $currentCount, "total" => $totalRequired]) . "\n";
+        \Yii::error($message);
         return $message;
     }
 

@@ -1,0 +1,50 @@
+<?php
+
+namespace app\modules\api\commands\max;
+
+use app\modules\api\commands\max\BotHandler;
+use garmayev\max\EventHandler;
+use garmayev\max\MessageBuilder;
+
+class LocationHandler implements BotHandler
+{
+    public function register(EventHandler $handler): void
+    {
+        $max = \Yii::$app->max;
+        $handler->onMessage(function ($request) use ($max) {
+            $session = \Yii::$app->session;
+            if ($session->getIsActive()) {
+                $session->close();
+            }
+            $user = \app\models\User::findByMaxId($request->message->sender->user_id);
+            \Yii::$app->user->login($user, 0);
+            $session->setId($user->profile->max_id);
+            $session->open();
+            $attachments = $request->message->body->attachments;
+            foreach ($attachments as $attachment) {
+                if ($attachment->type == 'location') {
+                    $order = \app\models\Order::findOne($session->get('order_id'));
+//                    \Yii::error($order->building->location->attributes);
+                    if (\app\components\Helper::isPointInCircle(['latitude' => $attachment->latitude, 'longitude' => $attachment->longitude], $order->building->location->attributes, $order->building->radius)) {
+                        $hours = new \app\models\Hours([
+                            'user_id' => $user->id,
+                            'date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d'),
+                            'count' => 0,
+                            'is_payed' -> false,
+                            'order_id' => $order->id,
+                            'start_time' => \Yii::$app->formatter->asTime(time()),
+                        ]);
+                        if ($hours->save()) {
+//                            $max->sendAnswer()
+                        }
+                    } else {
+                        $message = MessageBuilder::create(\Yii::t('telegram', 'command_location_missing'))
+                            ->inlineKeyboard([MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t('telegram', 'button_menu'), 'command_menu')])])
+                            ->build();
+                        $max->sendMessage($message, ['user_id' => $user->profile->max_id]);
+                    }
+                }
+            }
+        });
+    }
+}

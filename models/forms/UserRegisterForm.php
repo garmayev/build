@@ -223,7 +223,7 @@ class UserRegisterForm extends Model
             $this->_user = User::findOne($user_id);
         }
 
-        if ($this->_user->profile) {
+        if (isset($this->_user->profile)) {
             $this->_profile = $this->_user->profile;
         } else {
             $this->_profile = new Profile();
@@ -252,7 +252,7 @@ class UserRegisterForm extends Model
         $this->_user = Coworker::findOne($id);
 
         if (!$this->_user) {
-            \Yii::error("Coworker with id {$id} not found");
+//            \Yii::error("Coworker with id {$id} not found");
             $this->_profile = new Profile();
             $this->properties = [];
             return;

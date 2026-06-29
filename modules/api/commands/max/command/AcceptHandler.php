@@ -28,41 +28,62 @@ class AcceptHandler implements BotHandler
             if ($args[0] === "command_accept") {
                 if (!$order->isFull()) {
                     if (!$order->canAssignCoworker($coworker)) {
-                        $max->sendAnswer(['message' => [
-                            'text' => \Yii::t('app', 'Sorry, you can`t assign to order'),
-                            'attachments' => [],
-                        ]], [
-                            'callback_id' => $request->callback->callback_id,
-                        ]);
+                        $max->sendAnswer([
+                            'message' => MessageBuilder::create(\Yii::t('app', 'Sorry, you can`t assign to order'))
+                                ->inlineKeyboard([
+                                    MessageBuilder::row([
+                                        MessageBuilder::callbackButton(\Yii::t('telegram', 'Menu'), 'command_menu')
+                                    ])
+                                ])
+                                ->build(),
+                            ], [
+                                'callback_id' => $request->callback->callback_id,
+                            ]);
                         return null;
                     }
                     if (!$order->assignCoworker($coworker)) {
-                        $max->sendAnswer(['message' => [
-                            'text' => \Yii::t('app', 'Sorry, you can`t assign to order'),
-                            'attachments' => [],
-                            'format' => 'html',
-                        ]], [
+                        $max->sendAnswer([
+                            'message' => MessageBuilder::
+                                create(\Yii::t('app', 'Sorry, you can`t assign to order'))
+                                ->inlineKeyboard([
+                                    MessageBuilder::row([
+                                        MessageBuilder::callbackButton(\Yii::t('telegram', 'Menu'), 'command_menu')
+                                    ])
+                                ])
+                                ->build(),
+                        ], [
                             'callback_id' => $request->callback->callback_id,
                         ]);
                         return null;
                     }
-                    if ($order->isFull()) {
+                    if (isset($order) && $order->isFull()) {
                         $order->status = \app\models\Order::STATUS_PROCESS;
                         $order->save();
                     }
                 }
-                $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $order->id])->andWhere(['not in', 'chat_id', $request->callback->user->user_id])->all();
+                $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $order->id])->andWhere(['not in', 'chat_id', array_merge([$request->callback->user->user_id], \yii\helpers\ArrayHelper::getColumn($order->coworkers, 'profile.max_id'))])->all();
                 if (count($messages)) {
                     foreach ($messages as $message) {
-                        $max->editMessage([
-                            'text' => $message->text,
-                            'format' => 'html',
-                            'attachments' => $order->isFull() ? json_decode($message->attachments, true) : [],
-                        ], [
+                        $messageText = \app\components\Helper::generateTelegramMessage($orderId);
+                        $title = !empty($this->title) ? "({$this->title})" : "";
+                        $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $orderId]) . " {$title}</b>\n" . $messageText;
+
+                        $builded = MessageBuilder::create($formattedMessage)->format('html')->build();
+                        $builded['attachments'] = $order->isFull() ? [] : json_decode($message->reply_markup, true);
+                        $max->editMessage($builded, [
                             'message_id' => $message->message_id,
                         ]);
                     }
                 }
+                $max->sendAnswer([
+                    'message' => MessageBuilder::create(\Yii::t('app', 'You successfully assigned to order #{orderId}', ['orderId' => $orderId]))
+                        ->inlineKeyboard([MessageBuilder::row([
+                            MessageBuilder::callbackButton(\Yii::t('telegram', 'Menu'), 'command_menu')
+                        ])])
+                        ->build(),
+                    ], [
+                        'callback_id' => $request->callback->callback_id,
+                    ]);
             }
         });
     }

@@ -15,7 +15,6 @@ class OrdersMyHandler implements BotHandler
     {
         $max = \Yii::$app->max;
         $handler->onCallback(function (\garmayev\max\base\Request $request) use ($max) {
-//            \Yii::error($request->callback->user->user_id);
             if ($request->callback->payload === "command_orders_my") {
                 $user = \app\models\Coworker::findByMaxId($request->callback->user->user_id);
                 $text = "";
@@ -23,6 +22,7 @@ class OrdersMyHandler implements BotHandler
                 if ($user) {
                     \Yii::$app->user->login($user);
                 }
+
                 if ($user->can("director")) {
                     $text = \Yii::t("telegram", 'command_orders_my');
                     foreach (\app\models\Order::findAll(["created_by" => $user->id]) as $order) {
@@ -30,6 +30,7 @@ class OrdersMyHandler implements BotHandler
                     }
                 } else {
                     $orders = $user->orders;
+//                    \Yii::error(count($orders));
                     if ($orders) {
                         foreach ($orders as $order) {
                             $keyboard[] = [MessageBuilder::callbackButton(!empty($order->comment) ? $order->comment :  \Yii::t('app', 'Order #{id}', ['id' => $order->id]), "order_detail mode=my&id={$order->id}")];

@@ -29,18 +29,12 @@ class Attachment extends ActiveRecord
         ];
     }
 
-    public function beforeDelete()
-    {
-        unlink(\Yii::getAlias('@webroot') . $this->url);
-        return parent::beforeDelete();
-    }
-
     public function upload()
     {
         $name = md5($this->file->baseName."-".time());
         $filename = "{$name}.{$this->file->extension}";
         $this->url = "/upload/$filename";
-        return $this->file->saveAs(\Yii::getAlias('@webroot')."/upload/$filename");
+        return $this->file->saveAs(\Yii::getAlias('@webroot').$this->url);
     }
 
     /**
@@ -54,7 +48,7 @@ class Attachment extends ActiveRecord
 
     public function isImage()
     {
-        preg_match('/\.(jpg|jpeg|png|gif|webp|svg)$/', $this->url, $matches);
+        preg_match('/\.(jpg|jpeg|png|gif|webp)$/', $this->url, $matches);
         return !empty($matches);
     }
 }

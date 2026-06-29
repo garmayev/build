@@ -153,9 +153,6 @@ class Order extends \yii\db\ActiveRecord
             foreach ($this->requirements as $requirement) {
                 $requirement->delete();
             }
-            foreach ($this->telegramMessages as $message) {
-                $message->remove();
-            }
             $transaction->commit();
             return parent::beforeDelete();
         } catch (\Exception $e) {
@@ -217,7 +214,7 @@ class Order extends \yii\db\ActiveRecord
             // Убираем старое правило date и добавляем кастомные валидаторы
             [['start_datetime'], 'validateStartDate'],
             [['finish_datetime'], 'validateFinishDate'],
-            [['start_datetime', 'finish_datetime'], 'validateDateRange'], // НОВЫЙ ВАЛИДАТОР
+            [['start_datetime', 'finish_datetime'], 'validateDateRange', 'when' => function ($model) {return $model->isNewRecord;}], // НОВЫЙ ВАЛИДАТОР
 
             [['start_datetime', 'finish_datetime'], 'date', 'format' => 'php:Y-m-d H:i:s'],
 
@@ -716,7 +713,8 @@ class Order extends \yii\db\ActiveRecord
     public function getCoworkers(): ActiveQuery
     {
         return $this->hasMany(Coworker::class, ['id' => 'user_id'])
-            ->viaTable('order_user', ['order_id' => 'id']);
+            ->viaTable('order_user', ['order_id' => 'id'])
+            ->joinWith('profile');
     }
 
     /**
@@ -988,7 +986,11 @@ class Order extends \yii\db\ActiveRecord
         $coworkersIds = ArrayHelper::getColumn($this->coworkers, 'id');
         if (!in_array($coworker->id, $coworkersIds)) {
             $this->link('coworkers', $coworker);
-            return $this->save();
+            if ($this->save()) {
+                return true;
+            } else {
+                \Yii::error($this->errors);
+            }
         }
         return false;
     }
@@ -1141,10 +1143,11 @@ class Order extends \yii\db\ActiveRecord
             // Генерация данных сообщения один раз
             $messageText = Helper::generateTelegramMessage($this->id);
             $title = !empty($this->title) ? "({$this->title})" : "";
-            $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $this->id]) . " {$title}</b>\n" . $messageText;
+            $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $this->id]) . " {$title}</b>\n" . Helper::generateTelegramMessage($this->id);
 
             // 3. Отправка уведомлений подходящим сотрудникам
             foreach ($this->suitableCoworkers as $coworker) {
+//                \Yii::error($coworker->attributes);
                 if (!$this->canAssignCoworker($coworker)) {
                     continue;
                 }
@@ -1156,9 +1159,13 @@ class Order extends \yii\db\ActiveRecord
                     MessageBuilder::row([MessageBuilder::callbackButton("Принять заказ", "command_accept id={$this->id}")]),
                     MessageBuilder::row([MessageBuilder::callbackButton("Отказаться", "command_reject id={$this->id}")])
                 ];
-
+                $messages = TelegramMessage::find()->where(['order_id' => $this->id])->andWhere(['chat_id' => $profile->max_id])->all();
+                foreach ($messages as $message) {
+                    \Yii::$app->max->deleteMessage(['message_id' => $message->message_id]);
+                    $message->delete();
+                }
                 $telegramMsg = new TelegramMessage([
-                    'chat_id' => $profile->chat_id ?? $profile->max_id,
+                    'chat_id' => $profile->max_id,
                     'order_id' => $this->id,
                     'text' => $formattedMessage,
                     'reply_markup' => $coworkerKeyboard,
@@ -1169,9 +1176,9 @@ class Order extends \yii\db\ActiveRecord
             }
 
             // 4. Уведомление владельца
-            if (!$this->isOwnerNotified() && $this->owner->profile) {
+            if (!$this->isOwnerNotified() && $this->owner->profile && $this->owner->profile->max_id) {
                 $telegramMsg = new TelegramMessage([
-                    'chat_id' => $this->owner->profile->chat_id,
+                    'chat_id' => $this->owner->profile->max_id,
                     'order_id' => $this->id,
                     'text' => "<b>" . \Yii::t("app", "Order #{id}", ["id" => $this->id]) . "</b>\n" . $messageText,
                     'reply_markup' => json_encode([

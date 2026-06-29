@@ -23,11 +23,22 @@ class MaxController extends Controller
         $callbacks = [
             new \app\modules\api\commands\max\StartBotHandler(),
             new \app\modules\api\commands\max\ContactHandler(),
+            new \app\modules\api\commands\max\LocationHandler(),
+            new \app\modules\api\commands\max\ImageHandler(),
             new \app\modules\api\commands\max\command\OrderDetailHandler(),
             new \app\modules\api\commands\max\command\OrdersMyHandler(),
             new \app\modules\api\commands\max\command\OrdersListHandler(),
             new \app\modules\api\commands\max\command\MenuHandler(),
             new \app\modules\api\commands\max\command\AcceptHandler(),
+            new \app\modules\api\commands\max\command\RejectHandler(),
+            new \app\modules\api\commands\max\command\ReportCommentHandler(),
+            new \app\modules\api\commands\max\command\ReportSaveHandler(),
+            new \app\modules\api\commands\max\command\StartDayHandler(),
+            new \app\modules\api\commands\max\command\StartDayOrderHandler(),
+            new \app\modules\api\commands\max\command\StartReportHandler(),
+            new \app\modules\api\commands\max\command\StartReportOrderHandler(),
+            new \app\modules\api\commands\max\message\MenuHandler(),
+            new \app\modules\api\commands\max\message\CommentHandler(),
         ];
         foreach ($callbacks as $callback) {
             $callback->register($handler);

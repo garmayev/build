@@ -84,12 +84,33 @@ class OrderController extends BaseController
     public function actionDelete($id)
     {
         $model = Order::findOne($id);
-        $model->unlinkAll('attachments', true);
+//        $model->unlinkAll('attachments', true);
+        foreach ($model->attachments as $attachment) {
+            $path = \yii\helpers\FileHelper::normalizePath('@app/web'.$attachment->url);
+            if (file_exists(\Yii::getAlias($path))) {
+                unlink(\Yii::getAlias($path));
+            }
+            $attachment->delete();
+        }
         foreach ($model->telegramMessages as $message) {
             try {
-                \Yii::$app->telegram->deleteMessage(['chat_id' => $message->chat_id, 'message_id' => $message->message_id]);
+//                \Yii::$app->telegram->deleteMessage(['chat_id' => $message->chat_id, 'message_id' => $message->message_id]);
+                \Yii::$app->max->deleteMessage(['message_id' => $message->id]);
+                $message->delete();
             } catch (\Exception $e) {}
         }
+        foreach ($model->reports as $report) {
+            foreach ($report->attachments as $attachment) {
+                $path = \yii\helpers\FileHelper::normalizePath('@app/web'.$attachment->url);
+                if (file_exists(\Yii::getAlias($path))) {
+                    unlink(\Yii::getAlias($path));
+                }
+                $attachment->delete();
+            }
+            $report->delete();
+        }
+        $model->unlinkAll('telegramMessages', true);
+//        $model->unlinkAll('requirements', true);
         $model->delete();
         return $this->redirect(['/order/index']);
     }

@@ -12,7 +12,7 @@ class StartBotHandler implements BotHandler
     {
         $max = \Yii::$app->max;
         $handler->onBotStarted(function ($request) use ($max) {
-            $message = MessageBuilder::create(\Yii::t("telegram", "message_menu"))
+            $message = MessageBuilder::create(\Yii::t("telegram", "command_start"))
                 ->format('html')
                 ->inlineKeyboard([
                     [MessageBuilder::requestContactButton(\Yii::t("telegram", "command_contact"), "id032396478430_2_bot")]

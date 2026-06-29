@@ -23,8 +23,9 @@ class RejectHandler implements BotHandler
                 ->joinWith('profile')
                 ->where(['profile.max_id' => $request->callback->user->user_id])
                 ->one();
+//            \Yii::error($data);
             if ($args[0] === "command_reject") {
-                $order->unlink('coworkers', $coworker);
+                $order->unlink('coworkers', $coworker, true);
                 $max->sendAnswer([
                     'message' => MessageBuilder::create(\Yii::t('telegram', 'You reject order successfully'))
                         ->inlineKeyboard([
@@ -34,6 +35,8 @@ class RejectHandler implements BotHandler
                         ])
                         ->format('html')
                         ->build(),
+                ], [
+                    'callback_id' => $request->callback->callback_id,
                 ]);
             }
         });

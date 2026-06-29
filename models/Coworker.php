@@ -202,7 +202,7 @@ class Coworker extends User
     {
         return $this->hasMany(Order::class, ['id' => 'order_id'])
             ->viaTable('order_user', ['user_id' => 'id'])
-            ->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]])
+//            ->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]])
             ->andWhere(["or", ["order.created_by" => $this->referrer_id], ["order.created_by" => $this->id]]);
     }
 

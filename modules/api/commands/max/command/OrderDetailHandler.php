@@ -25,11 +25,6 @@ class OrderDetailHandler implements BotHandler
                 if ($user) {
                     \Yii::$app->user->login($user);
                 }
-                if ($user->can("director")) {
-                    foreach (\app\models\Order::findAll(["created_by" => $user->id]) as $order) {
-                        $keyboard[] = [[ 'text' => \Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'callback_data' => '/order_detail mode=my&id=' . $order->id ]];
-                    }
-                } else {
                     if ($data['mode'] === 'my') {
                         $keyboard[] = [MessageBuilder::callbackButton(\Yii::t('telegram', 'button_reject'), "command_reject id={$order->id}")];
                         $keyboard[] = [MessageBuilder::callbackButton(\Yii::t('telegram', 'command_back'), 'command_orders_my')];
@@ -46,7 +41,6 @@ class OrderDetailHandler implements BotHandler
                         }
                     }
                     $max->sendAnswer(['message' => $message->build()], ['callback_id' => $request->callback->callback_id]);
-                }
             }
         });
     }

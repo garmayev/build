@@ -67,12 +67,12 @@ class TelegramMessage extends ActiveRecord
                 $message->image(\yii\helpers\Url::to($attachment->url, true));
             }
         }
-
-        $response = $max->sendMessage($message->build(), ['user_id' => $this->chat_id]);
+        $messageBuilded = $message->build();
+        $response = $max->sendMessage($messageBuilded, ['user_id' => $this->chat_id]);
 
         $this->message_id = $response->message['body']['mid'];
-        if (is_array($this->reply_markup)) {
-            $this->reply_markup = json_encode($this->reply_markup);
+        if (is_array($messageBuilded['attachments'])) {
+            $this->reply_markup = json_encode($messageBuilded['attachments']);
         }
         if (!$this->save()) {
             \Yii::error($this->errors);
