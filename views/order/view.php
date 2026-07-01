@@ -228,7 +228,7 @@ echo DetailView::widget([
                         'headerOptions' => ['class' => 'text-center col-md-3 col-3'],
                         'contentOptions' => ['class' => 'text-center col-md-3 col-3', 'style' => ''],
                         'value' => function (\app\models\Coworker $model) {
-                            return "{$model->profile->family} {$model->profile->name} {$model->profile->surname}";
+                            return $model->name;
                         }
                     ], [
                         'headerOptions' => ['class' => 'text-center col-md-3 col-3'],
@@ -245,6 +245,12 @@ echo DetailView::widget([
                         'headerOptions' => ['class' => 'text-center col-md-3 col-3'],
                         'contentOptions' => ['class' => 'text-center col-md-3 col-3'],
                         'format' => 'raw'
+                    ], [
+                        'attribute' => 'hours',
+                        'label' => \Yii::t('app', 'Hours'),
+                        'value' => function (\app\models\Coworker $model) {
+                            return array_sum(\yii\helpers\ArrayHelper::getColumn($model->hours, 'count'));
+                        }
                     ], [
                         'attribute' => 'coworkerProperties',
                         'label' => \Yii::t('app', 'Properties'),
@@ -291,15 +297,23 @@ echo DetailView::widget([
                     'headerOptions' => ['class' => 'col-md-2 col-2'],
                 ],
                 [
+                    'attribute' => 'user_id',
+                    'label' => \Yii::t('app', 'Created By'),
+                    'headerOptions' => ['class' => 'col-md-2 col-2'],
+                    'value' => function (Report $model) {
+                        return $model->coworker->name;
+                    }
+                ],
+                [
                     'attribute' => 'attachments',
                     'label' => \Yii::t('app', 'Attachments'),
                     'format' => 'raw',
-                    'headerOptions' => ['class' => 'col-md-7 col-7'],
+                    'headerOptions' => ['class' => 'col-md-5 col-5'],
                     'value' => function (Report $model) {
                         $result = "<div class='light-gallery'>";
                         $images = [];
                         foreach ($model->attachments as $attachment) {
-                            $images[] = $attachment->getLink(false);
+                            $images[] = \yii\helpers\Html::img($attachment->getLink(false), ['width' => 100]);
                         }
                         $result .= implode("\n", $images) . "</div>";
                         if (count($images)) {
@@ -394,6 +408,10 @@ background: none !important;
 
 #expand-table + .kv-detail-container .table-striped tbody tr {
     background-color: transparent !important;
+}
+.lg-container.lg-show.lg-show-in {
+    position:absolute;
+    z-index: 1090;
 }
 CSS
 );

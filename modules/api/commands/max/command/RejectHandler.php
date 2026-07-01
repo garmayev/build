@@ -27,10 +27,10 @@ class RejectHandler implements BotHandler
             if ($args[0] === "command_reject") {
                 $order->unlink('coworkers', $coworker, true);
                 $max->sendAnswer([
-                    'message' => MessageBuilder::create(\Yii::t('telegram', 'You reject order successfully'))
+                    'message' => MessageBuilder::create(\Yii::t('telegram', 'command_reject_successfully'))
                         ->inlineKeyboard([
                             MessageBuilder::row([
-                                MessageBuilder::callbackButton(\Yii::t('telegram', 'command_back'), 'command_menu')
+                                MessageBuilder::callbackButton(\Yii::t('telegram', 'button_menu'), 'command_menu')
                             ])
                         ])
                         ->format('html')

@@ -43,6 +43,9 @@ class Attachment extends ActiveRecord
      */
     public function getLink($baseUrl = false): string
     {
+        if (preg_match("/https:\/\//", $this->url)) {
+            return $this->url;
+        }
         return $baseUrl ? Html::a(Html::img($this->url, ['class' => 'glide__slide']), Url::to([$this->url], true), ['data-lg-size' => '1600-2400']) : Html::a(Html::img($this->url, ['class' => 'glide__slide']), [$this->url], ['data-lg-size' => '1600-2400', 'class' => 'image-container']);
     }
 

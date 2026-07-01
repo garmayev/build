@@ -202,7 +202,7 @@ class Coworker extends User
     {
         return $this->hasMany(Order::class, ['id' => 'order_id'])
             ->viaTable('order_user', ['user_id' => 'id'])
-//            ->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]])
+            ->where(['in', 'order.status', [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]])
             ->andWhere(["or", ["order.created_by" => $this->referrer_id], ["order.created_by" => $this->id]]);
     }
 
@@ -212,7 +212,7 @@ class Coworker extends User
          * @var Requirement[] $requirements
          */
         $userId = $this->id;
-        return Order::find()
+        $query = Order::find()
             ->joinWith(['requirements' => function ($query) use ($userId) {
                 $query->alias('req');
             }])
@@ -242,9 +242,13 @@ class Coworker extends User
                     'COUNT(req.id) = 0' // Нет требований
                 ]
             ])
-            ->andWhere(['status' => Order::STATUS_NEW])
+            ->andWhere(['status' => [Order::STATUS_NEW, Order::STATUS_PROCESS, Order::STATUS_BUILD]])
             ->andWhere(['not in', 'order.id', \yii\helpers\ArrayHelper::map($this->orders, 'id', 'id')])
-            ->andWhere(['or', ['order.created_by' => $this->referrer_id], ['order.created_by' => $this->id]]);
+            ->andWhere(['or', ['order.created_by' => $this->referrer_id], ['order.created_by' => $this->id]])
+            ->orderBy(['order.id' => SORT_ASC]);
+
+//        \Yii::error($query->createCommand()->rawSql);
+        return $query;
     }
 
     public function getActiveOrders()

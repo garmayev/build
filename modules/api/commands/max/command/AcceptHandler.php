@@ -29,10 +29,10 @@ class AcceptHandler implements BotHandler
                 if (!$order->isFull()) {
                     if (!$order->canAssignCoworker($coworker)) {
                         $max->sendAnswer([
-                            'message' => MessageBuilder::create(\Yii::t('app', 'Sorry, you can`t assign to order'))
+                            'message' => MessageBuilder::create(\Yii::t('telegram', 'command_accept_failed'))
                                 ->inlineKeyboard([
                                     MessageBuilder::row([
-                                        MessageBuilder::callbackButton(\Yii::t('telegram', 'Menu'), 'command_menu')
+                                        MessageBuilder::callbackButton(\Yii::t('telegram', 'button_menu'), 'command_menu')
                                     ])
                                 ])
                                 ->build(),
@@ -44,10 +44,10 @@ class AcceptHandler implements BotHandler
                     if (!$order->assignCoworker($coworker)) {
                         $max->sendAnswer([
                             'message' => MessageBuilder::
-                                create(\Yii::t('app', 'Sorry, you can`t assign to order'))
+                                create(\Yii::t('telegram', 'command_accept_failed'))
                                 ->inlineKeyboard([
                                     MessageBuilder::row([
-                                        MessageBuilder::callbackButton(\Yii::t('telegram', 'Menu'), 'command_menu')
+                                        MessageBuilder::callbackButton(\Yii::t('telegram', 'button_menu'), 'command_menu')
                                     ])
                                 ])
                                 ->build(),
@@ -64,7 +64,7 @@ class AcceptHandler implements BotHandler
                 $messages = \app\models\telegram\TelegramMessage::find()->where(['order_id' => $order->id])->andWhere(['not in', 'chat_id', array_merge([$request->callback->user->user_id], \yii\helpers\ArrayHelper::getColumn($order->coworkers, 'profile.max_id'))])->all();
                 if (count($messages)) {
                     foreach ($messages as $message) {
-                        $messageText = \app\components\Helper::generateTelegramMessage($orderId);
+                        $messageText = \app\components\Helper::orderDetails($order);
                         $title = !empty($this->title) ? "({$this->title})" : "";
                         $formattedMessage = '<b>' . \Yii::t('app', 'Order #{id}', ['id' => $orderId]) . " {$title}</b>\n" . $messageText;
 
@@ -76,9 +76,9 @@ class AcceptHandler implements BotHandler
                     }
                 }
                 $max->sendAnswer([
-                    'message' => MessageBuilder::create(\Yii::t('app', 'You successfully assigned to order #{orderId}', ['orderId' => $orderId]))
+                    'message' => MessageBuilder::create(\Yii::t('telegram', 'command_accept_successfully'))
                         ->inlineKeyboard([MessageBuilder::row([
-                            MessageBuilder::callbackButton(\Yii::t('telegram', 'Menu'), 'command_menu')
+                            MessageBuilder::callbackButton(\Yii::t('telegram', 'button_menu'), 'command_menu')
                         ])])
                         ->build(),
                     ], [

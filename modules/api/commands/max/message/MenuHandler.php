@@ -31,7 +31,7 @@ class MenuHandler implements BotHandler
                         MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t("telegram", "command_orders_my"), "command_orders_my")]),
                         MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t("telegram", "command_orders_list"), "command_orders_list")]),
                         MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t("telegram", "command_start_day"), "command_start_day")]),
-                        MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t("telegram", "command_start_report"), "command_start_report")])
+                        MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t("telegram", "button_report_start"), "command_start_report")])
                     ])
                     ->format("html")
                     ->build(), 

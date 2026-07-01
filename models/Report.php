@@ -29,7 +29,12 @@ class Report extends \yii\db\ActiveRecord
                 'class' => 'yii\behaviors\TimestampBehavior',
                 'createdAtAttribute' => 'created_at',
                 'updatedAtAttribute' => false,
-            ]
+            ],
+            'blameable' => [
+                'class' => 'yii\behaviors\BlameableBehavior',
+                'createdByAttribute' => 'user_id',
+                'updatedByAttribute' => false,
+            ],
         ];
     }
 
@@ -50,7 +55,8 @@ class Report extends \yii\db\ActiveRecord
     {
         return [
             [['comment'], 'string'],
-            [['created_at', 'order_id'], 'integer'],
+            [['created_at', 'order_id', 'user_id'], 'integer'],
+            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => Coworker::class, 'targetAttribute' => ['user_id' => 'id']],
             [['order_id'], 'exist', 'skipOnError' => true, 'targetClass' => Order::class, 'targetAttribute' => ['order_id' => 'id']],
             [['files'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg', 'maxFiles' => 10],
         ];
@@ -75,6 +81,14 @@ class Report extends \yii\db\ActiveRecord
     public function getOrder(): ActiveQuery
     {
         return $this->hasOne(Order::class, ['id' => 'order_id']);
+    }
+
+    /**
+     * @return ActiveQuery
+     */
+    public function getCoworker(): ActiveQuery
+    {
+        return $this->hasOne(Coworker::class, ['id' => 'user_id']);
     }
 
     /**

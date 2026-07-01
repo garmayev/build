@@ -8,51 +8,85 @@ use garmayev\max\MessageBuilder;
 
 class ImageHandler implements BotHandler
 {
+    private $_user;
+    private $_session;
+
     public function register(EventHandler $handler): void
     {
         $max = \Yii::$app->max;
         $handler->onMessage(function ($request) use ($max) {
-            $session = \Yii::$app->session;
-            if ($session->getIsActive()) {
-                $session->close();
+            if ($this->auth($request->message->sender)) {
+                $this->switchSession();
             }
 
-            // 3. Set the target session ID 
-            $session->setId($request->message->sender->user_id);
-            // 4. Open the session with the newly assigned ID
-            $session->open();
-            //\Yii::error($request->message->sender->user_id);
-            $orderId = $session->get('order_id');
-            $action = $session->get('action');
+            $action = $this->_session->get('action');
+            $urls = $this->_session->get('urls');
+            $comment = $this->_session->get('comment');
+            $isset_images = false;
+            $isset_text = false;
+            $text = "";
             switch ($action) {
                 case "new_report":
-                    $urls = [];
+                    $orderId = $this->_session->get('order_id');
+                    $urls = $this->_session->get('urls') ?? [];
                     foreach ($request->message->body->attachments ?? [] as $attachment) {
-                        if ($attachment->type == 'image' && isset($orderId) && isset($action)) {
+                        if (($attachment->type == 'image') && isset($orderId) && isset($action)) {
                             $urls[] = $attachment->payload->url;
+                            $isset_images = true;
+                        }
+                        if ($attachment->type == 'file') {
+                            $urls[] = $attachment->payload['url'];
+                            $isset_images = true;
                         }
                     }
-                    \Yii::error($action);
-                    if (count($urls)) {
-                        $session->set('urls', $urls);
-                        $max->sendMessage(
-                            MessageBuilder::create(\Yii::t('app', 'Images saved')."\n\n".\Yii::t('telegram', 'Are you want to attach text for report?'))
-                                ->inlineKeyboard([
-                                    MessageBuilder::row([
-                                        MessageBuilder::callbackButton(\Yii::t('app', 'Yes'), 'command_report_comment')
-                                    ]),
-                                    MessageBuilder::row([
-                                        MessageBuilder::callbackButton(\Yii::t('app', 'No'), 'command_report_save')
-                                    ]),
-                                ])
-                                ->build(), 
-                            ['user_id' => $request->message->sender->user_id]
-                        );
+
+                    if ($isset_images) {
+                        $this->_session->set('urls', $urls);
+                        $text .= \Yii::t('telegram', 'message_images_attached_to_report') . "\n\n";
                     }
+                    if ($request->message->body->text) {
+                        $comment .= "\n".$request->message->body->text;
+                        $this->_session->set('comment', $comment);
+                        $text .= \Yii::t('telegram', 'message_comment_attached_to_report') . "\n\n";
+                    }
+                    $text .= \Yii::t('telegram', 'message_text_or_image_and_save');
+                    $message = MessageBuilder::create($text)
+                        ->inlineKeyboard([
+                            MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t('telegram', 'button_report_save'), 'command_report_save')]),
+                            MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t('telegram', 'button_report_cancel'), 'command_report_cancel')])
+                        ])
+                        ->build();
+                    $max->sendMessage($message, ['user_id' => $request->message->sender->user_id]);
                 break;
                 case "continue_report":
                 break;
             }
         });
+    }
+
+    private function auth(\garmayev\max\types\User $max_user)
+    {
+        $this->_user = \app\models\User::findByMaxId($max_user->user_id);
+        if ($this->_user) {
+            \Yii::$app->user->login($this->_user, 0);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function switchSession()
+    {
+        if (!\Yii::$app->user->isGuest) {
+            $this->_session = \Yii::$app->session;
+            if ($this->_session->getIsActive()) {
+                $this->_session->close();
+            }
+
+            // 3. Set the target session ID 
+            $this->_session->setId(\Yii::$app->user->identity->profile->max_id);
+            // 4. Open the session with the newly assigned ID
+            $this->_session->open();
+        }
     }
 }

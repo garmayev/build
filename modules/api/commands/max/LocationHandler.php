@@ -24,18 +24,30 @@ class LocationHandler implements BotHandler
             foreach ($attachments as $attachment) {
                 if ($attachment->type == 'location') {
                     $order = \app\models\Order::findOne($session->get('order_id'));
-//                    \Yii::error($order->building->location->attributes);
+                    \Yii::error([$attachment->latitude, $attachment->longitude]);
+                    \Yii::error($order->building->location->attributes);
                     if (\app\components\Helper::isPointInCircle(['latitude' => $attachment->latitude, 'longitude' => $attachment->longitude], $order->building->location->attributes, $order->building->radius)) {
                         $hours = new \app\models\Hours([
                             'user_id' => $user->id,
                             'date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d'),
                             'count' => 0,
-                            'is_payed' -> false,
+                            'is_payed' => 0,
                             'order_id' => $order->id,
-                            'start_time' => \Yii::$app->formatter->asTime(time()),
+                            'start_time' => \Yii::$app->formatter->asDatetime(time(), 'php:Y-m-d H:i:s'),
                         ]);
                         if ($hours->save()) {
-//                            $max->sendAnswer()
+                            $max->sendMessage(
+                                MessageBuilder::create(\Yii::t('telegram', 'command_hours_created'))
+                                    ->inlineKeyboard([
+                                        MessageBuilder::row([
+                                            MessageBuilder::callbackButton(\Yii::t('telegram', 'button_menu'), 'command_menu')
+                                        ])
+                                    ])
+                                    ->build(), [
+                                'user_id' => $request->message->sender->user_id
+                            ]);
+                        } else {
+                            \Yii::error($hours->errors);
                         }
                     } else {
                         $message = MessageBuilder::create(\Yii::t('telegram', 'command_location_missing'))

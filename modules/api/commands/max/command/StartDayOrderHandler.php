@@ -35,7 +35,7 @@ class StartDayOrderHandler implements BotHandler
                 $keyboard[] = MessageBuilder::row([MessageBuilder::requestLocationButton(\Yii::t('telegram', 'command_location_send'), true)]);
                 $keyboard[] = MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t('telegram', 'command_back'), 'command_start_day')]);
                 $max->sendAnswer([
-                    'message' => MessageBuilder::create(\Yii::t('app', 'command_location_send'))
+                    'message' => MessageBuilder::create(\Yii::t('telegram', 'command_location_send'))
                         ->inlineKeyboard($keyboard)
                         ->build()
                 ], [

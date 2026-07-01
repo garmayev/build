@@ -8,7 +8,7 @@ use garmayev\max\EventHandler;
 use garmayev\max\types\Callback;
 use garmayev\max\MessageBuilder;
 
-class StartReportOrderHandler implements BotHandler
+class ReportCancelHandler implements BotHandler
 {
 
     public function register(EventHandler $handler): void
@@ -16,8 +16,6 @@ class StartReportOrderHandler implements BotHandler
         $max = \Yii::$app->max;
         $handler->onCallback(function (\garmayev\max\base\Request $request) use ($max) {
             $args = explode(' ', $request->callback->payload);
-            parse_str($args[1] ?? '', $data);
-
             $session = \Yii::$app->session;
             if ($session->getIsActive()) {
                 $session->close();
@@ -27,19 +25,15 @@ class StartReportOrderHandler implements BotHandler
             $session->setId($request->callback->user->user_id);
             // 4. Open the session with the newly assigned ID
             $session->open();
-
-            $coworker = Coworker::find()->joinWith('profile')->where(['profile.max_id' => $request->callback->user->user_id])->one();
-
-            if ($args[0] === "command_start_report_order" && $session->get('action') != null) {
-                $session->set('order_id', $data['id']);
-                $message = MessageBuilder::create(\Yii::t('telegram', 'message_text_or_image_and_save', ['id' => $data['id']]))
+            //\Yii::error($request->message->sender->user_id);
+            if ($args[0] === "command_report_cancel") {
+                $message = MessageBuilder::create(\Yii::t('telegram', 'message_report_cancelled'))
+                    ->inlineKeyboard([MessageBuilder::row([
+                        MessageBuilder::callbackButton(\Yii::t('telegram', 'button_menu'), 'command_menu')
+                    ])])
                     ->build();
-                $message['attachments'] = [];
-                $max->sendAnswer([
-                    'message' => $message,
-                ], [
-                    'callback_id' => $request->callback->callback_id,
-                ]);
+                $max->sendAnswer(['message' => $message], ['callback_id' => $request->callback->callback_id]);
+                $session->removeAll();
             }
         });
     }

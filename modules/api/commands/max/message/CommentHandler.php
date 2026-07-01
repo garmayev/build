@@ -20,33 +20,26 @@ class CommentHandler implements BotHandler
             $session->setId($request->message->sender->user_id);
             $session->open();
 
-            $orderId = $session->get('order_id');
-            $urls = $session->get('urls');
-            $action = $session->get('action');
-            $report_id = $session->get('report_id');
-
-            \Yii::error($action);
-            \Yii::error($report_id);
-
             if (trim($request->message->body->text) === "/menu") {
                 $session->removeAll();
                 return;
             }
-            if ($action === 'report_comment' && isset($report_id)) {
+            $action = $session->get('action');
+            $report_id = $session->get('report_id');
+            $order_id = $session->get('order_id');
+
+            if ($action === 'report_comment') {
+                $comment = $session->get('comment');
+                $comment .= "\n".$request->message->body->text;
                 $model = \app\models\Report::findOne($report_id);
-                if (isset($model)) {
-                    if ($model->load(['Report' => ['order_id' => $orderId, 'comment' => $request->message->body->text]]) && $model->save()) {
-                        $model->setUrl($urls);
-                        \Yii::error($action);
-                        \Yii::error($model->attributes);
-                        $message = MessageBuilder::create(\Yii::t('telegram', 'message_report_{id}_attached_to_{order_id}', ['id' => $model->id, 'order_id' => $orderId]))->build();
-    //                    $max->sendMessage($message, ['user_id' => $request->message->sender->user_id]);
-                        $session->removeAll();
-                    } else {
-                        \Yii::error($model->attributes);
-                        \Yii::error($model->errors);
-                    }
-                }
+                $session->set('comment', $comment);
+                $message = MessageBuilder::create(\Yii::t('telegram', 'message_text_or_image_and_save'))
+                    ->inlineKeyboard([
+                        MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t('telegram', 'button_report_save'), 'command_report_save')]),
+                        MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t('telegram', 'button_menu'), 'command_menu')])
+                    ])
+                    ->build();
+                $max->sendMessage($message, ['user_id' => $request->message->sender->user_id]);
             }
         });
     }

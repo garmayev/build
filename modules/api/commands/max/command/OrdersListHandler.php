@@ -22,9 +22,10 @@ class OrdersListHandler implements BotHandler
                 if ($user) {
                     \Yii::$app->user->login($user);
                     $coworker = Coworker::find()->joinWith(['profile'])->where(['user_id' => $user->id])->one();
+                } else {
+                    return;
                 }
-
-                $orders = $coworker->suitableOrders;
+                $orders = $coworker->getSuitableOrders()->all();
                 if ($orders) {
                     foreach ($orders as $order) {
                         $model = \app\models\Order::findOne($order);

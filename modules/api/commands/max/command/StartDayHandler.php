@@ -27,11 +27,24 @@ class StartDayHandler implements BotHandler
             $session->open();
 
             if ($request->callback->payload === "command_start_day") {
+                $hours = \app\models\Hours::find()->where(['user_id' => $user->id])->andWhere(['date' => \Yii::$app->formatter->asDate(time(), 'php:Y-m-d')])->all();
+                if (count($hours)) {
+                    $max->sendAnswer(['message' => MessageBuilder::create(\Yii::t('telegram', 'command_hours_isset'))
+                        ->inlineKeyboard([MessageBuilder::row([
+                            MessageBuilder::callbackButton(\Yii::t('telegram', 'button_menu'), 'command_menu')
+                        ])])
+                        ->build()
+                    ], [
+                        'callback_id' => $request->callback->callback_id
+                    ]);
+                    return;
+                }
                 $keyboard = [];
                 $coworker = Coworker::findOne($user->id);
                 foreach ($coworker->orders as $order) {
                     $keyboard[] = MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t('app', 'Order #{id}', ['id' => $order->id]), 'command_start_day_order id='.$order->id)]);
                 }
+                \Yii::error($keyboard);
                 $keyboard[] = MessageBuilder::row([MessageBuilder::callbackButton(\Yii::t('telegram', 'command_back'), 'command_menu')]);
                 $max->sendAnswer([
                     'message' => MessageBuilder::create(\Yii::t('app', 'Select order from list:'))
